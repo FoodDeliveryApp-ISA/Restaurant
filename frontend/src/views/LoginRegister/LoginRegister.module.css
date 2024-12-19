@@ -1,0 +1,83 @@
+/* Reset and base styles */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: row-reverse; /* Make the right side (login) appear on the right */
+}
+
+/* Left half with background image */
+.left-half {
+  flex: 1;
+  background-image: url("../../assets/images/login1.jpg"); /* Corrected path */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* Dark overlay for background image */
+.left-half::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Image overlay text */
+.image-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+  z-index: 1;
+}
+
+.image-overlay h1 {
+  font-size: 2.5rem;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* Right half for tabs */
+.right-half {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 2rem;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .left-half,
+  .right-half {
+    flex: 0;
+    width: 100%;
+    height: 50vh;
+  }
+
+  .image-overlay h1 {
+    font-size: 2rem;
+  }
+}
+
+/* Optional: Style for Ant Design Tabs */
+:global(.ant-tabs-nav) {
+  margin-bottom: 1rem;
+}
+
+:global(.ant-tabs-tab) {
+  padding: 12px 24px !important;
+}
+
+:global(.ant-tabs-tab-active) {
+  background-color: #f0f0f0 !important;
+}
