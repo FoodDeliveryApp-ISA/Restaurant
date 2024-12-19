@@ -1,7 +1,7 @@
 import React from "react";
 import { Tabs } from "antd";
-import Login from "../Login/Login";
-import Register from "../Register/Register";
+import RestaurantLogin from "../Login/Login";
+import RestaurantRegister from "../Register/Register";
 import loginImage from "../../assets/images/login3.jpg";
 import { motion } from "framer-motion";
 
@@ -78,7 +78,7 @@ const LoginRegister: React.FC = () => {
               >
                 Create Your Account
               </motion.h2>
-              <Register />
+              <RestaurantRegister/>
             </TabPane>
             <TabPane tab="Login" key="2">
               <motion.h2
@@ -89,7 +89,7 @@ const LoginRegister: React.FC = () => {
               >
                 Welcome Back!
               </motion.h2>
-              <Login />
+              <RestaurantLogin />
             </TabPane>
           </Tabs>
         </div>

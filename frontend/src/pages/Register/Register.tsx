@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { Form, Input, Button, message } from "antd";
-import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
+import { Form, Input, Button, message, Select } from "antd";
+import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
 
-const Register: React.FC = () => {
+const RestaurantRegister: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = (values: {
     email: string;
-    username: string;
+    name: string;
+    phone: string;
     password: string;
+    role: string;
   }) => {
     console.log("Register Values: ", values);
     setLoading(true);
@@ -16,14 +18,17 @@ const Register: React.FC = () => {
     // Simulate registration API call
     setTimeout(() => {
       setLoading(false);
-      message.success("Registration successful!");
+      message.success("Registration successful! Welcome to the restaurant team.");
     }, 1000);
   };
 
   return (
     <div style={{ maxWidth: 400, margin: "50px auto", padding: 20 }}>
+      <h2 className="text-center mb-4" style={{ fontWeight: "bold", fontSize: 24 }}>
+        Restaurant Staff Registration
+      </h2>
       <Form
-        name="register"
+        name="restaurant-register"
         layout="vertical"
         onFinish={handleRegister}
         style={{
@@ -47,15 +52,30 @@ const Register: React.FC = () => {
           />
         </Form.Item>
 
-        {/* Username Field */}
+        {/* Name Field */}
         <Form.Item
-          label="Username"
-          name="username"
-          rules={[{ required: true, message: "Please enter your username!" }]}
+          label="Full Name"
+          name="name"
+          rules={[{ required: true, message: "Please enter your full name!" }]}
         >
           <Input
             prefix={<UserOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
-            placeholder="Enter your username"
+            placeholder="Enter your full name"
+          />
+        </Form.Item>
+
+        {/* Phone Field */}
+        <Form.Item
+          label="Phone Number"
+          name="phone"
+          rules={[
+            { required: true, message: "Please enter your phone number!" },
+            { pattern: /^\d{10}$/, message: "Please enter a valid 10-digit phone number!" },
+          ]}
+        >
+          <Input
+            prefix={<PhoneOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
+            placeholder="Enter your phone number"
           />
         </Form.Item>
 
@@ -75,28 +95,17 @@ const Register: React.FC = () => {
           />
         </Form.Item>
 
-        {/* Confirm Password Field */}
+        {/* Role Field */}
         <Form.Item
-          label="Confirm Password"
-          name="confirm"
-          dependencies={["password"]}
-          hasFeedback
-          rules={[
-            { required: true, message: "Please confirm your password!" },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue("password") === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error("Passwords do not match!"));
-              },
-            }),
-          ]}
+          label="Role"
+          name="role"
+          rules={[{ required: true, message: "Please select your role!" }]}
         >
-          <Input.Password
-            prefix={<LockOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
-            placeholder="Confirm your password"
-          />
+          <Select placeholder="Select your role">
+            <Select.Option value="staff">Staff</Select.Option>
+            <Select.Option value="manager">Manager</Select.Option>
+            <Select.Option value="admin">Admin</Select.Option>
+          </Select>
         </Form.Item>
 
         {/* Submit Button */}
@@ -107,8 +116,8 @@ const Register: React.FC = () => {
             block
             loading={loading}
             style={{
-              backgroundColor: "#1890ff",
-              borderColor: "#1890ff",
+              backgroundColor: "#FF5733",
+              borderColor: "#FF5733",
               height: "40px",
               fontSize: "16px",
               fontWeight: "bold",
@@ -122,5 +131,4 @@ const Register: React.FC = () => {
   );
 };
 
-export default Register;
-
+export default RestaurantRegister;
