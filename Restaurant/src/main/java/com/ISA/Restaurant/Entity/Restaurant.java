@@ -1,13 +1,14 @@
 package com.ISA.Restaurant.Entity;
 
 import jakarta.persistence.*;
-import lombok.*; // Importing Lombok annotations
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Data // Lombok annotation to generate getters, setters, toString, equals, and hashCode methods
-@NoArgsConstructor // Lombok annotation to generate a no-argument constructor
-@AllArgsConstructor // Lombok annotation to generate an all-arguments constructor
-@Builder // Lombok annotation to create a builder pattern
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Restaurant {
 
     @Id
