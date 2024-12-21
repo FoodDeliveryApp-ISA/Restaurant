@@ -19,7 +19,7 @@ public class Restaurant {
     @Column(name = "restaurant_name", nullable = false)
     private String restaurantName;
 
-    @Column(name = "restaurant_email", nullable = false)
+    @Column(name = "restaurant_email", nullable = false, unique = true)
     private String restaurantEmail;
 
     @Column(name = "restaurant_password", nullable = false)

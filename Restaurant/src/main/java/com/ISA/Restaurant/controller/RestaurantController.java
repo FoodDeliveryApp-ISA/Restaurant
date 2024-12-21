@@ -1,6 +1,7 @@
 package com.ISA.Restaurant.controller;
 
 import com.ISA.Restaurant.Dto.RestaurantDto;
+import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.service.RestaurentService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class RestaurantController {
 
-    private final RestaurentService restaurentService;
+    private final RestaurentService restaurantService;
 
     // Test endpoint for checking the API
     @GetMapping("/test")
@@ -22,15 +23,15 @@ public class RestaurantController {
 
     // Endpoint for saving a restaurant
     @PostMapping
-    public ResponseEntity<RestaurantDto> saveRestaurant(@RequestBody RestaurantDto restaurantDto) {
-        RestaurantDto savedRestaurant = restaurentService.saveRestaurent(restaurantDto);
-        return new ResponseEntity<>(savedRestaurant, HttpStatus.CREATED);
+    public ResponseEntity<RestaurantDto> createRestaurant(@RequestBody RestaurantDto restaurantDto) {
+        RestaurantDto savedRestaurant = restaurantService.saveRestaurent(restaurantDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedRestaurant);
     }
 
     // Endpoint for getting a restaurant by its ID
     @GetMapping("/{restaurantId}")
     public ResponseEntity<RestaurantDto> getRestaurantById(@PathVariable int restaurantId) {
-        RestaurantDto restaurantDto = restaurentService.getRestaurantById(restaurantId);
+        RestaurantDto restaurantDto = restaurantService.getRestaurantById(restaurantId);
         if (restaurantDto != null) {
             return new ResponseEntity<>(restaurantDto, HttpStatus.OK);
         } else {
@@ -43,7 +44,7 @@ public class RestaurantController {
     public ResponseEntity<RestaurantDto> updateRestaurant(
             @PathVariable int restaurantId,
             @RequestBody RestaurantDto restaurantDto) {
-        RestaurantDto updatedRestaurant = restaurentService.updateRestaurant(restaurantId, restaurantDto);
+        RestaurantDto updatedRestaurant = restaurantService.updateRestaurant(restaurantId, restaurantDto);
         if (updatedRestaurant != null) {
             return new ResponseEntity<>(updatedRestaurant, HttpStatus.OK);
         } else {
@@ -54,7 +55,7 @@ public class RestaurantController {
     // Endpoint for deleting a restaurant
     @DeleteMapping("/{restaurantId}")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable int restaurantId) {
-        boolean isDeleted = restaurentService.deleteRestaurant(restaurantId);
+        boolean isDeleted = restaurantService.deleteRestaurant(restaurantId);
         if (isDeleted) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -65,7 +66,7 @@ public class RestaurantController {
     // Endpoint for getting all restaurants
     @GetMapping
     public ResponseEntity<Iterable<RestaurantDto>> getAllRestaurants() {
-        Iterable<RestaurantDto> restaurantDtos = restaurentService.getAllRestaurants();
+        Iterable<RestaurantDto> restaurantDtos = restaurantService.getAllRestaurants();
         return new ResponseEntity<>(restaurantDtos, HttpStatus.OK);
     }
 }

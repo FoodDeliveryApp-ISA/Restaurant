@@ -2,19 +2,19 @@ package com.ISA.Restaurant.service.impl;
 
 import com.ISA.Restaurant.Dto.RestaurantDto;
 import com.ISA.Restaurant.Entity.Restaurant;
-import com.ISA.Restaurant.repo.RestaurentRepository;
+import com.ISA.Restaurant.repo.RestaurantRepository;
 import com.ISA.Restaurant.service.RestaurentService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
 @AllArgsConstructor
 public class RestaurentImpl implements RestaurentService {
-    private final RestaurentRepository repository;
+
+    private final RestaurantRepository repository;
 
     @Override
     public RestaurantDto saveRestaurent(RestaurantDto restaurantDto) {
