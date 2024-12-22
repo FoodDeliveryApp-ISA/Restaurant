@@ -3,6 +3,7 @@ import { Form, Input, Button, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/auth.service";
+import ToastNotification from "../../components/ToastNotification";
 
 const RestaurantLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -18,9 +19,10 @@ const RestaurantLogin: React.FC = () => {
     try {
       const response = await authService.login(dataToSend);
       if (response) {
-        message.success(
-          "Login successful! Welcome to the restaurant dashboard."
-        );
+        ToastNotification.success({
+          message: "Login Successful",
+          description: "Welcome back!",
+        });
         navigate("/dashboard");
       } else {
         message.error("Login failed. Please check your credentials.");

@@ -1,24 +1,34 @@
 import React from "react";
 import { Menu, Avatar, Dropdown } from "antd";
-import { UserOutlined, CodeOutlined, LogoutOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import authService from "../../services/auth.service.ts"; // Import authService for logout functionality
+import { useNavigate } from "react-router-dom";
 
 const RightMenu = ({ mode }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    authService.logout(); // Clear authentication state
+    navigate("/"); // Redirect to login page after logout
+  };
+
   // Menu items with a black background and white text
   const menuItems = (
     <Menu
       className="bg-black text-white"
       style={{
-        backgroundColor: "black", // Ensure the background is black
-        color: "white", // Ensure text is white
+        backgroundColor: "black", // Background is black
+        color: "white", // Text is white
       }}
     >
-      <Menu.Item key="project" icon={<CodeOutlined className="text-white" />}>
-        <span className="text-white">Projects</span>
-      </Menu.Item>
-      <Menu.Item key="about-us" icon={<UserOutlined className="text-white" />}>
+      <Menu.Item key="profile" icon={<UserOutlined className="text-white" />}>
         <span className="text-white">Profile</span>
       </Menu.Item>
-      <Menu.Item key="log-out" icon={<LogoutOutlined className="text-white" />}>
+      <Menu.Item
+        key="logout"
+        icon={<LogoutOutlined className="text-white" />}
+        onClick={handleLogout}
+      >
         <span className="text-white">Logout</span>
       </Menu.Item>
     </Menu>

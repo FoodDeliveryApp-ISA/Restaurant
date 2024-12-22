@@ -1,18 +1,35 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
+import Main from "./components/Main";
 import LoginRegister from "./pages/LoginRegister/LoginRegister";
-import Navbar from "./components/NavBar";
-import FooterView from "./components/Footer/index.tsx";
-// import "antd/dist/antd.css";
+import Menu from "./pages/Menu/Menu";
+
+import MenuDetailsPage from "./pages/MenuDetailsPage/MenuDetailsPage";
 
 const App = () => (
-  <Router>
-    <Navbar />
-    <Routes>
-      <Route path="/" element={<LoginRegister />} />
-    </Routes>
-    <FooterView />
-  </Router>
+  <div className="App">
+    <Router>
+      {/* Routes without Main layout */}
+      <Routes>
+        <Route path="/" element={<LoginRegister />} />
+        <Route path="/menu" element={<Menu />} />
+        <Route path="/menu/:id" element={<MenuDetailsPage />} />
+
+        {/* Routes that require the Main layout */}
+        <Route element={<Main />}>
+          <Route path="/menu" element={<Menu />} />
+        </Route>
+
+        {/* Redirect from unknown routes to / */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
+  </div>
 );
 
 export default App;

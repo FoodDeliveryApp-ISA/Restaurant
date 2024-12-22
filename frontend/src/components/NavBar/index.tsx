@@ -3,20 +3,39 @@ import { Drawer, Button } from "antd";
 import LeftMenu from "./LeftMenu.tsx";
 import RightMenu from "./RightMenu.tsx";
 import { MenuOutlined } from "@ant-design/icons";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import authService from "../../services/auth.service.ts"; // Import authService
 
 const Navbar = () => {
   const [visible, setVisible] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication state
+  const navigate = useNavigate(); // Hook for navigation
+  const { pathname: location } = useLocation();
 
   const showDrawer = () => {
     setVisible(!visible);
   };
 
-  const { pathname: location } = useLocation();
+  // Check authentication status on component mount
+  useEffect(() => {
+    setIsAuthenticated(authService.isAuthenticated()); // Use authService to check authentication
+  }, []);
 
   useEffect(() => {
     setVisible(false); // Close the drawer on route change
   }, [location]);
+
+  const handleLogin = () => {
+    authService.login(); // Simulate login via authService
+    setIsAuthenticated(true); // Update authentication state
+    navigate("/"); // Navigate to home page
+  };
+
+  const handleLogout = () => {
+    authService.logout(); // Simulate logout via authService
+    setIsAuthenticated(false); // Update authentication state
+    navigate("/login"); // Navigate to login page
+  };
 
   return (
     <nav className="sticky top-0 z-50 h-19 w-full bg-black shadow-md">
@@ -27,7 +46,15 @@ const Navbar = () => {
         {/* Desktop Menus */}
         <div className="hidden md:flex items-center gap-4">
           <LeftMenu mode="horizontal" />
-          <RightMenu mode="horizontal" />
+          {isAuthenticated ? (
+            <RightMenu mode="horizontal" onLogout={handleLogout} />
+          ) : (
+            <div className="flex gap-2">
+              <Button type="primary" onClick={handleLogin}>
+                Login
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -51,7 +78,15 @@ const Navbar = () => {
         bodyStyle={{ backgroundColor: "black", color: "white" }}
       >
         <LeftMenu mode="inline" />
-        <RightMenu mode="inline" />
+        {isAuthenticated ? (
+          <RightMenu mode="inline" onLogout={handleLogout} />
+        ) : (
+          <div className="flex flex-col gap-2">
+            <Button type="primary" onClick={handleLogin}>
+              Login
+            </Button>
+          </div>
+        )}
       </Drawer>
     </nav>
   );
