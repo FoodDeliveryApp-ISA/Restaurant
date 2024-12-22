@@ -18,8 +18,8 @@ public class RestaurentImpl implements RestaurentService {
 
     @Override
     public RestaurantDto saveRestaurent(RestaurantDto restaurantDto) {
+        System.out.println("Restaurant to save: " + restaurantDto);
         Restaurant restaurant = new Restaurant(
-                restaurantDto.getRestaurantId(),
                 restaurantDto.getRestaurantName(),
                 restaurantDto.getRestaurantEmail(),
                 restaurantDto.getRestaurantPassword(),
@@ -27,9 +27,10 @@ public class RestaurentImpl implements RestaurentService {
                 restaurantDto.getRestaurantPhone(),
                 restaurantDto.getRestaurantCity(),
                 restaurantDto.getRestaurantLocation(),
-                restaurantDto.getActive()
+                true
         );
         Restaurant savedRestaurant = repository.save(restaurant);
+        System.out.println("Restaurant to save: " + restaurant);
 
         return new RestaurantDto(
                 savedRestaurant.getRestaurantId(),
@@ -65,7 +66,6 @@ public class RestaurentImpl implements RestaurentService {
     public RestaurantDto updateRestaurant(int restaurantId, RestaurantDto restaurantDto) {
         if (repository.existsById(restaurantId)) {
             Restaurant restaurant = new Restaurant(
-                    restaurantId,
                     restaurantDto.getRestaurantName(),
                     restaurantDto.getRestaurantEmail(),
                     restaurantDto.getRestaurantPassword(),

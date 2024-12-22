@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Tabs } from "antd";
 import RestaurantLogin from "../Login/Login";
 import RestaurantRegister from "../Register/Register";
@@ -69,7 +69,7 @@ const LoginRegister: React.FC = () => {
               color: "#555",
             }}
           >
-            <TabPane tab="Register" key="1">
+            <TabPane tab="Register" key="2">
               <motion.h2
                 className="text-2xl font-bold text-center mb-6 text-blue-500"
                 initial={{ opacity: 0, y: -20 }}
@@ -78,9 +78,9 @@ const LoginRegister: React.FC = () => {
               >
                 Create Your Account
               </motion.h2>
-              <RestaurantRegister/>
+              <RestaurantRegister />
             </TabPane>
-            <TabPane tab="Login" key="2">
+            <TabPane tab="Login" key="1">
               <motion.h2
                 className="text-2xl font-bold text-center mb-6 text-green-500"
                 initial={{ opacity: 0, y: -20 }}
@@ -99,5 +99,3 @@ const LoginRegister: React.FC = () => {
 };
 
 export default LoginRegister;
-
-

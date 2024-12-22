@@ -8,23 +8,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RestaurantDto {
-
-    private int restaurantId;  // Change this from long to int
-
+    private int restaurantId;  // Change retained as int for consistency
     private String restaurantName;
-
     private String restaurantEmail;
-
     private String restaurantPassword;
-
     private String restaurantAddress;
-
     private String restaurantPhone;
-
     private String restaurantCity;
-
     private String restaurantLocation;
-
     private Boolean active;
-
 }
+

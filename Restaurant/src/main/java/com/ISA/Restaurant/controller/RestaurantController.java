@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/restaurant")  // Corrected to match the API endpoint naming convention
+@RequestMapping("/restaurants/")  // Corrected to match the API endpoint naming convention
 @AllArgsConstructor
 public class RestaurantController {
 
@@ -24,12 +24,14 @@ public class RestaurantController {
     // Endpoint for saving a restaurant
     @PostMapping
     public ResponseEntity<RestaurantDto> createRestaurant(@RequestBody RestaurantDto restaurantDto) {
+        System.out.println("1  "+restaurantDto);
         RestaurantDto savedRestaurant = restaurantService.saveRestaurent(restaurantDto);
+        System.out.println("2 "+savedRestaurant);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedRestaurant);
     }
 
     // Endpoint for getting a restaurant by its ID
-    @GetMapping("/{restaurantId}")
+    @GetMapping("{restaurantId}")
     public ResponseEntity<RestaurantDto> getRestaurantById(@PathVariable int restaurantId) {
         RestaurantDto restaurantDto = restaurantService.getRestaurantById(restaurantId);
         if (restaurantDto != null) {
@@ -40,7 +42,7 @@ public class RestaurantController {
     }
 
     // Endpoint for updating a restaurant
-    @PutMapping("/{restaurantId}")
+    @PutMapping("{restaurantId}")
     public ResponseEntity<RestaurantDto> updateRestaurant(
             @PathVariable int restaurantId,
             @RequestBody RestaurantDto restaurantDto) {
@@ -53,7 +55,7 @@ public class RestaurantController {
     }
 
     // Endpoint for deleting a restaurant
-    @DeleteMapping("/{restaurantId}")
+    @DeleteMapping("{restaurantId}")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable int restaurantId) {
         boolean isDeleted = restaurantService.deleteRestaurant(restaurantId);
         if (isDeleted) {
