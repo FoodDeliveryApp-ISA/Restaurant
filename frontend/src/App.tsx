@@ -5,24 +5,24 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import Layout from "./components/Layout/Layout";
 import Main from "./components/Main";
 import LoginRegister from "./pages/LoginRegister/LoginRegister";
 import Menu from "./pages/Menu/Menu";
-
 import MenuDetailsPage from "./pages/MenuDetailsPage/MenuDetailsPage";
+import Profile from "./pages/Profile/Profile";
 
 const App = () => (
   <div className="App">
     <Router>
-      {/* Routes without Main layout */}
       <Routes>
-        <Route path="/" element={<LoginRegister />} />
-        <Route path="/menu" element={<Menu />} />
-        <Route path="/menu/:id" element={<MenuDetailsPage />} />
-
-        {/* Routes that require the Main layout */}
-        <Route element={<Main />}>
-          <Route path="/menu" element={<Menu />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<LoginRegister />} />
+          <Route element={<Main />}>
+            <Route path="/menu" element={<Menu />} />
+            <Route path="/menu/:id" element={<MenuDetailsPage />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
         </Route>
 
         {/* Redirect from unknown routes to / */}
@@ -33,3 +33,4 @@ const App = () => (
 );
 
 export default App;
+

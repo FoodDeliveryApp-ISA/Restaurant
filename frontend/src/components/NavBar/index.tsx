@@ -16,10 +16,10 @@ const Navbar = () => {
     setVisible(!visible);
   };
 
-  // Check authentication status on component mount
+  // Check authentication status on component mount and when route changes
   useEffect(() => {
     setIsAuthenticated(authService.isAuthenticated()); // Use authService to check authentication
-  }, []);
+  }, [location]); // Add location as a dependency
 
   useEffect(() => {
     setVisible(false); // Close the drawer on route change
@@ -38,19 +38,25 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 h-19 w-full bg-black shadow-md">
-      <div className="flex justify-between items-center px-4 py-2">
+    <nav className="sticky top-0 z-50 w-full bg-black shadow-md">
+      <div className="flex justify-between items-center px-6 py-4"> {/* Increased height with py-4 */}
         {/* Logo Section */}
-        <div className="logo text-lg font-bold text-white">Brand Here</div>
+        <div className="logo text-xl font-bold text-white tracking-wide">
+          Brand Here
+        </div>
 
         {/* Desktop Menus */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-6">
           <LeftMenu mode="horizontal" />
           {isAuthenticated ? (
             <RightMenu mode="horizontal" onLogout={handleLogout} />
           ) : (
-            <div className="flex gap-2">
-              <Button type="primary" onClick={handleLogin}>
+            <div className="flex gap-4">
+              <Button
+                type="primary"
+                onClick={handleLogin}
+                className="bg-white text-black rounded-lg hover:bg-gray-100 transition-all duration-300"
+              >
                 Login
               </Button>
             </div>
@@ -74,15 +80,26 @@ const Navbar = () => {
         onClose={showDrawer}
         open={visible}
         className="md:hidden bg-black text-white"
-        headerStyle={{ backgroundColor: "black", color: "white" }}
-        bodyStyle={{ backgroundColor: "black", color: "white" }}
+        headerStyle={{
+          backgroundColor: "black",
+          color: "white",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.3)",
+        }}
+        bodyStyle={{
+          backgroundColor: "black",
+          color: "white",
+        }}
       >
         <LeftMenu mode="inline" />
         {isAuthenticated ? (
           <RightMenu mode="inline" onLogout={handleLogout} />
         ) : (
-          <div className="flex flex-col gap-2">
-            <Button type="primary" onClick={handleLogin}>
+          <div className="flex flex-col gap-4">
+            <Button
+              type="primary"
+              onClick={handleLogin}
+              className="bg-white text-black rounded-lg hover:bg-gray-100 transition-all duration-300"
+            >
               Login
             </Button>
           </div>

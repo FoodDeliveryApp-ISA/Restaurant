@@ -24,7 +24,7 @@ const RestaurantLogin: React.FC = () => {
           message: "Login Successful",
           description: "Welcome back!",
         });
-        navigate("/dashboard");
+        navigate("/profile");
       } else {
         message.error("Login failed. Please check your credentials.");
       }

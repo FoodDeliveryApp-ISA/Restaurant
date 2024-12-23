@@ -35,7 +35,7 @@ class AuthService {
         if (response.data.token) {
           console.log("Access Token found:", response.data.accessToken);
           localStorage.setItem("restauran","assa");
-          localStorage.setItem("restaurant", JSON.stringify(response.data.accessToken));
+          localStorage.setItem("restaurant", JSON.stringify(response.data));
           console.log("Access Token found3:", response.data.accessToken);
           ToastNotification.success({
             message: "Login Successful",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Layout, Button } from "antd";
-import { useLocation } from "react-router-dom";
+import { useLocation , Outlet} from "react-router-dom";
 import Sidenav from "./SideNav";
 
 const { Content, Sider } = Layout;
@@ -39,7 +39,10 @@ const Main = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main Content Area */}
       <Layout className="w-full">
-        <Content className="p-6 md:p-8 bg-gray-100">{children}</Content>
+        <Content className="p-6 md:p-8 bg-gray-100">
+          {/* {children} */}
+          <Outlet />
+        </Content>
       </Layout>
 
       {/* Mobile Menu Button */}
