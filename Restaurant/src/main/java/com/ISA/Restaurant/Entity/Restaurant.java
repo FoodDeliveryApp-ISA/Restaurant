@@ -60,7 +60,7 @@ public class Restaurant implements UserDetails {
     @Column(name = "verification_expiration")
     private LocalDateTime verificationCodeExpiresAt;
 
-    @Column(name = "enabled")
+    @Column(name = "enabled" , nullable = false)
     private Boolean enabled = false;
 
     public Restaurant(String restaurantName, String restaurantEmail, String restaurantPassword,

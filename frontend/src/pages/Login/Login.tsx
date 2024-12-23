@@ -18,6 +18,7 @@ const RestaurantLogin: React.FC = () => {
 
     try {
       const response = await authService.login(dataToSend);
+      console.log(response);
       if (response) {
         ToastNotification.success({
           message: "Login Successful",

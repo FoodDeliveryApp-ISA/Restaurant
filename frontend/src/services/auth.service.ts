@@ -22,15 +22,21 @@ interface LoginRequest {
 class AuthService {
   // Login method with type annotations
   login(data: LoginRequest): Promise<Restaurant> {
+
     return axios
       .post<Restaurant>(`${API_URL}login`, data, {
         headers: {
           "Content-Type": "application/json",
         },
+        withCredentials: true, // Send credentials with the request
       })
       .then((response: AxiosResponse<Restaurant>) => {
-        if (response.data.accessToken) {
-          localStorage.setItem("restaurant", JSON.stringify(response.data));
+        console.log("API Response Data2:", response.data);
+        if (response.data.token) {
+          console.log("Access Token found:", response.data.accessToken);
+          localStorage.setItem("restauran","assa");
+          localStorage.setItem("restaurant", JSON.stringify(response.data.accessToken));
+          console.log("Access Token found3:", response.data.accessToken);
           ToastNotification.success({
             message: "Login Successful",
             description: "Welcome back!",
@@ -47,7 +53,7 @@ class AuthService {
         throw error;
       });
   }
-
+  
   isAuthenticated(): boolean {
     const restaurantData = localStorage.getItem("restaurant");
     return !!restaurantData; // Returns true if data exists, otherwise false

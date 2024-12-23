@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout, Button } from "antd";
 import { useLocation } from "react-router-dom";
-import Sidenav from "./Sidenav";
+import Sidenav from "./SideNav";
 
 const { Content, Sider } = Layout;
 

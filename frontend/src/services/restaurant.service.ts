@@ -45,6 +45,7 @@ class AuthService {
             "restaurant",
             JSON.stringify(response.data.data)
           );
+          console.log(response.data)
         }
         return response.data;
       })
