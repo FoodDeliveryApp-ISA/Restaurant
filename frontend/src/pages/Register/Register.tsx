@@ -125,11 +125,6 @@ const RestaurantRegister: React.FC = () => {
 
     try {
       const response = await authService.register(finalData);
-      if (response) {
-        message.success("Registration successful! Welcome.");
-      } else {
-        message.error("Registration failed. Please try again.");
-      }
     } catch (error: any) {
       console.error("Error during registration: ", error);
       message.error(
@@ -151,9 +146,7 @@ const RestaurantRegister: React.FC = () => {
       <Form
         name="restaurant-register"
         layout="vertical"
-        onFinish={
-          currentStep === steps.length - 1 ? handleFinish : handleNext
-        }
+        onFinish={currentStep === steps.length - 1 ? handleFinish : handleNext}
         style={{
           boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
           padding: 20,

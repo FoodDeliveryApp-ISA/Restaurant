@@ -4,7 +4,7 @@ import LeftMenu from "./LeftMenu.tsx";
 import RightMenu from "./RightMenu.tsx";
 import { MenuOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
-import authService from "../../services/auth.service.ts"; // Import authService
+import authService from "../../../services/auth.service.ts"; // Import authService
 
 const Navbar = () => {
   const [visible, setVisible] = useState(false);
@@ -39,30 +39,18 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-black shadow-md">
-      <div className="flex justify-between items-center px-6 py-4"> {/* Increased height with py-4 */}
+      <div className="flex justify-between items-center px-6 py-4">
         {/* Logo Section */}
         <div className="logo text-xl font-bold text-white tracking-wide">
           Brand Here
         </div>
-
         {/* Desktop Menus */}
         <div className="hidden md:flex items-center gap-6">
           <LeftMenu mode="horizontal" />
           {isAuthenticated ? (
             <RightMenu mode="horizontal" onLogout={handleLogout} />
-          ) : (
-            <div className="flex gap-4">
-              <Button
-                type="primary"
-                onClick={handleLogin}
-                className="bg-white text-black rounded-lg hover:bg-gray-100 transition-all duration-300"
-              >
-                Login
-              </Button>
-            </div>
-          )}
+          ) : null}
         </div>
-
         {/* Mobile Menu Button */}
         <Button
           className="md:hidden text-white hover:text-gray-300 focus:outline-none"
@@ -93,17 +81,7 @@ const Navbar = () => {
         <LeftMenu mode="inline" />
         {isAuthenticated ? (
           <RightMenu mode="inline" onLogout={handleLogout} />
-        ) : (
-          <div className="flex flex-col gap-4">
-            <Button
-              type="primary"
-              onClick={handleLogin}
-              className="bg-white text-black rounded-lg hover:bg-gray-100 transition-all duration-300"
-            >
-              Login
-            </Button>
-          </div>
-        )}
+        ) : null}
       </Drawer>
     </nav>
   );

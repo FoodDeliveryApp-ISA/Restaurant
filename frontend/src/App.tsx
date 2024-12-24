@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 
 import Layout from "./components/Layout/Layout";
-import Main from "./components/Main";
+import Main from "./components/Layout/Main";
 import LoginRegister from "./pages/LoginRegister/LoginRegister";
 import Menu from "./pages/Menu/Menu";
 import MenuDetailsPage from "./pages/MenuDetailsPage/MenuDetailsPage";
@@ -33,4 +33,3 @@ const App = () => (
 );
 
 export default App;
-

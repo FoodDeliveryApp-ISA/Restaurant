@@ -4,20 +4,21 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/auth.service";
 import ToastNotification from "../../components/ToastNotification";
+import { z } from "zod";
+import { RestaurantLoginSchema, RestaurantLoginDTO } from "../../schemas/RestaurantLoginSchema";
 
 const RestaurantLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (values: { email: string; password: string }) => {
+  const handleLogin = async (values: RestaurantLoginDTO) => {
     setLoading(true);
-    const dataToSend = {
-      email: values.email,
-      password: values.password,
-    };
 
     try {
-      const response = await authService.login(dataToSend);
+      // Validate with zod schema
+      RestaurantLoginSchema.parse(values);
+
+      const response = await authService.login(values);
       console.log(response);
       if (response) {
         ToastNotification.success({
@@ -29,11 +30,15 @@ const RestaurantLogin: React.FC = () => {
         message.error("Login failed. Please check your credentials.");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-      message.error(
-        error?.response?.data?.message ||
-          "Something went wrong. Please try again."
-      );
+      if (error instanceof z.ZodError) {
+        // Handle zod validation errors
+        message.error(error.errors[0]?.message || "Validation error.");
+      } else {
+        console.error("Error during login:", error);
+        message.error(
+          error?.response?.data?.message || "Something went wrong. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -52,15 +57,15 @@ const RestaurantLogin: React.FC = () => {
           borderRadius: 8,
         }}
       >
-        {/* Username Field */}
+        {/* Email Field */}
         <Form.Item
-          label="email"
+          label="Email"
           name="email"
           rules={[{ required: true, message: "Please enter your email!" }]}
         >
           <Input
             prefix={<UserOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
-            placeholder="Enter your staff username"
+            placeholder="Enter your email"
           />
         </Form.Item>
 

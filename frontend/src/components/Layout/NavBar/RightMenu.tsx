@@ -1,7 +1,7 @@
 import React from "react";
 import { Menu, Avatar, Dropdown } from "antd";
 import { UserOutlined, LogoutOutlined } from "@ant-design/icons";
-import authService from "../../services/auth.service.ts"; // Import authService for logout functionality
+import authService from "../../../services/auth.service.ts"; // Import authService for logout functionality
 import { useNavigate } from "react-router-dom";
 
 const RightMenu = ({ mode }) => {
