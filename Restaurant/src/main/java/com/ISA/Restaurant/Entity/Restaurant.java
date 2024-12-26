@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @Entity
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Restaurant implements UserDetails {
@@ -51,6 +53,9 @@ public class Restaurant implements UserDetails {
     @Column(name = "restaurant_location")
     private String restaurantLocation;
 
+    @Column(name = "cover_image_url")
+    private String coverImageUrl;
+
     @Column(name = "active")
     private Boolean active;
 
@@ -63,9 +68,17 @@ public class Restaurant implements UserDetails {
     @Column(name = "enabled" , nullable = false)
     private Boolean enabled = false;
 
-    public Restaurant(String restaurantName, String restaurantEmail, String restaurantPassword,
-                      String restaurantAddress, String restaurantPhone, String restaurantCity,
-                      String restaurantLocation, Boolean active) {
+    public Restaurant(
+            String restaurantName,
+            String restaurantEmail,
+            String restaurantPassword,
+            String restaurantAddress,
+            String restaurantPhone,
+            String restaurantCity,
+            String restaurantLocation,
+            Boolean active,
+            String coverImageUrl
+    ) {
         this.restaurantName = restaurantName;
         this.restaurantEmail = restaurantEmail;
         this.restaurantPassword = restaurantPassword;
@@ -75,6 +88,28 @@ public class Restaurant implements UserDetails {
         this.restaurantLocation = restaurantLocation;
         this.active = active;
         this.enabled = false; // Default to false until verified
+        this.coverImageUrl = "";
+    }
+
+    public Restaurant(
+            String restaurantName,
+            String restaurantEmail,
+            String restaurantAddress,
+            String restaurantPhone,
+            String restaurantCity,
+            String restaurantLocation,
+            Boolean active,
+            String coverImageUrl
+    )
+    {
+        this.restaurantName = restaurantName;
+        this.restaurantEmail = restaurantEmail;
+        this.restaurantAddress = restaurantAddress;
+        this.restaurantPhone = restaurantPhone;
+        this.restaurantCity = restaurantCity;
+        this.restaurantLocation = restaurantLocation;
+        this.active = active;
+        this.coverImageUrl = coverImageUrl;
     }
 
     @Override

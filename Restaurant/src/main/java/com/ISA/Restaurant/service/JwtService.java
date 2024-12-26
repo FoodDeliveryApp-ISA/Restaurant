@@ -1,10 +1,9 @@
 package com.ISA.Restaurant.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -15,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+@Slf4j
 @Service
 public class JwtService {
 
@@ -44,8 +44,12 @@ public class JwtService {
      * @param <T> the type of the claim
      * @return the resolved claim
      */
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public <T> T extractClaim(
+            String token,
+            Function<Claims, T> claimsResolver)
+    {
         final Claims claims = extractAllClaims(token);
+        log.info("claims: {}", claims);
         return claimsResolver.apply(claims);
     }
 
@@ -55,6 +59,7 @@ public class JwtService {
      * @return the generated token
      */
     public String generateToken(UserDetails userDetails) {
+
         return generateToken(new HashMap<>(), userDetails);
     }
 
@@ -106,6 +111,7 @@ public class JwtService {
      * @return true if expired, false otherwise
      */
     private boolean isTokenExpired(String token) {
+
         return extractExpiration(token).before(new Date());
     }
 
@@ -115,6 +121,7 @@ public class JwtService {
      * @return the expiration date
      */
     private Date extractExpiration(String token) {
+
         return extractClaim(token, Claims::getExpiration);
     }
 
@@ -124,12 +131,34 @@ public class JwtService {
      * @return the claims
      */
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSignInKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            log.info("Token: {}", token);
+            log.info("Signing Key: {}", getSignInKey());
+
+            // Parse JWT token
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey())  // Set the signing key
+                    .build()
+                    .parseClaimsJws(token)         // Parse the JWT
+                    .getBody();                    // Get the claims body
+        } catch (ExpiredJwtException e) {
+            log.error("Token is expired: {}", e.getMessage());
+            throw new RuntimeException("Token has expired");
+        } catch (UnsupportedJwtException e) {
+            log.error("Unsupported JWT: {}", e.getMessage());
+            throw new RuntimeException("Unsupported JWT");
+        } catch (MalformedJwtException e) {
+            log.error("Malformed JWT: {}", e.getMessage());
+            throw new RuntimeException("Malformed JWT token");
+        } catch (SignatureException e) {
+            log.error("Signature validation failed: {}", e.getMessage());
+            throw new RuntimeException("Invalid JWT signature");
+        } catch (JwtException e) {
+            log.error("JWT parsing error: {}", e.getMessage());
+            throw new RuntimeException("Error parsing JWT token");
+        }
     }
+
 
     /**
      * Retrieves the signing key based on the secret key.

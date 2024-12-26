@@ -1,8 +1,8 @@
 package com.ISA.Restaurant.service;
 
-import com.ISA.Restaurant.Dto.RegisterRequest;
-import com.ISA.Restaurant.Dto.LoginRequest;
-import com.ISA.Restaurant.Dto.VerifyRestaurantDto;
+import com.ISA.Restaurant.Dto.Request.RegisterRequest;
+import com.ISA.Restaurant.Dto.Request.LoginRequest;
+import com.ISA.Restaurant.Dto.Request.VerifyRestaurantDto;
 import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.repo.RestaurantRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,8 @@ public class AuthenticationService {
                 input.getRestaurantPhone(),
                 input.getRestaurantCity(),
                 input.getRestaurantLocation(),
-                true
+                true ,
+                ""
         );
 //        restaurant.setVerificationCode(generateVerificationCode());
 //        restaurant.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
@@ -57,8 +58,7 @@ public class AuthenticationService {
     }
 
     public Restaurant authenticate(LoginRequest input) {
-        log.info("Authenticating user {}", input);
-        System.out.println("Attempting to authenticate restaurant with email: " + input.getEmail());
+        log.info("Authenticating user {}", input.getEmail());
         Restaurant restaurant = restaurantRepository.findByRestaurantEmail(input.getEmail())
                 .orElseThrow(() -> {
                     System.err.println("Restaurant with email " + input.getEmail() + " not found.");
