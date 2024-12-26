@@ -1,21 +1,21 @@
 package com.ISA.Restaurant.Entity;
 
+import com.ISA.Restaurant.Dto.Request.RequestUpdatedRestaurantDto;
+import com.ISA.Restaurant.Dto.RegisterRequest;
+import com.ISA.Restaurant.Dto.RestaurantDto;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class Restaurant implements UserDetails {
 
@@ -37,49 +37,91 @@ public class Restaurant implements UserDetails {
     @NotBlank
     private String restaurantPassword;
 
-    @Column(name = "restaurant_address", nullable = false)
+    @Column(name = "restaurant_address")
     private String restaurantAddress;
 
-    @Column(name = "restaurant_phone", nullable = false)
-    @NotBlank
+    @Column(name = "restaurant_phone")
     private String restaurantPhone;
 
-    @Column(name = "restaurant_city", nullable = false)
-    @NotBlank
+    @Column(name = "restaurant_city")
     private String restaurantCity;
 
     @Column(name = "restaurant_location")
     private String restaurantLocation;
 
-    @Column(name = "active")
-    private Boolean active;
+    @Column(name = "active", nullable = false)
+    private Boolean active = false;
 
-    @Column(name = "verification_code")
-    private String verificationCode;
+    @Column(name = "cover_image_url")
+    private String coverImageUrl;
 
-    @Column(name = "verification_expiration")
-    private LocalDateTime verificationCodeExpiresAt;
-
-    @Column(name = "enabled" , nullable = false)
+    @Column(name = "enabled", nullable = false)
     private Boolean enabled = false;
 
-    public Restaurant(String restaurantName, String restaurantEmail, String restaurantPassword,
-                      String restaurantAddress, String restaurantPhone, String restaurantCity,
-                      String restaurantLocation, Boolean active) {
+    // Constructor for RegisterRequest
+    public Restaurant(RegisterRequest registerRequest) {
+        this.restaurantName = registerRequest.getRestaurantName();
+        this.restaurantEmail = registerRequest.getRestaurantEmail();
+        this.restaurantPassword = registerRequest.getRestaurantPassword();
+        this.restaurantAddress = registerRequest.getRestaurantAddress();
+        this.restaurantPhone = registerRequest.getRestaurantPhone();
+        this.restaurantCity = registerRequest.getRestaurantCity();
+        this.restaurantLocation = registerRequest.getRestaurantLocation();
+        this.active = false; // Default to inactive on registration
+        this.enabled = true; // Default to enabled
+    }
+
+    public Restaurant(
+            @NotBlank String restaurantName,
+            @NotBlank @Email String restaurantEmail,
+            String restaurantAddress,
+            String restaurantPhone,
+            String restaurantCity,
+            String restaurantLocation,
+            Boolean active,
+            String coverImageUrl
+    ) {
         this.restaurantName = restaurantName;
         this.restaurantEmail = restaurantEmail;
-        this.restaurantPassword = restaurantPassword;
         this.restaurantAddress = restaurantAddress;
         this.restaurantPhone = restaurantPhone;
         this.restaurantCity = restaurantCity;
         this.restaurantLocation = restaurantLocation;
         this.active = active;
-        this.enabled = false; // Default to false until verified
+        this.coverImageUrl = coverImageUrl;
+    }
+
+    // Method to update from RequestUpdatedRestaurantDto
+    public void updateFromDto(RequestUpdatedRestaurantDto dto) {
+        this.restaurantName = dto.getRestaurantName();
+        this.restaurantEmail = dto.getRestaurantEmail();
+        this.restaurantAddress = dto.getRestaurantAddress();
+        this.restaurantPhone = dto.getRestaurantPhone();
+        this.restaurantCity = dto.getRestaurantCity();
+        this.restaurantLocation = dto.getRestaurantLocation();
+        this.active = dto.getActive();
+        this.coverImageUrl = dto.getCoverImageUrl();
+    }
+
+    // Method to convert to RestaurantDto
+    public RestaurantDto toDto() {
+        return new RestaurantDto(
+                this.restaurantId,
+                this.restaurantName,
+                this.restaurantEmail,
+                this.restaurantAddress,
+                this.restaurantPhone,
+                this.restaurantCity,
+                this.restaurantLocation,
+                this.active,
+                this.coverImageUrl,
+                this.enabled
+        );
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return Collections.emptyList();
     }
 
     @Override
@@ -112,3 +154,5 @@ public class Restaurant implements UserDetails {
         return this.enabled;
     }
 }
+
+
