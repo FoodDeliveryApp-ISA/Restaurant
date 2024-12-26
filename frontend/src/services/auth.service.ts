@@ -21,7 +21,8 @@ interface LoginRequest {
 
 class AuthService {
   // Login method with type annotations
-  login(data: LoginRequest): Promise<Restaurant> {
+   // Login method with type annotations
+   login(data: LoginRequest): Promise<Restaurant> {
 
     return axios
       .post<Restaurant>(`${API_URL}login`, data, {
@@ -53,7 +54,41 @@ class AuthService {
         throw error;
       });
   }
+
+  // Register method with auto login after successful registration
+  register(data: Restaurant): Promise<AxiosResponse<Restaurant>> {
+    return axios
+      .post<Restaurant>(`${API_URL}signup`, data)
+      .then((response: AxiosResponse<Restaurant>) => {
+        ToastNotification.success({
+          message: "Registration Successful",
+          description: "Welcome! Your account has been created.",
+        });
   
+        // Assuming the response contains the restaurant data, and `restaurantId` is part of it
+        const restaurantId = response.data.restaurantId; // Adjust according to the actual response structure
+  
+        // Store the restaurantId in localStorage
+        localStorage.setItem('restaurantId', restaurantId.toString());
+  
+        // Automatically log the user in after registration
+        const loginData: LoginRequest = {
+          email: data.restaurantEmail,
+          password: data.restaurantPassword,
+        };
+        return this.login(loginData); // Trigger login after successful registration
+      })
+      .catch((error) => {
+        ToastNotification.error({
+          message: "Registration Failed",
+          description:
+            error.response?.data?.message || "An error occurred during registration.",
+        });
+        throw error;
+      });
+  }
+  
+
   isAuthenticated(): boolean {
     const restaurantData = localStorage.getItem("restaurant");
     return !!restaurantData; // Returns true if data exists, otherwise false
@@ -65,27 +100,6 @@ class AuthService {
       message: "Logged Out",
       description: "You have successfully logged out.",
     });
-  }
-
-  register(data: Restaurant): Promise<AxiosResponse<Restaurant>> {
-    return axios
-      .post<Restaurant>(`${API_URL}signup`, data)
-      .then((response: AxiosResponse<Restaurant>) => {
-        ToastNotification.success({
-          message: "Registration Successful",
-          description: "Welcome! Your account has been created.",
-        });
-        return response.data;
-      })
-      .catch((error) => {
-        ToastNotification.error({
-          message: "Registration Failed",
-          description:
-            error.response?.data?.message ||
-            "An error occurred during registration.",
-        });
-        throw error;
-      });
   }
 
   getCurrentRestaurant(): Restaurant | null {

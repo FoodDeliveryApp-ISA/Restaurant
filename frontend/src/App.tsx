@@ -1,5 +1,5 @@
 import {
-  BrowserRouter as Router,
+  BrowserRouter,
   Routes,
   Route,
   Navigate,
@@ -11,25 +11,37 @@ import LoginRegister from "./pages/LoginRegister/LoginRegister";
 import Menu from "./pages/Menu/Menu";
 import MenuDetailsPage from "./pages/MenuDetailsPage/MenuDetailsPage";
 import Profile from "./pages/Profile/Profile";
+import NotFoundPage from "./pages/404"; // Import the 404 component
+import ForbiddenPage from "./pages/403"; // Import the 403 component
+import PrivateRoute from "./routes/PrivateRoute";
 
 const App = () => (
   <div className="App">
-    <Router>
+    <BrowserRouter>
       <Routes>
+        {/* Routes with Layout */}
         <Route element={<Layout />}>
           <Route path="/" element={<LoginRegister />} />
           <Route element={<Main />}>
-            <Route path="/menu" element={<Menu />} />
-            <Route path="/menu/:id" element={<MenuDetailsPage />} />
-            <Route path="/profile" element={<Profile />} />
+            {/* Private Routes */}
+            <Route path="/menu" element={<PrivateRoute element={<Menu />} />} />
+            <Route
+              path="/menu/:id"
+              element={<PrivateRoute element={<MenuDetailsPage />} />}
+            />
+            <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
           </Route>
-        </Route>
 
-        {/* Redirect from unknown routes to / */}
-        <Route path="*" element={<Navigate to="/" />} />
+          {/* 403 Forbidden Route */}
+          <Route path="/403" element={<ForbiddenPage />} />
+
+          {/* Catch-all route for 404 */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Routes>
-    </Router>
+    </BrowserRouter>
   </div>
 );
 
 export default App;
+

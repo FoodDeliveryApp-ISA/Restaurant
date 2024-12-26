@@ -54,6 +54,7 @@ public class RestaurantController {
         }
     }
 
+
     // Endpoint for deleting a restaurant
     @DeleteMapping("{restaurantId}")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable int restaurantId) {

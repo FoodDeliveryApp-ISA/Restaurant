@@ -7,6 +7,7 @@ import com.ISA.Restaurant.service.RestaurentService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -64,18 +65,24 @@ public class RestaurentImpl implements RestaurentService {
 
     @Override
     public RestaurantDto updateRestaurant(int restaurantId, RestaurantDto restaurantDto) {
-        if (repository.existsById(restaurantId)) {
-            Restaurant restaurant = new Restaurant(
-                    restaurantDto.getRestaurantName(),
-                    restaurantDto.getRestaurantEmail(),
-                    restaurantDto.getRestaurantPassword(),
-                    restaurantDto.getRestaurantAddress(),
-                    restaurantDto.getRestaurantPhone(),
-                    restaurantDto.getRestaurantCity(),
-                    restaurantDto.getRestaurantLocation(),
-                    restaurantDto.getActive()
-            );
-            Restaurant updatedRestaurant = repository.save(restaurant);
+        Optional<Restaurant> existingRestaurantOpt = repository.findById(restaurantId);
+        if (existingRestaurantOpt.isPresent()) {
+            Restaurant existingRestaurant = existingRestaurantOpt.get();
+
+            // Update fields
+            existingRestaurant.setRestaurantName(restaurantDto.getRestaurantName());
+            existingRestaurant.setRestaurantEmail(restaurantDto.getRestaurantEmail());
+            existingRestaurant.setRestaurantPassword(restaurantDto.getRestaurantPassword());
+            existingRestaurant.setRestaurantAddress(restaurantDto.getRestaurantAddress());
+            existingRestaurant.setRestaurantPhone(restaurantDto.getRestaurantPhone());
+            existingRestaurant.setRestaurantCity(restaurantDto.getRestaurantCity());
+            existingRestaurant.setRestaurantLocation(restaurantDto.getRestaurantLocation());
+            existingRestaurant.setActive(restaurantDto.getActive());
+
+            // Save updated restaurant
+            Restaurant updatedRestaurant = repository.save(existingRestaurant);
+
+            // Convert to DTO and return
             return new RestaurantDto(
                     updatedRestaurant.getRestaurantId(),
                     updatedRestaurant.getRestaurantName(),
@@ -88,8 +95,9 @@ public class RestaurentImpl implements RestaurentService {
                     updatedRestaurant.getActive()
             );
         }
-        return null; // return null if not found
+        return null; // Return null if restaurant with the given ID doesn't exist
     }
+
 
     @Override
     public boolean deleteRestaurant(int restaurantId) {

@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 
 // API URL for the backend
-const API_URL = "http://localhost:8081/auth/";
+const API_URL = "http://localhost:8081/restaurants/";
 
 // Interfaces for the Restaurant and Response data
 interface Restaurant {
@@ -29,68 +29,6 @@ interface RestaurantsResponse {
 }
 
 class AuthService {
-  // Login method with type annotations
-  login(
-    restaurantEmail: string,
-    restaurantPassword: string
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios
-      .post<RestaurantResponse>(`${API_URL}signin`, {
-        restaurantEmail,
-        restaurantPassword,
-      })
-      .then((response: AxiosResponse<RestaurantResponse>) => {
-        if (response.data.data.accessToken) {
-          localStorage.setItem(
-            "restaurant",
-            JSON.stringify(response.data.data)
-          );
-          console.log(response.data)
-        }
-        return response.data;
-      })
-      .catch((error) => {
-        console.error("Login error:", error);
-        throw error; // Propagate the error
-      });
-  }
-
-  // Logout method
-  logout(): void {
-    localStorage.removeItem("restaurant");
-  }
-
-  // Register method with type annotations
-  register(
-    restaurantName: string,
-    restaurantEmail: string,
-    restaurantPassword: string,
-    restaurantPhone: string,
-    restaurantCity: string,
-    restaurantLocation: string
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios
-      .post<RestaurantResponse>(`${API_URL}signup`, {
-        restaurantName,
-        restaurantEmail,
-        restaurantPassword,
-        restaurantPhone,
-        restaurantCity,
-        restaurantLocation,
-      })
-      .then((response: AxiosResponse<RestaurantResponse>) => response.data)
-      .catch((error) => {
-        console.error("Registration error:", error);
-        throw error; // Propagate the error
-      });
-  }
-
-  // Create a new restaurant
-  createRestaurant(
-    data: Restaurant
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios.post<RestaurantResponse>(`${API_URL}restaurants`, data);
-  }
 
   // Update restaurant details
   updateRestaurant(
@@ -98,7 +36,7 @@ class AuthService {
     data: Partial<Restaurant>
   ): Promise<AxiosResponse<RestaurantResponse>> {
     return axios.put<RestaurantResponse>(
-      `${API_URL}restaurants/${restaurantId}`,
+      `${API_URL}${restaurantId}`,
       data
     );
   }
@@ -108,13 +46,13 @@ class AuthService {
     restaurantId: string
   ): Promise<AxiosResponse<RestaurantResponse>> {
     return axios.get<RestaurantResponse>(
-      `${API_URL}restaurants/${restaurantId}`
+      `${API_URL}${restaurantId}`
     );
   }
 
   // Get all restaurants
   getAllRestaurants(): Promise<AxiosResponse<RestaurantsResponse>> {
-    return axios.get<RestaurantsResponse>(`${API_URL}restaurants`);
+    return axios.get<RestaurantsResponse>(`${API_URL}`);
   }
 
   // Delete a restaurant by ID
@@ -122,7 +60,7 @@ class AuthService {
     restaurantId: string
   ): Promise<AxiosResponse<RestaurantResponse>> {
     return axios.delete<RestaurantResponse>(
-      `${API_URL}restaurants/${restaurantId}`
+      `${API_URL}${restaurantId}`
     );
   }
 

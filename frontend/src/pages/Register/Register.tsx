@@ -7,6 +7,7 @@ import {
   HomeOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import authService from "../../services/auth.service";
 
 const { Step } = Steps;
@@ -15,6 +16,7 @@ const RestaurantRegister: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const steps = [
     {
@@ -125,6 +127,7 @@ const RestaurantRegister: React.FC = () => {
 
     try {
       const response = await authService.register(finalData);
+      navigate("/profile");
     } catch (error: any) {
       console.error("Error during registration: ", error);
       message.error(

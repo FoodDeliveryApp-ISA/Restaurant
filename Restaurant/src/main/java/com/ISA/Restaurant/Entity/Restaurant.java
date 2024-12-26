@@ -28,7 +28,7 @@ public class Restaurant implements UserDetails {
     @NotBlank
     private String restaurantName;
 
-    @Column(name = "restaurant_email", nullable = false, unique = true)
+    @Column(name = "restaurant_email", nullable = false)
     @NotBlank
     @Email
     private String restaurantEmail;

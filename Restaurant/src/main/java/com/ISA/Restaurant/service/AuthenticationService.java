@@ -5,6 +5,7 @@ import com.ISA.Restaurant.Dto.LoginRequest;
 import com.ISA.Restaurant.Dto.VerifyRestaurantDto;
 import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.repo.RestaurantRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
+@Slf4j
 @Service
 public class AuthenticationService {
 
@@ -55,6 +57,7 @@ public class AuthenticationService {
     }
 
     public Restaurant authenticate(LoginRequest input) {
+        log.info("Authenticating user {}", input);
         System.out.println("Attempting to authenticate restaurant with email: " + input.getEmail());
         Restaurant restaurant = restaurantRepository.findByRestaurantEmail(input.getEmail())
                 .orElseThrow(() -> {
