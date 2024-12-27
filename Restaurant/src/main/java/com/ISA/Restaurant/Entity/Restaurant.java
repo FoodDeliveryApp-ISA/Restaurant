@@ -59,6 +59,9 @@ public class Restaurant implements UserDetails {
     @Column(name = "active")
     private Boolean active;
 
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Menu> menus;
+
     @Column(name = "verification_code")
     private String verificationCode;
 
@@ -146,4 +149,15 @@ public class Restaurant implements UserDetails {
     public boolean isEnabled() {
         return this.enabled;
     }
+
+    @Override
+    public String toString() {
+        return "Restaurant{" +
+                "id=" + restaurantId +
+                ", name='" + restaurantName + '\'' +
+                ", email='" + restaurantEmail + '\'' +
+                '}';
+    }
+
+
 }

@@ -10,10 +10,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RequestUpdatedMenuDto {
-    private Long menuId;
     private String menuName;
     private String menuDescription;
     private Boolean active;
-    private List<RequestUpdatedMenuItemDto> items; // Nested DTO for updating menu items
+//    private List<RequestUpdatedMenuItemDto> items; // Nested DTO for updating menu items
     private String coverImageUrl;
 }

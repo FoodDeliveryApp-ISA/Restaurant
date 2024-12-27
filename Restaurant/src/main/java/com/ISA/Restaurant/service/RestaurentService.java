@@ -4,7 +4,7 @@ import com.ISA.Restaurant.Dto.Request.RegisterRequest;
 import com.ISA.Restaurant.Dto.RestaurantDto;
 
 public interface RestaurentService {
-    RestaurantDto saveRestaurent(RegisterRequest registerRequest);
+//    RestaurantDto saveRestaurent(RegisterRequest registerRequest);
 
     RestaurantDto getRestaurantById(int restaurantId);
 

@@ -48,31 +48,31 @@ public class RestaurentImpl implements RestaurentService {
         );
     }
 
-    @Override
-    public RestaurantDto saveRestaurent(RegisterRequest registerRequest) {
-        System.out.println("Restaurant to save: " + registerRequest);
-
-        // Hashing the password
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String hashedPassword = encoder.encode(registerRequest.getRestaurantPassword());
-
-        Restaurant restaurant = new Restaurant(
-                registerRequest.getRestaurantName(),
-                registerRequest.getRestaurantEmail(),
-                hashedPassword,
-                registerRequest.getRestaurantAddress(),
-                registerRequest.getRestaurantPhone(),
-                registerRequest.getRestaurantCity(),
-                registerRequest.getRestaurantLocation(),
-                false, // Active is set to false by default
-                "" // Default cover image URL
-        );
-
-        Restaurant savedRestaurant = repository.save(restaurant);
-        System.out.println("Saved Restaurant: " + savedRestaurant);
-
-        return mapEntityToDto(savedRestaurant);
-    }
+//    @Override
+//    public RestaurantDto saveRestaurent(RegisterRequest registerRequest) {
+//        System.out.println("Restaurant to save: " + registerRequest);
+//
+//        // Hashing the password
+//        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+//        String hashedPassword = encoder.encode(registerRequest.getRestaurantPassword());
+//
+//        Restaurant restaurant = new Restaurant(
+//                registerRequest.getRestaurantName(),
+//                registerRequest.getRestaurantEmail(),
+//                hashedPassword,
+//                registerRequest.getRestaurantAddress(),
+//                registerRequest.getRestaurantPhone(),
+//                registerRequest.getRestaurantCity(),
+//                registerRequest.getRestaurantLocation(),
+//                false, // Active is set to false by default
+//                "" // Default cover image URL
+//        );
+//
+//        Restaurant savedRestaurant = repository.save(restaurant);
+//        System.out.println("Saved Restaurant: " + savedRestaurant);
+//
+//        return mapEntityToDto(savedRestaurant);
+//    }
 
     @Override
     public RestaurantDto getRestaurantById(int restaurantId) {

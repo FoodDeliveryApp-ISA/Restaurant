@@ -1,6 +1,6 @@
 package com.ISA.Restaurant.Dto;
 
-import com.ISA.Restaurant.Dto.MenuItemDto;
+//import com.ISA.Restaurant.Dto.MenuItemDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,7 @@ public class MenuDto {
     private String menuDescription;
     private Boolean active;
     private String coverImageUrl;
-    private List<MenuItemDto> items; // Nested DTO for menu items
+//    private List<MenuItemDto> items; // Nested DTO for menu items
 }
 
 

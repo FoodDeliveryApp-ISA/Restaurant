@@ -19,17 +19,18 @@ public class Menu {
     private String menuDescription;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id", nullable = false)
+    @JoinColumn(name = "restaurant_id", nullable = false) // Maps the column in Menu table
     private Restaurant restaurant;
 
-    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MenuItem> items;
+//    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
+////    private List<MenuItem> items;
 
     @Column(name = "cover_image_url")
     private String coverImageUrl;
 
     @Column(name = "active")
     private Boolean active;
+
 
     @Override
     public String toString() {

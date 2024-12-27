@@ -1,7 +1,11 @@
 package com.ISA.Restaurant.service;
 
 import com.ISA.Restaurant.Dto.MenuDto;
+import com.ISA.Restaurant.Dto.Request.RequestMenuSaveDto;
+import com.ISA.Restaurant.Dto.Request.RequestUpdatedMenuDto;
 import com.ISA.Restaurant.Entity.Menu;
+import com.ISA.Restaurant.Entity.Restaurant;
+
 import java.util.List;
 
 public interface MenuService {
@@ -12,7 +16,7 @@ public interface MenuService {
      * @param menuDto the MenuDto object to be saved.
      * @return the saved MenuDto.
      */
-    MenuDto saveMenu(MenuDto menuDto);
+    MenuDto saveMenu(RequestMenuSaveDto menuDto , Restaurant restaurant);
 
     /**
      * Get a menu by ID.
@@ -36,7 +40,7 @@ public interface MenuService {
      * @param menuDto the MenuDto object containing updated data.
      * @return the updated MenuDto, or null if the menu does not exist.
      */
-    MenuDto updateMenu(long menuId, MenuDto menuDto) ;
+    MenuDto updateMenu(long menuId, RequestUpdatedMenuDto menuDto) ;
 
     /**
      * Delete a menu by ID.
@@ -45,4 +49,6 @@ public interface MenuService {
      * @return true if the menu was successfully deleted, false otherwise.
      */
     boolean deleteMenu(long menuId) ;
+
+    List<MenuDto> getMenusByRestaurant(Restaurant authenticatedRestaurant);
 }
