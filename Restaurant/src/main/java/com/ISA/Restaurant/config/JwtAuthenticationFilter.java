@@ -1,10 +1,11 @@
 package com.ISA.Restaurant.config;
 
-import com.ISA.Restaurant.utils.JwtUtil;
+import com.ISA.Restaurant.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,19 +19,20 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final HandlerExceptionResolver handlerExceptionResolver;
-    private final JwtUtil jwtUtil; // Changed to JwtUtil
+    private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(
-            JwtUtil jwtUtil, // Changed to JwtUtil
+            JwtService jwtService,
             UserDetailsService userDetailsService,
             HandlerExceptionResolver handlerExceptionResolver
     ) {
-        this.jwtUtil = jwtUtil; // Updated to JwtUtil
+        this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.handlerExceptionResolver = handlerExceptionResolver;
     }
@@ -42,36 +44,53 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
+        log.info("Authorization header: {}", authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.info("No Bearer token found in Authorization header.");
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtUtil.getUsernameFromToken(jwt); // Use JwtUtil's method
+            final String jwt = authHeader.substring(7); // Extract the token
+            log.info("Extracted JWT: {}", jwt);
 
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            final String userEmail = jwtService.extractUsername(jwt); // Extract email/username from the token
+            log.info("Extracted user email: {}", userEmail);
 
-            if (userEmail != null && authentication == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            // Check if user is already authenticated
+            Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+            if (userEmail != null && existingAuth == null) {
+                log.info("No existing authentication found, validating token...");
 
-                if (jwtUtil.validateToken(jwt, userDetails)) { // Use JwtUtil's method
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+                log.info("Loaded UserDetails: {}", userDetails);
+
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    log.info("JWT is valid. Setting authentication context.");
+
+                    // Create an authentication token
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities()
                     );
 
+                    // Set authentication details
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // Set the authentication in the security context
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.info("Authentication context updated successfully.");
+                } else {
+                    log.warn("Invalid JWT token.");
                 }
             }
-
             filterChain.doFilter(request, response);
-        } catch (Exception exception) {
-            handlerExceptionResolver.resolveException(request, response, null, exception);
+        } catch (Exception e) {
+            log.error("Exception occurred while processing JWT: {}", e.getMessage(), e);
+            handlerExceptionResolver.resolveException(request, response, null, e);
         }
     }
 }

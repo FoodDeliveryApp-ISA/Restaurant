@@ -6,9 +6,11 @@ import com.ISA.Restaurant.Dto.Request.VerifyRestaurantDto;
 import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.service.AuthenticationService;
 import com.ISA.Restaurant.service.JwtService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RequestMapping("/auth")
 @RestController
 public class AuthenticationController {
@@ -25,6 +27,7 @@ public class AuthenticationController {
     // Test endpoint for checking the API
     @GetMapping("/test")
     public String test() {
+        log.info("hit test");
         return "test";
     }
 

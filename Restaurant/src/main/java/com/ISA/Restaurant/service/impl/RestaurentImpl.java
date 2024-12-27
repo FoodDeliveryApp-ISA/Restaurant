@@ -96,7 +96,6 @@ public class RestaurentImpl implements RestaurentService {
         // Update fields
         existingRestaurant.setRestaurantName(restaurantDto.getRestaurantName());
         existingRestaurant.setRestaurantEmail(restaurantDto.getRestaurantEmail());
-        existingRestaurant.setRestaurantPassword(restaurantDto.getRestaurantPassword());
         existingRestaurant.setRestaurantAddress(restaurantDto.getRestaurantAddress());
         existingRestaurant.setRestaurantPhone(restaurantDto.getRestaurantPhone());
         existingRestaurant.setRestaurantCity(restaurantDto.getRestaurantCity());
