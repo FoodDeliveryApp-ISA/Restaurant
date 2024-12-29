@@ -1,74 +1,55 @@
 import axios, { AxiosResponse } from "axios";
+import authHeader from "./auth-header"; // Adjust the path as necessary
+import {
+  RestaurantResponseDto,
+  RequestUpdatedRestaurantDto,
+} from "./dto/restaurant.dto";
 
 // API URL for the backend
 const API_URL = "http://localhost:8081/restaurants/";
 
-// Interfaces for the Restaurant and Response data
-interface Restaurant {
-  restaurantName: string;
-  restaurantEmail: string;
-  restaurantPassword: string;
-  restaurantAddress: string;
-  restaurantPhone: string;
-  restaurantCity: string;
-  restaurantLocation: string;
-  enabled: boolean;
-  accessToken?: string;
-}
-
-interface RestaurantResponse {
-  message: string;
-  status: string;
-  data: Restaurant;
-}
-
-interface RestaurantsResponse {
-  message: string;
-  status: string;
-  data: Restaurant[];
-}
-
-class AuthService {
-
-  // Update restaurant details
-  updateRestaurant(
-    restaurantId: string,
-    data: Partial<Restaurant>
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios.put<RestaurantResponse>(
-      `${API_URL}${restaurantId}`,
-      data
-    );
+class RestaurantService {
+  // Get details of the authenticated restaurant
+  async getAuthenticatedRestaurant(): Promise<RestaurantResponseDto | null> {
+    try {
+      const response: AxiosResponse<RestaurantResponseDto> = await axios.get(
+        `${API_URL}auth`,
+        { headers: authHeader() } // Include the auth header
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching authenticated restaurant details:", error);
+      return null;
+    }
   }
 
-  // Get a specific restaurant by ID
-  getRestaurantById(
-    restaurantId: string
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios.get<RestaurantResponse>(
-      `${API_URL}${restaurantId}`
-    );
+  // Update the authenticated restaurant
+  async updateAuthenticatedRestaurant(
+    restaurantDto: RequestUpdatedRestaurantDto
+  ): Promise<RestaurantResponseDto | null> {
+    try {
+      const response: AxiosResponse<RestaurantResponseDto> = await axios.put(
+        `${API_URL}auth`,
+        restaurantDto,
+        { headers: authHeader() } // Include the auth header
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating authenticated restaurant:", error);
+      return null;
+    }
   }
 
-  // Get all restaurants
-  getAllRestaurants(): Promise<AxiosResponse<RestaurantsResponse>> {
-    return axios.get<RestaurantsResponse>(`${API_URL}`);
-  }
-
-  // Delete a restaurant by ID
-  deleteRestaurant(
-    restaurantId: string
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios.delete<RestaurantResponse>(
-      `${API_URL}${restaurantId}`
-    );
-  }
-
-  // Get current restaurant method with type annotations
-  getCurrentRestaurant(): Restaurant | null {
-    const restaurant = localStorage.getItem("restaurant");
-    return restaurant ? (JSON.parse(restaurant) as Restaurant) : null;
+  // Delete the authenticated restaurant
+  async deleteAuthenticatedRestaurant(): Promise<boolean> {
+    try {
+      await axios.delete(`${API_URL}auth`, { headers: authHeader() }); // Include the auth header
+      return true;
+    } catch (error) {
+      console.error("Error deleting authenticated restaurant:", error);
+      return false;
+    }
   }
 }
 
-export default new AuthService();
+export default new RestaurantService();

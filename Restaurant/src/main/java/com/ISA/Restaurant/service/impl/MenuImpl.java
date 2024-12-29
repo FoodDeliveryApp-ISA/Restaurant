@@ -30,8 +30,6 @@ public class MenuImpl implements MenuService {
         if (dto instanceof RequestMenuSaveDto saveDto) {
             menu.setMenuName(saveDto.getMenuName());
             menu.setMenuDescription(saveDto.getMenuDescription());
-            menu.setActive(saveDto.getActive());
-            menu.setCoverImageUrl(saveDto.getCoverImageUrl());
         } else if (dto instanceof RequestUpdatedMenuDto updateDto) {
             menu.setMenuName(updateDto.getMenuName());
             menu.setMenuDescription(updateDto.getMenuDescription());
@@ -96,8 +94,12 @@ public class MenuImpl implements MenuService {
 
     @Override
     public MenuDto saveMenu(RequestMenuSaveDto menuDto, Restaurant restaurant) {
-        Menu menu = mapDtoToEntity(menuDto);
+        Menu menu = new Menu();
+        log.info("RequestMenuSaveDto: {}", menuDto);
+        menu.setMenuName(menuDto.getMenuName());
+        menu.setMenuDescription(menuDto.getMenuDescription());
         menu.setRestaurant(restaurant);
+        menu.setActive(false);
         log.info("Menu saved");
         log.info("Restaurant {}", restaurant);
         log.info("Menu {}", menu);

@@ -14,6 +14,7 @@ public class Menu {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long menuId;
 
+    @Column(name = "menu_name", nullable = false)
     private String menuName;
 
     private String menuDescription;
@@ -22,8 +23,8 @@ public class Menu {
     @JoinColumn(name = "restaurant_id", nullable = false) // Maps the column in Menu table
     private Restaurant restaurant;
 
-//    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
-////    private List<MenuItem> items;
+    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MenuItem> items;
 
     @Column(name = "cover_image_url")
     private String coverImageUrl;

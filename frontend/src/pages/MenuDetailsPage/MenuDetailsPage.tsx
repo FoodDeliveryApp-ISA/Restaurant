@@ -1,90 +1,27 @@
-import React, { useState } from "react";
-import { Card, Button } from "antd";
-import { useParams } from "react-router-dom";
-import MenuItemsTable from "../../components/MenuItemsTable";
-import AddModal from "../../components/AddModal";
-import EditModal from "../../components/EditModal";
+// src/pages/MenuDetailsPage/MenuDetailsPage.tsx
 
-interface MenuItem {
-  key: string;
-  name: string;
-  description: string;
-  active: boolean;
-}
+import React from "react";
+import { Button } from "antd";
+import MenuItemsTable from "./components/MenuItemsTable";
+import { useParams } from "react-router-dom";
 
 const MenuDetailsPage: React.FC = () => {
-  const { id } = useParams();
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    {
-      key: "1",
-      name: "Pancakes",
-      description: "Fluffy pancakes",
-      active: true,
-    },
-  ]);
+  // Extract menuId from the URL using useParams
+  const { menuId } = useParams<{ menuId: string }>();
+  console.log("Menu ID:", menuId);
+  // Convert menuId to a number (assuming it should be numeric)
+  const menuIdNumber = parseInt(menuId, 10);
+  console.log("Menu ID (number):", menuIdNumber);
 
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-
-  const handleAddItem = (item: MenuItem) => {
-    setMenuItems((prev) => [
-      ...prev,
-      { ...item, key: String(prev.length + 1) },
-    ]);
-    setIsAddModalVisible(false);
-  };
-
-  const handleEditItem = (item: MenuItem) => {
-    setMenuItems((prev) =>
-      prev.map((menuItem) => (menuItem.key === item.key ? item : menuItem))
-    );
-    setEditingItem(null);
-  };
-
-  const handleDeleteItem = (key: string) => {
-    setMenuItems((prev) => prev.filter((item) => item.key !== key));
-  };
-
-  const handleToggleActive = (key: string) => {
-    setMenuItems((prev) =>
-      prev.map((item) =>
-        item.key === key ? { ...item, active: !item.active } : item
-      )
-    );
-  };
+  if (isNaN(menuIdNumber)) {
+    return <div>Error: Invalid menu ID</div>;
+  }
 
   return (
-    <div className="menu-details-page">
-      <Card
-        title={`Menu Items - Menu ID: ${id}`}
-        extra={
-          <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
-            Add Menu Item
-          </Button>
-        }
-      >
-        <MenuItemsTable
-          items={menuItems}
-          onEdit={(item) => setEditingItem(item)}
-          onDelete={handleDeleteItem}
-          onToggleActive={handleToggleActive}
-        />
-      </Card>
-
-      <AddModal
-        visible={isAddModalVisible}
-        onCancel={() => setIsAddModalVisible(false)}
-        onSave={handleAddItem}
-      />
-
-      {editingItem && (
-        <EditModal
-          visible={!!editingItem}
-          item={editingItem}
-          onCancel={() => setEditingItem(null)}
-          onSave={handleEditItem}
-        />
-      )}
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Menu Details</h1>
+      <MenuItemsTable menuId={menuIdNumber} />{" "}
+      {/* Pass the numeric menuId to MenuItemsTable */}
     </div>
   );
 };

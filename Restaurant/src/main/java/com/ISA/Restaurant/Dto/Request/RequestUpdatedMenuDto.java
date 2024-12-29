@@ -13,6 +13,5 @@ public class RequestUpdatedMenuDto {
     private String menuName;
     private String menuDescription;
     private Boolean active;
-//    private List<RequestUpdatedMenuItemDto> items; // Nested DTO for updating menu items
     private String coverImageUrl;
 }

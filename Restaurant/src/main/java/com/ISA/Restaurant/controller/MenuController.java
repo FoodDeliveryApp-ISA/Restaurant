@@ -66,11 +66,16 @@ public class MenuController {
             return ResponseEntity.status(403).body("Unauthorized: Please log in as a restaurant.");
         }
         // Associate the restaurant directly
+        log.info("*createMenu(): AuthenticatedRestaurant: {}", authenticatedRestaurant);
+        log.info("*createMenu(): menu: {}", menu);
         return ResponseEntity.ok(menuService.saveMenu(menu,authenticatedRestaurant));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getMenuById(@PathVariable Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null or undefined");
+        }
         Restaurant authenticatedRestaurant = getAuthenticatedRestaurant();
 
         if (authenticatedRestaurant == null) {
@@ -120,9 +125,11 @@ public class MenuController {
 
         // Fetch only menus belonging to the authenticated restaurant
         List<MenuDto> menus = menuService.getMenusByRestaurant(authenticatedRestaurant);
+        log.info("*getAllMenus(): menus: {}", menus);
         if (menus.isEmpty()) {
             return ResponseEntity.ok("No menus found for your restaurant.");
         }
+        log.info("*getAllMenus(): menus: {}", menus);
 
         return ResponseEntity.ok(menus);
     }

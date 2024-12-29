@@ -1,43 +1,27 @@
 import axios, { AxiosResponse } from "axios";
-import ToastNotification from "../components/ToastNotification"; // Adjust the path as needed
+import ToastNotification from "../components/ToastNotification"; // Adjust the path if necessary
+import TokenUtil from "../utils/tokenUtil";
+import {
+  RegisterRequest,
+  LoginRequest,
+  LoginResponse,
+  Restaurant,
+} from "./dto/auth.dto";
 
 const API_URL = "http://localhost:8081/auth/";
 
-interface Restaurant {
-  restaurantEmail: string;
-  restaurantPassword: string;
-  restaurantName: string;
-  restaurantPhone: string;
-  restaurantCity: string;
-  restaurantLocation: string;
-  enabled?: boolean;
-  accessToken?: string; // Ensure accessToken is part of the response if needed
-}
-
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
 class AuthService {
-  // Login method with type annotations
-   // Login method with type annotations
-   login(data: LoginRequest): Promise<Restaurant> {
-
+  // Login method
+  login(data: LoginRequest): Promise<LoginResponse> {
     return axios
-      .post<Restaurant>(`${API_URL}login`, data, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true, // Send credentials with the request
+      .post<LoginResponse>(`${API_URL}login`, data, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true, // For cookies or session management
       })
-      .then((response: AxiosResponse<Restaurant>) => {
-        console.log("API Response Data2:", response.data);
-        if (response.data.token) {
-          console.log("Access Token found:", response.data.accessToken);
-          localStorage.setItem("restauran","assa");
-          localStorage.setItem("restaurant", JSON.stringify(response.data));
-          console.log("Access Token found3:", response.data.accessToken);
+      .then((response: AxiosResponse<LoginResponse>) => {
+        const { token } = response.data;
+        if (token) {
+          TokenUtil.storeToken(token); // Store the token using TokenUtil
           ToastNotification.success({
             message: "Login Successful",
             description: "Welcome back!",
@@ -55,8 +39,9 @@ class AuthService {
       });
   }
 
-  // Register method with auto login after successful registration
-  register(data: Restaurant): Promise<AxiosResponse<Restaurant>> {
+  // Register method
+  // Register method with auto-login after successful registration
+  register(data: RegisterRequest): Promise<LoginResponse> {
     return axios
       .post<Restaurant>(`${API_URL}signup`, data)
       .then((response: AxiosResponse<Restaurant>) => {
@@ -64,47 +49,55 @@ class AuthService {
           message: "Registration Successful",
           description: "Welcome! Your account has been created.",
         });
-  
-        // Assuming the response contains the restaurant data, and `restaurantId` is part of it
-        const restaurantId = response.data.restaurantId; // Adjust according to the actual response structure
-  
-        // Store the restaurantId in localStorage
-        localStorage.setItem('restaurantId', restaurantId.toString());
-  
+
+        // Assuming the response contains the restaurantId
+        if (response.data.restaurantId) {
+          // Store the restaurantId in localStorage
+          localStorage.setItem(
+            "restaurantId",
+            response.data.restaurantId.toString()
+          );
+        } else {
+          console.warn("Response does not contain restaurantId.");
+        }
+
         // Automatically log the user in after registration
         const loginData: LoginRequest = {
           email: data.restaurantEmail,
           password: data.restaurantPassword,
         };
-        return this.login(loginData); // Trigger login after successful registration
+
+        // Trigger login after successful registration
+        return this.login(loginData);
       })
       .catch((error) => {
         ToastNotification.error({
           message: "Registration Failed",
           description:
-            error.response?.data?.message || "An error occurred during registration.",
+            error.response?.data?.message ||
+            "An error occurred during registration.",
         });
+
+        console.error(
+          "Registration error:",
+          error.response?.data || error.message
+        );
         throw error;
       });
   }
-  
 
+  // Check if the user is authenticated
   isAuthenticated(): boolean {
-    const restaurantData = localStorage.getItem("restaurant");
-    return !!restaurantData; // Returns true if data exists, otherwise false
+    return TokenUtil.getToken() !== null; // Check if the token exists
   }
 
+  // Logout method
   logout(): void {
-    localStorage.removeItem("restaurant");
+    TokenUtil.removeToken();
     ToastNotification.info({
       message: "Logged Out",
       description: "You have successfully logged out.",
     });
-  }
-
-  getCurrentRestaurant(): Restaurant | null {
-    const restaurant = localStorage.getItem("restaurant");
-    return restaurant ? (JSON.parse(restaurant) as Restaurant) : null;
   }
 }
 

@@ -2,26 +2,26 @@ import React, { useState, useEffect } from "react";
 import { Row, Col, Spin, Alert } from "antd";
 import LeftSection from "./LeftSection";
 import RightSection from "./RightSection";
-import AuthService from "../../services/restaurant.service"; // Import the AuthService
+import RestaurantService from "../../services/restaurant.service"; // Import the RestaurantService
 
 const Profile = () => {
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
-  // Fetch the restaurant data when the restaurantId is set
+  // Fetch the authenticated restaurant data
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
-        console.log("Fetching restaurant data...");
-        if (!restaurantId) {
-          throw new Error("Restaurant ID is missing.");
+        console.log("Fetching authenticated restaurant data...");
+
+        const response = await RestaurantService.getAuthenticatedRestaurant();
+        if (!response) {
+          throw new Error("No restaurant data found.");
         }
 
-        const response = await AuthService.getRestaurantById(restaurantId); // Use the correct restaurantId
-        console.log("Response:", response.data);
-        setRestaurant(response.data); // Assuming response.data is the restaurant data
+        console.log("Response:", response);
+        setRestaurant(response); // Assuming response is the restaurant data
       } catch (err) {
         console.error("Error fetching restaurant data:", err);
         setError("Failed to load restaurant data");
@@ -30,17 +30,8 @@ const Profile = () => {
       }
     };
 
-    // Ensure fetchRestaurant is called only when restaurantId is available
-    if (restaurantId) {
-      fetchRestaurant();
-    }
-  }, [restaurantId]); // Dependency array ensures effect runs when restaurantId changes
-
-  useEffect(() => {
-    const storedRestaurantId = localStorage.getItem("restaurantId");
-    // Manually set restaurantId to "1" for testing
-    setRestaurantId(storedRestaurantId);
-  }, []); // Empty dependency array to run once when the component mounts
+    fetchRestaurant(); // Call the fetch function on component mount
+  }, []); // Empty dependency array ensures effect runs once on mount
 
   if (loading) return <Spin size="large" />;
   if (error) return <Alert message={error} type="error" />;

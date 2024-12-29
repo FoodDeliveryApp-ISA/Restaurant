@@ -1,39 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { Card, Form, Input, Button } from "antd";
-import AuthService from "../../services/restaurant.service";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Modal,
+  Space,
+  Typography,
+  Tooltip,
+} from "antd";
+import { SaveOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
+import RestaurantService from "../../services/restaurant.service";
 import ToastNotification from "../../components/ToastNotification";
 
-interface Restaurant {
+const { Title } = Typography;
+
+interface RestaurantResponseDto {
+  restaurantId: number;
   restaurantName: string;
   restaurantEmail: string;
-  restaurantPassword: string;
   restaurantAddress: string;
   restaurantPhone: string;
   restaurantCity: string;
   restaurantLocation: string;
-  enabled: boolean;
-  accessToken?: string;
-  id?: string; // Add id property to restaurant type
+  active: boolean;
+  coverImageUrl: string;
 }
 
 interface RightSectionProps {
-  restaurant: Restaurant | null;
+  restaurant: RestaurantResponseDto | null; // Ensure this is the correct type
 }
 
 const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
   const [form] = Form.useForm();
-  const [restaurantId, setRestaurantId] = useState<string | null>(null); // State to store restaurant ID
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Set form fields when the restaurant object is available
   useEffect(() => {
-    const storedRestaurantId = localStorage.getItem("restaurantId");
-    console.log(storedRestaurantId)
     if (restaurant) {
-      setRestaurantId("352"); // Set the restaurant ID if available
       form.setFieldsValue({
         restaurantName: restaurant.restaurantName,
         restaurantEmail: restaurant.restaurantEmail,
-        restaurantPassword: restaurant.restaurantPassword,
         restaurantAddress: restaurant.restaurantAddress,
         restaurantPhone: restaurant.restaurantPhone,
         restaurantCity: restaurant.restaurantCity,
@@ -42,74 +50,69 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
     }
   }, [restaurant, form]);
 
-  const onFinish = async (values: any) => {
-    console.log("Submitted values:", values);
+  // Function to handle save button click
+  const handleSave = () => {
+    Modal.confirm({
+      title: "Are you sure you want to save changes?",
+      content: "Once saved, the changes will be applied.",
+      okText: "Yes",
+      cancelText: "No",
+      onOk: async () => {
+        setLoading(true);
+        const values = form.getFieldsValue();
+        try {
+          const updatedRestaurant =
+            await RestaurantService.updateAuthenticatedRestaurant(
+              restaurant?.restaurantId || 0,
+              values
+            );
 
-    if (restaurantId) { // Check if restaurantId is available
-      try {
-        const updatedRestaurant = await AuthService.updateRestaurant(
-          restaurantId, // Pass the restaurantId here
-          values
-        );
-        console.log("data ")
-        
-        // Success notification
-        ToastNotification.success({
-          message: "Restaurant updated successfully!",
-          description: `The restaurant "${updatedRestaurant.restaurantName}" has been updated.`,
-        });
-        
-        console.log("Restaurant updated successfully:", updatedRestaurant);
-        
-        // Optionally, you can redirect or update UI based on success
-        // Example: redirect to the restaurant profile page
-        // history.push(`/restaurant/${restaurantId}`);
+          ToastNotification.success({
+            message: "Restaurant updated successfully!",
+            description: `The restaurant "${updatedRestaurant?.restaurantName}" has been updated.`,
+          });
 
-      } catch (error) {
-        console.error("Error updating restaurant:", error);
+          setIsEditing(false); // Disable editing after saving
+        } catch (error) {
+          ToastNotification.error({
+            message: "Error updating restaurant",
+            description:
+              error?.response?.data?.message ||
+              "An unexpected error occurred. Please try again.",
+          });
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
 
-        // Error notification
-        ToastNotification.error({
-          message: "Error updating restaurant",
-          description: error?.response?.data?.message || "An unexpected error occurred. Please try again.",
-        });
-      }
-    } else {
-      console.error("Restaurant ID is missing.");
-
-      // Error notification for missing restaurantId
-      ToastNotification.error({
-        message: "Restaurant ID is missing",
-        description: "Please make sure that the restaurant ID is correctly provided.",
-      });
-    }
-};
-
+  // Function to toggle editing state
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
+  };
 
   return (
-    <Card style={{ padding: "20px" }}>
-      <Form
-        layout="vertical"
-        form={form}
-        onFinish={onFinish}
-        initialValues={{
-          restaurantName: restaurant?.restaurantName || "",
-          restaurantEmail: restaurant?.restaurantEmail || "",
-          restaurantPassword: restaurant?.restaurantPassword || "",
-          restaurantAddress: restaurant?.restaurantAddress || "",
-          restaurantPhone: restaurant?.restaurantPhone || "",
-          restaurantCity: restaurant?.restaurantCity || "",
-          restaurantLocation: restaurant?.restaurantLocation || "",
-        }}
-      >
+    <Card
+      style={{
+        padding: "20px",
+        borderRadius: "8px",
+        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <Title level={3} style={{ textAlign: "center", marginBottom: "20px" }}>
+        Restaurant Details
+      </Title>
+      <Form layout="vertical" form={form}>
         <Form.Item
           name="restaurantName"
           label="Restaurant Name"
-          rules={[{ required: true, message: "Please enter the restaurant name" }]}
+          rules={[
+            { required: true, message: "Please enter the restaurant name" },
+          ]}
         >
-          <Input />
+          <Input disabled={!isEditing} />
         </Form.Item>
-
         <Form.Item
           name="restaurantEmail"
           label="Email"
@@ -118,49 +121,59 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
             { type: "email", message: "Enter a valid email" },
           ]}
         >
-          <Input />
+          <Input disabled={!isEditing} />
         </Form.Item>
-
-        <Form.Item
-          name="restaurantPassword"
-          label="Password"
-          rules={[{ required: true, message: "Please enter the password" }]}
-        >
-          <Input.Password />
-        </Form.Item>
-
         <Form.Item
           name="restaurantAddress"
           label="Address"
           rules={[{ required: true, message: "Please enter the address" }]}
         >
-          <Input />
+          <Input disabled={!isEditing} />
         </Form.Item>
-
         <Form.Item
           name="restaurantPhone"
           label="Phone"
           rules={[{ required: true, message: "Please enter the phone number" }]}
         >
-          <Input />
+          <Input disabled={!isEditing} />
         </Form.Item>
-
         <Form.Item
           name="restaurantCity"
           label="City"
           rules={[{ required: true, message: "Please enter the city" }]}
         >
-          <Input />
+          <Input disabled={!isEditing} />
         </Form.Item>
-
         <Form.Item name="restaurantLocation" label="Location">
-          <Input />
+          <Input disabled={!isEditing} />
         </Form.Item>
-
-        <Form.Item>
-          <Button type="primary" htmlType="submit" block>
-            Save
-          </Button>
+        <Form.Item style={{ textAlign: "center", marginTop: "20px" }}>
+          {isEditing ? (
+            <Space size="large">
+              <Button
+                type="primary"
+                onClick={handleSave}
+                icon={<SaveOutlined />}
+                loading={loading}
+              >
+                Save Changes
+              </Button>
+              <Button onClick={toggleEdit} icon={<CloseOutlined />} danger>
+                Cancel
+              </Button>
+            </Space>
+          ) : (
+            <Tooltip title="Edit restaurant details">
+              <Button
+                onClick={toggleEdit}
+                icon={<EditOutlined />}
+                type="default"
+                style={{ width: "100%" }}
+              >
+                Edit
+              </Button>
+            </Tooltip>
+          )}
         </Form.Item>
       </Form>
     </Card>

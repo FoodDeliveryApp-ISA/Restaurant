@@ -8,6 +8,4 @@ import lombok.Setter;
 public class RequestMenuSaveDto {
     private String menuName;
     private String menuDescription;
-    private Boolean active;
-    private String coverImageUrl;
 }

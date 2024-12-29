@@ -1,9 +1,4 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "./components/Layout/Layout";
 import Main from "./components/Layout/Main";
@@ -26,10 +21,13 @@ const App = () => (
             {/* Private Routes */}
             <Route path="/menu" element={<PrivateRoute element={<Menu />} />} />
             <Route
-              path="/menu/:id"
+              path="/menu/:menuId"
               element={<PrivateRoute element={<MenuDetailsPage />} />}
             />
-            <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
+            <Route
+              path="/profile"
+              element={<PrivateRoute element={<Profile />} />}
+            />
           </Route>
 
           {/* 403 Forbidden Route */}
@@ -44,4 +42,3 @@ const App = () => (
 );
 
 export default App;
-
