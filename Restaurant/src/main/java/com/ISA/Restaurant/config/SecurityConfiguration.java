@@ -28,7 +28,7 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Allow both localhost and 127.0.0.1 for the frontend origin
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173","http://localhost:8081"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5174", "http://127.0.0.1:5173","http://localhost:8081"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization"));
@@ -47,6 +47,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/restaurants/**").permitAll()
+                        .requestMatchers("/api/validation/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

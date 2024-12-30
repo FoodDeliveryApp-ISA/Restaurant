@@ -21,6 +21,7 @@ class AuthService {
       .then((response: AxiosResponse<LoginResponse>) => {
         const { token } = response.data;
         if (token) {
+          console.log(token);
           TokenUtil.storeToken(token); // Store the token using TokenUtil
           ToastNotification.success({
             message: "Login Successful",

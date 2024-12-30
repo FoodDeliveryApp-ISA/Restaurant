@@ -1,21 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Input, Button, message, Steps } from "antd";
-import {
-  MailOutlined,
-  LockOutlined,
-  PhoneOutlined,
-  HomeOutlined,
-  EnvironmentOutlined,
-} from "@ant-design/icons";
+import { MailOutlined, LockOutlined, PhoneOutlined, HomeOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/auth.service";
+import { ValidationService } from "../../services/validation.service"; // Assuming this is imported correctly
 
 const { Step } = Steps;
 
 const RestaurantRegister: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [restaurantNameError, setRestaurantNameError] = useState<string | null>(null);
+  const [restaurantName, setRestaurantName] = useState<string>("");
+  const [restaurantEmail, setRestaurantEmail] = useState<string>("");
   const navigate = useNavigate();
 
   const steps = [
@@ -28,11 +27,23 @@ const RestaurantRegister: React.FC = () => {
             name="restaurantName"
             rules={[
               { required: true, message: "Please enter the restaurant name!" },
+              {
+                validator: async (_, value) => {
+                  if (value) {
+                    const isUnique = await ValidationService.validateRestaurant(value);
+                    if (!isUnique) {
+                      return Promise.reject(new Error("Restaurant name is already taken"));
+                    }
+                  }
+                },
+              },
             ]}
           >
             <Input
               prefix={<HomeOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
               placeholder="Enter restaurant name"
+              value={restaurantName}
+              onChange={(e) => setRestaurantName(e.target.value)}
             />
           </Form.Item>
           <Form.Item
@@ -41,11 +52,23 @@ const RestaurantRegister: React.FC = () => {
             rules={[
               { required: true, message: "Please enter your email!" },
               { type: "email", message: "Please enter a valid email!" },
+              {
+                validator: async (_, value) => {
+                  if (value) {
+                    const isUnique = await ValidationService.validateEmail(value);
+                    if (!isUnique) {
+                      return Promise.reject(new Error("Email is already taken"));
+                    }
+                  }
+                },
+              },
             ]}
           >
             <Input
               prefix={<MailOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
               placeholder="Enter your email"
+              value={restaurantEmail}
+              onChange={(e) => setRestaurantEmail(e.target.value)}
             />
           </Form.Item>
           <Form.Item
