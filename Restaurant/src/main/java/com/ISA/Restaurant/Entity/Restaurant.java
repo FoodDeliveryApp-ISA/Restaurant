@@ -62,14 +62,14 @@ public class Restaurant implements UserDetails {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Menu> menus;
 
-    @Column(name = "verification_code")
-    private String verificationCode;
-
-    @Column(name = "verification_expiration")
-    private LocalDateTime verificationCodeExpiresAt;
-
-    @Column(name = "enabled" , nullable = false)
-    private Boolean enabled = false;
+//    @Column(name = "verification_code")
+//    private String verificationCode;
+//
+//    @Column(name = "verification_expiration")
+//    private LocalDateTime verificationCodeExpiresAt;
+//
+//    @Column(name = "enabled" , nullable = false)
+//    private Boolean enabled = false;
 
     public Restaurant(
             String restaurantName,
@@ -90,7 +90,7 @@ public class Restaurant implements UserDetails {
         this.restaurantCity = restaurantCity;
         this.restaurantLocation = restaurantLocation;
         this.active = active;
-        this.enabled = false; // Default to false until verified
+//        this.enabled = false; // Default to false until verified
         this.coverImageUrl = "";
     }
 
@@ -145,10 +145,10 @@ public class Restaurant implements UserDetails {
         return true;
     }
 
-    @Override
-    public boolean isEnabled() {
-        return this.enabled;
-    }
+//    @Override
+//    public boolean isEnabled() {
+//        return this.enabled;
+//    }
 
     @Override
     public String toString() {

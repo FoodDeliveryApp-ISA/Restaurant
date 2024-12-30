@@ -2,7 +2,7 @@ package com.ISA.Restaurant.controller;
 import com.ISA.Restaurant.Dto.Request.LoginRequest;
 import com.ISA.Restaurant.Dto.Response.LoginResponse;
 import com.ISA.Restaurant.Dto.Request.RegisterRequest;
-import com.ISA.Restaurant.Dto.Request.VerifyRestaurantDto;
+import com.ISA.Restaurant.Dto.Request.VerifyEmailDto;
 import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.service.AuthenticationService;
 import com.ISA.Restaurant.service.JwtService;

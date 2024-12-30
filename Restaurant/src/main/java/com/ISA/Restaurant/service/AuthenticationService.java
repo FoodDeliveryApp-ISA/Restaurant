@@ -2,7 +2,7 @@ package com.ISA.Restaurant.service;
 
 import com.ISA.Restaurant.Dto.Request.RegisterRequest;
 import com.ISA.Restaurant.Dto.Request.LoginRequest;
-import com.ISA.Restaurant.Dto.Request.VerifyRestaurantDto;
+import com.ISA.Restaurant.Dto.Request.VerifyEmailDto;
 import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.repo.RestaurantRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ public class AuthenticationService {
         );
 //        restaurant.setVerificationCode(generateVerificationCode());
 //        restaurant.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
-        restaurant.setEnabled(true);
+//        restaurant.setEnabled(true);
 
         // sendVerificationEmail(restaurant); // Email sending commented out
 
