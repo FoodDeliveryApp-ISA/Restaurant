@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Table, Button, Popconfirm, message, Switch } from "antd";
 import MenuItemService from "../../../services/menuItem.service";
 import { MenuItemDto } from "../../../services/dto/menuItem.dto";
-import EmailVerificationPopup from "../../../components/EmailVerificationPopup";
+import EmailVerificationPopup from "../../../components/EmailVerificationPopUp";
 import EditMenuItemModal from "./EditMenuItemModal";
 import AddMenuItemModal from "./AddMenuItemModal";
 
