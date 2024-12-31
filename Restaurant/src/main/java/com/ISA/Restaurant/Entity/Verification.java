@@ -20,4 +20,10 @@ public class Verification {
 //    private String reason; // REGISTER, RESET_PASSWORD, etc.
     private LocalDateTime expiresAt;
 
+    public Verification(String email, String verificationCode, LocalDateTime expiresAt) {
+        this.email = email;
+        this.verificationCode = verificationCode;
+        this.expiresAt = expiresAt;
+    }
+
 }
