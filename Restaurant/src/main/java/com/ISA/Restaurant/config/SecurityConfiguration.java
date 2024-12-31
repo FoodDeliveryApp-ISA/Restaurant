@@ -47,6 +47,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/restaurants/**").permitAll()
+                        .requestMatchers("/email/**").permitAll()
+                        .requestMatchers("/api/validation/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

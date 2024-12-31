@@ -3,13 +3,13 @@ package com.ISA.Restaurant.controller;
 import com.ISA.Restaurant.Dto.Request.RequestVerificationDto;
 import com.ISA.Restaurant.Dto.Request.VerifyEmailDto;
 import com.ISA.Restaurant.service.VerificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+@Slf4j
+@RequestMapping("/email")
 @RestController
 public class EmailVerificationController {
     private final VerificationService verificationService;
@@ -18,8 +18,15 @@ public class EmailVerificationController {
         this.verificationService = verificationService;
     }
 
+    // Test endpoint for checking the API
+    @GetMapping("/test")
+    public String test() {
+        log.info("hit test");
+        return "test";
+    }
+
     @PostMapping("/request")
-    public ResponseEntity<?> requestVerificationCode(@RequestParam RequestVerificationDto requestVerificationDto) {
+    public ResponseEntity<?> requestVerificationCode(@RequestBody RequestVerificationDto requestVerificationDto) {
         try {
             verificationService.generateAndSendVerification(requestVerificationDto);
             return ResponseEntity.ok("Verification code sent");
@@ -39,7 +46,7 @@ public class EmailVerificationController {
     }
 
     @PostMapping("/resend")
-    public ResponseEntity<?> resendVerificationCode(@RequestParam RequestVerificationDto requestVerificationDto) {
+    public ResponseEntity<?> resendVerificationCode(@RequestBody RequestVerificationDto requestVerificationDto) {
         try {
             verificationService.resendVerificationCode(requestVerificationDto);
             return ResponseEntity.ok("Verification code sent");

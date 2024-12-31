@@ -9,7 +9,10 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/auth.service";
-import { ValidationService } from "../../services/validation.service"; // Assuming this is imported correctly
+import {ValidationService}  from "../../services/validation.service"; // Assuming this is imported correctly
+import emailVerificationService from "../../services/emailVerification.service";
+import { RequestVerificationDto,VerifyEmailDto } from "../../services/dto/emailVerification.dto";
+import EmailVerificationPopup from "../../components/EmailVerificationPopup";
 
 const { Step } = Steps;
 
@@ -24,7 +27,73 @@ const RestaurantRegister: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState<string>("");
   const [restaurantEmail, setRestaurantEmail] = useState<string>("");
   const navigate = useNavigate();
+  const [isEmailVerificationVisible, setIsEmailVerificationVisible] =
+  useState(false);
 
+  // Handles successful verification and registration
+  const handleVerificationSuccess = async () => {
+    try {
+      console.log(formData);
+      const response = await authService.register(formData);
+      message.success("Registration successful!");
+      navigate("/profile");
+    } catch (error: any) {
+      message.error(error.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handles resending the verification code
+  const handleResend = async () => {
+    try {
+      const dto: RequestVerificationDto = { email: formData.restaurantEmail };
+      await emailVerificationService.resendVerificationCode(dto);
+      message.success("Verification email resent. Please check your inbox.");
+    } catch (error) {
+      message.error("Failed to resend the verification email.");
+    }
+  };
+
+  // Handles checking the verification code
+  const handleCheckCode = async (): Promise<boolean> => {
+    const inputs = document.querySelectorAll('input[type="text"]');
+    const verificationCode = Array.from(inputs)
+      .map((input) => (input as HTMLInputElement).value)
+      .join("")
+      .slice(-6); // Ensure only the last 6 characters are used
+
+    try {
+      const dto: VerifyEmailDto = { email: formData.restaurantEmail, verificationCode };
+      console.log(formData);
+      console.log(dto);
+      await emailVerificationService.verifyUser(dto);
+      console.log(dto);
+      await handleVerificationSuccess();
+      return true;
+    } catch (error) {
+      message.error("Invalid or expired verification code.");
+      return false;
+    }
+  };
+
+  // Handles form submission and email verification initiation
+  const handleFinish = async (values: any) => {
+    const finalData = { ...formData, ...values, enabled: true };
+    setFormData(finalData);
+    setLoading(true);
+
+    try {
+      const dto: RequestVerificationDto = { email: finalData.restaurantEmail };
+      await emailVerificationService.requestVerificationCode(dto);
+      message.success("Verification email sent. Please check your inbox.");
+      setIsEmailVerificationVisible(true);
+    } catch (error) {
+      message.error("Failed to send verification email.");
+    } finally {
+      setLoading(false);
+    }
+  };
   const steps = [
     {
       title: "Basic Details",
@@ -160,23 +229,34 @@ const RestaurantRegister: React.FC = () => {
     setCurrentStep(currentStep + 1);
   };
 
-  const handleFinish = async (values: any) => {
-    const finalData = { ...formData, ...values, enabled: true };
-    setLoading(true);
+  // const handleFinish = async (values: any) => {
+  //   const finalData = { ...formData, ...values, enabled: true };
+  //   setLoading(true);
+  //   setIsEmailVerificationVisible(true);
+  
+  //   try {
+  //     await emailVerificationService.requestVerificationCode({
+  //       email: values.email,
+  //     });
+  //     message.success("Verification email sent. Please check your inbox.");
+  //   } catch (error) {
+  //     message.error("Failed to send verification email.");
+  //     setLoading(false);
+  //   }
 
-    try {
-      const response = await authService.register(finalData);
-      navigate("/profile");
-    } catch (error: any) {
-      console.error("Error during registration: ", error);
-      message.error(
-        error.response?.data?.message ||
-          "Something went wrong. Please try again later."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   // try {
+  //   //   const response = await authService.register(finalData);
+  //   //   navigate("/profile");
+  //   // } catch (error: any) {
+  //   //   console.error("Error during registration: ", error);
+  //   //   message.error(
+  //   //     error.response?.data?.message ||
+  //   //       "Something went wrong. Please try again later."
+  //   //   );
+  //   // } finally {
+  //   //   setLoading(false);
+  //   // }
+  // };
 
   return (
     <div style={{ maxWidth: 400, margin: "50px auto", padding: 20 }}>
@@ -221,6 +301,19 @@ const RestaurantRegister: React.FC = () => {
           </div>
         </Form.Item>
       </Form>
+      {isEmailVerificationVisible && (
+        <EmailVerificationPopup
+          visible={isEmailVerificationVisible}
+          onClose={() => setIsEmailVerificationVisible(false)}
+          onResend={handleResend}
+          onSend={handleVerificationSuccess}
+          onCheck={handleCheckCode} // Pass the onCheck function
+          title="Custom Email Verification"
+          description="Please enter the verification code to continue."
+          successMessage="Thank you for verifying your email!"
+          timerDuration={60}
+        />
+      )}
     </div>
   );
 };
