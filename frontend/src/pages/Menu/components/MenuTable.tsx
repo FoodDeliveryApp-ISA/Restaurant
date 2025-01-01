@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table, Button, Switch, message, Input } from "antd";
+import { Table, Button, Switch, message, Empty } from "antd";
 import { MenuDto } from "../../../services/dto/menu.dto";
 
 interface MenuTableProps {
@@ -101,13 +101,20 @@ const MenuTable: React.FC<MenuTableProps> = ({
 
   return (
     <div className="overflow-x-auto p-6 bg-gray-50 rounded-lg shadow-md">
-      <Table
-        dataSource={menus}
-        columns={columns}
-        rowKey="menuId"
-        pagination={false}
-        className="rounded-lg bg-white"
-      />
+      {console.log("Menus:", menus)}
+      {Array.isArray(menus) && menus.length > 0 ? (
+        <Table
+          dataSource={menus}
+          columns={columns}
+          rowKey="menuId"
+          pagination={false}
+          className="rounded-lg bg-white"
+        />
+      ) : (
+        <div className="text-center p-10">
+          <Empty description="No menu items available" />
+        </div>
+      )}
     </div>
   );
 };

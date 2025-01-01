@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal, message, Spin } from "antd";
 import { CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
 
 interface EmailVerificationPopupProps {
   visible: boolean;
@@ -20,10 +21,10 @@ const EmailVerificationPopup: React.FC<EmailVerificationPopupProps> = ({
   onResend,
   onCheck,
   onSend,
-  title = "Verify Your Email", // Default title
-  description = "Enter the 6-digit code sent to your email. If you don't see the email, click 'Resend Email.'", // Default description
-  successMessage = "Your email has been successfully verified!", // Default success message
-  timerDuration = 30, // Default timer duration
+  title = "Verify Your Email",
+  description = "Enter the 6-digit code sent to your email. If you don't see the email, click 'Resend Email.'",
+  successMessage = "Your email has been successfully verified!",
+  timerDuration = 30,
 }) => {
   const [timer, setTimer] = useState(timerDuration);
   const [isResendDisabled, setIsResendDisabled] = useState(false);
@@ -38,8 +39,8 @@ const EmailVerificationPopup: React.FC<EmailVerificationPopupProps> = ({
   ]);
   const [isCodeCorrect, setIsCodeCorrect] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
+  const [shake, setShake] = useState(false);
 
-  // Reset timer and flags when the popup is opened
   useEffect(() => {
     if (visible) {
       resetTimer();
@@ -54,7 +55,6 @@ const EmailVerificationPopup: React.FC<EmailVerificationPopupProps> = ({
     setIsResendDisabled(true);
   };
 
-  // Start the countdown when `isResendDisabled` is true
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
 
@@ -83,7 +83,7 @@ const EmailVerificationPopup: React.FC<EmailVerificationPopupProps> = ({
     startLoading();
     try {
       await onResend();
-      resetTimer(); // Reset timer when resend is clicked
+      resetTimer();
       message.success("Verification email sent!");
     } catch (error) {
       message.error("Error sending verification email!");
@@ -119,7 +119,9 @@ const EmailVerificationPopup: React.FC<EmailVerificationPopupProps> = ({
         handleSubmitVerification();
       } else {
         setIsCodeCorrect(false);
+        setShake(true); // Trigger shake animation
         message.error("The verification code is incorrect. Please try again.");
+        setTimeout(() => setShake(false), 500); // Reset shake state after animation
         setVerificationCode(["", "", "", "", "", ""]);
       }
     }
@@ -146,71 +148,88 @@ const EmailVerificationPopup: React.FC<EmailVerificationPopupProps> = ({
       footer={null}
       centered
       className="rounded-xl"
-      style={{
-        backgroundColor: "#f9f9f9",
-        padding: "20px",
-      }}
+      style={{ backgroundColor: "#f9f9f9", padding: "20px" }}
     >
       <Spin spinning={loadingCount > 0} indicator={<LoadingOutlined spin />}>
-        {!isVerified ? (
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-              {title}
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">{description}</p>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className={shake ? "animate-shake" : ""}
+        >
+          {!isVerified ? (
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+                {title}
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">{description}</p>
 
-            <div className="flex justify-center mb-6 space-x-2">
-              {verificationCode.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`input-${index}`}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleInputChange(e, index)}
-                  className="text-center text-lg p-3 w-12 mx-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  inputMode="numeric"
-                />
-              ))}
+              <div className="flex justify-center mb-6 space-x-2">
+                {verificationCode.map((digit, index) => (
+                  <motion.input
+                    key={index}
+                    id={`input-${index}`}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleInputChange(e, index)}
+                    className="text-center text-lg p-3 w-12 mx-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    inputMode="numeric"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  />
+                ))}
+              </div>
+
+              {!isCodeCorrect && (
+                <motion.p
+                  className="text-red-500 font-semibold mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  The verification code is incorrect. Please try again.
+                </motion.p>
+              )}
+
+              <Button
+                type="primary"
+                onClick={handleResend}
+                disabled={isResendDisabled}
+                className="w-full mt-4"
+                style={{
+                  backgroundColor: "#3b82f6",
+                  borderColor: "#3b82f6",
+                  padding: "10px",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                }}
+              >
+                {isResendDisabled ? `Resend Email (${timer}s)` : "Resend Email"}
+              </Button>
             </div>
-
-            {!isCodeCorrect && (
-              <p className="text-red-500 font-semibold mt-2">
-                The verification code is incorrect. Please try again.
-              </p>
-            )}
-
-            <Button
-              type="primary"
-              onClick={handleResend}
-              disabled={isResendDisabled}
-              className="w-full mt-4"
-              style={{
-                backgroundColor: "#3b82f6",
-                borderColor: "#3b82f6",
-                padding: "10px",
-                fontSize: "16px",
-                fontWeight: "bold",
-              }}
+          ) : (
+            <motion.div
+              className="text-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
             >
-              {isResendDisabled ? `Resend Email (${timer}s)` : "Resend Email"}
-            </Button>
-          </div>
-        ) : (
-          <div className="text-center">
-            <CheckCircleOutlined
-              style={{
-                fontSize: "48px",
-                color: "#3b82f6",
-                marginBottom: "20px",
-              }}
-            />
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-              Verification Successful
-            </h2>
-            <p className="text-gray-600">{successMessage}</p>
-          </div>
-        )}
+              <CheckCircleOutlined
+                style={{
+                  fontSize: "48px",
+                  color: "#3b82f6",
+                  marginBottom: "20px",
+                }}
+              />
+              <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+                Verification Successful
+              </h2>
+              <p className="text-gray-600">{successMessage}</p>
+            </motion.div>
+          )}
+        </motion.div>
       </Spin>
     </Modal>
   );

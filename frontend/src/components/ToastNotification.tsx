@@ -1,6 +1,6 @@
 import React from "react";
 import { notification } from "antd";
-// import "antd/dist/antd.css"; // Import Ant Design styles
+import { motion } from "framer-motion";
 
 interface NotificationProps {
   message: string;
@@ -11,6 +11,34 @@ interface NotificationProps {
 
 const DEFAULT_DURATION = 4.5;
 const DEFAULT_PLACEMENT: NotificationProps["placement"] = "topRight";
+
+const NotificationWrapper = ({
+  children,
+  type,
+}: {
+  children: React.ReactNode;
+  type: "success" | "error" | "info" | "warning";
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className={`rounded-lg shadow-lg p-4 ${
+        type === "success"
+          ? "bg-green-50 border border-green-400 text-green-800"
+          : type === "error"
+          ? "bg-red-50 border border-red-400 text-red-800"
+          : type === "info"
+          ? "bg-blue-50 border border-blue-400 text-blue-800"
+          : "bg-yellow-50 border border-yellow-400 text-yellow-800"
+      }`}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 const createNotification = (
   type: "success" | "error" | "info" | "warning",
@@ -23,33 +51,21 @@ const createNotification = (
 ) => {
   notification[type]({
     message: (
-      <span
-        style={{
-          fontWeight: "bold",
-          color: type === "error" ? "#ff4d4f" : "#1890ff",
-          fontSize: "16px",
-        }}
-      >
-        {message}
-      </span>
+      <NotificationWrapper type={type}>
+        <span className="font-bold text-lg">{message}</span>
+      </NotificationWrapper>
     ),
     description: (
-      <div
-        style={{
-          margin: 0,
-          color: "#595959",
-          fontSize: "14px",
-          lineHeight: "1.6",
-        }}
-      >
-        {description}
-      </div>
+      <NotificationWrapper type={type}>
+        <p className="text-sm text-gray-600">{description}</p>
+      </NotificationWrapper>
     ),
     duration,
     placement,
     style: {
       borderRadius: "8px",
       boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+      padding: "0",
     },
   });
 };
