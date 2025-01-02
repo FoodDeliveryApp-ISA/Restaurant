@@ -30,11 +30,20 @@ class AuthService {
         return response.data;
       })
       .catch((error) => {
-        ToastNotification.error({
-          message: "Login Failed",
-          description:
-            error.response?.data?.message || "An error occurred during login.",
-        });
+        if (error.response && error.response.data) {
+          // Handle error from the response
+          ToastNotification.error({
+            message: "Login Failed",
+            description:
+              error.response.data.message || "An error occurred during login.",
+          });
+        } else {
+          // Handle unexpected errors
+          ToastNotification.error({
+            message: "Login Failed",
+            description: "An unexpected error occurred.",
+          });
+        }
         throw error;
       });
   }
@@ -50,16 +59,16 @@ class AuthService {
           description: "Welcome! Your account has been created.",
         });
 
-        // Assuming the response contains the restaurantId
-        if (response.data.restaurantId) {
-          // Store the restaurantId in localStorage
-          localStorage.setItem(
-            "restaurantId",
-            response.data.restaurantId.toString()
-          );
-        } else {
-          console.warn("Response does not contain restaurantId.");
-        }
+        // // Assuming the response contains the restaurantId
+        // if (response.data.restaurantId) {
+        //   // Store the restaurantId in localStorage
+        //   localStorage.setItem(
+        //     "restaurantId",
+        //     response.data.restaurantId.toString()
+        //   );
+        // } else {
+        //   console.warn("Response does not contain restaurantId.");
+        // }
 
         // Automatically log the user in after registration
         const loginData: LoginRequest = {
@@ -71,12 +80,21 @@ class AuthService {
         return this.login(loginData);
       })
       .catch((error) => {
-        ToastNotification.error({
-          message: "Registration Failed",
-          description:
-            error.response?.data?.message ||
-            "An error occurred during registration.",
-        });
+        if (error.response && error.response.data) {
+          // Handle error from the response
+          ToastNotification.error({
+            message: "Registration Failed",
+            description:
+              error.response.data.message ||
+              "An error occurred during registration.",
+          });
+        } else {
+          // Handle unexpected errors
+          ToastNotification.error({
+            message: "Registration Failed",
+            description: "An unexpected error occurred.",
+          });
+        }
 
         console.error(
           "Registration error:",

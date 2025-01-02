@@ -23,7 +23,6 @@ public class AuthenticationController {
         this.authenticationService = authenticationService;
     }
 
-
     // Test endpoint for checking the API
     @GetMapping("/test")
     public String test() {
@@ -45,23 +44,4 @@ public class AuthenticationController {
         return ResponseEntity.ok(loginResponse);
     }
 
-//    @PostMapping("/verify")
-//    public ResponseEntity<?> verifyUser(@RequestBody VerifyRestaurantDto verifyUserDto) {
-//        try {
-//            authenticationService.verifyRestaurant(verifyUserDto);
-//            return ResponseEntity.ok("Account verified successfully");
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
-//
-//    @PostMapping("/resend")
-//    public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
-//        try {
-//            authenticationService.resendVerificationCode(email);
-//            return ResponseEntity.ok("Verification code sent");
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
 }
