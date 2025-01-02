@@ -1,6 +1,9 @@
 package com.ISA.Restaurant.exception;
 
 import com.ISA.Restaurant.Dto.Response.ErrorResponse;
+import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,63 +15,84 @@ import java.time.LocalDateTime;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    // Handle specific exceptions with custom messages and statuses
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException e, WebRequest request) {
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                "Conflict",
-                e.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+        log.error("EmailAlreadyExistsException: {}", e.getMessage(), e);
+        return buildErrorResponse(e, HttpStatus.CONFLICT, request);
     }
 
     @ExceptionHandler(RestaurantNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleRestaurantNotFound(RestaurantNotFoundException e, WebRequest request) {
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                e.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        log.warn("RestaurantNotFoundException: {}", e.getMessage());
+        return buildErrorResponse(e, HttpStatus.NOT_FOUND, request);
     }
 
     @ExceptionHandler(RestaurantNameAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleRestaurantNameAlreadyExists(RestaurantNameAlreadyExistsException e, WebRequest request) {
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                "Conflict",
-                e.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+        log.error("RestaurantNameAlreadyExistsException: {}", e.getMessage(), e);
+        return buildErrorResponse(e, HttpStatus.CONFLICT, request);
     }
 
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRequest(InvalidRequestException e, WebRequest request) {
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                e.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        log.error("InvalidRequestException: {}", e.getMessage(), e);
+        return buildErrorResponse(e, HttpStatus.BAD_REQUEST, request);
     }
 
+    @ExceptionHandler(MenuItemNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMenuItemNotFound(MenuItemNotFoundException e, WebRequest request) {
+        log.warn("MenuItemNotFoundException: {}", e.getMessage());
+        return buildErrorResponse(e, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFound(EntityNotFoundException e, WebRequest request) {
+        log.warn("EntityNotFoundException: {}", e.getMessage());
+        return buildErrorResponse(e, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(InvalidMenuItemException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidMenuItem(InvalidMenuItemException e, WebRequest request) {
+        log.error("InvalidMenuItemException: {}", e.getMessage(), e);
+        return buildErrorResponse(e, HttpStatus.BAD_REQUEST, request);
+    }
+
+    // New exception handlers for the added exceptions
+
+    @ExceptionHandler(MenuNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMenuNotFound(MenuNotFoundException e, WebRequest request) {
+        log.warn("MenuNotFoundException: {}", e.getMessage());
+        return buildErrorResponse(e, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException e, WebRequest request) {
+        log.warn("UnauthorizedException: {}", e.getMessage());
+        return buildErrorResponse(e, HttpStatus.FORBIDDEN, request);
+    }
+
+    // Fallback for unhandled exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception e, WebRequest request) {
+        log.error("Unhandled Exception: {}", e.getMessage(), e);
+        return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+    // Helper method to build the error response
+    private ResponseEntity<ErrorResponse> buildErrorResponse(Exception e, HttpStatus status, WebRequest request) {
         ErrorResponse response = new ErrorResponse(
                 LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
+                status.value(),
+                status.getReasonPhrase(),
                 e.getMessage(),
                 request.getDescription(false)
         );
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        log.info("ErrorResponse built: {}", response);
+        return new ResponseEntity<>(response, status);
     }
 }

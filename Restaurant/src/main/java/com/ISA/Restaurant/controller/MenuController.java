@@ -151,11 +151,6 @@ public class MenuController {
             return ResponseEntity.status(404).body("Menu not found.");
         }
 
-//        // Assuming the MenuDto contains the restaurant ID, verify ownership
-//        if (!existingMenu.getRestaurantId().equals(authenticatedRestaurant.getId())) {
-//            return ResponseEntity.status(403).body("Forbidden: You do not have access to delete this menu.");
-//        }
-
         // Perform the delete operation
         menuService.deleteMenu(id);
         return ResponseEntity.ok("Menu deleted successfully.");
