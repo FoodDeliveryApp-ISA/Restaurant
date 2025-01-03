@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package restaurant;
+
+service RestaurantService {
+  // Get all restaurants
+  rpc GetAllRestaurants (Empty) returns (RestaurantList);
+
+  // Get a restaurant by its ID
+  rpc GetRestaurantById (RestaurantIdRequest) returns (RestaurantDto);
+}
+
+message RestaurantDto {
+  int32 restaurantId = 1;
+  string restaurantName = 2;
+  string restaurantEmail = 3;
+  string restaurantAddress = 4;
+  string restaurantPhone = 5;
+  string restaurantCity = 6;
+  string restaurantLocation = 7;
+  string coverImageUrl = 8;
+}
+
+message RestaurantIdRequest {
+  int32 restaurantId = 1;
+}
+
+message RestaurantList {
+  repeated RestaurantDto restaurants = 1;
+}
+
+message Empty {}

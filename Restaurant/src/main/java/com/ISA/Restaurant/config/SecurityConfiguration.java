@@ -1,4 +1,6 @@
 package com.ISA.Restaurant.config;
+import net.devh.boot.grpc.server.security.authentication.BasicGrpcAuthenticationReader;
+import net.devh.boot.grpc.server.security.authentication.GrpcAuthenticationReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -22,6 +24,11 @@ public class SecurityConfiguration {
     public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider) {
         this.authenticationProvider = authenticationProvider;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
+    @Bean
+    public GrpcAuthenticationReader grpcAuthenticationReader(){
+        return new BasicGrpcAuthenticationReader();
     }
 
     @Bean
