@@ -13,6 +13,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
 
     Optional<Restaurant> findByRestaurantName(String restaurantName);
 
+
+
 //    Optional<Restaurant> findByVerificationCode(String verificationCode);
 }
 

@@ -1,64 +1,123 @@
 package com.ISA.Restaurant.service.impl;
 
-import com.google.protobuf.Empty;
+//import com.ISA.Restaurant.Entity.Menu;
+//import com.ISA.Restaurant.Entity.MenuItem;
+import com.ISA.Restaurant.Entity.Menu;
+import com.ISA.Restaurant.Entity.MenuItem;
+import com.ISA.Restaurant.repo.MenuItemRepository;
+import com.ISA.Restaurant.repo.MenuRepository;
+import com.ISA.Restaurant.repo.RestaurantRepository;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import restaurant.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import restaurant.Restaurant;
+import restaurant.RestaurantServiceGrpc;
+
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @GrpcService
+@Slf4j
 public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
+    @Autowired
+    private RestaurantRepository restaurantRepository;
 
+    @Autowired
+    private MenuRepository menuRepository;
+
+    @Autowired
+    private MenuItemRepository menuItemRepository;
 
     @Override
-    public void getAllRestaurants(Empty request, StreamObserver<Restaurant.RestaurantList> responseObserver) {
-        // Fetch all restaurant data from database (dummy data for now)
-        Restaurant.RestaurantDto restaurant1 = Restaurant.RestaurantDto.newBuilder()
-                .setRestaurantId(1)
-                .setRestaurantName("Restaurant A")
-                .setRestaurantEmail("contact@resta.com")
-                .setRestaurantAddress("123 A St")
-                .setRestaurantPhone("123-456-7890")
-                .setRestaurantCity("City A")
-                .setRestaurantLocation("Loc A")
-                .setCoverImageUrl("http://example.com/cover1.jpg")
+    public void getAllRestaurantSummaries(Restaurant.Empty request, StreamObserver<Restaurant.RestaurantSummaryList> responseObserver) {
+        log.info("Fetching all active restaurant summaries");
+
+        // Filter and map active restaurants
+        List<Restaurant.RestaurantSummary> summaries = restaurantRepository.findAll()
+                .stream()
+                .filter(restaurant -> restaurant != null && restaurant.getActive()) // Include only active restaurants
+                .map(restaurant -> {
+                    log.info("Processing restaurant: {} (ID: {})", restaurant.getRestaurantName(), restaurant.getRestaurantId());
+
+                    return Restaurant.RestaurantSummary.newBuilder()
+                            .setRestaurantId(restaurant.getRestaurantId())
+                            .setRestaurantName(restaurant.getRestaurantName())
+                            .setRestaurantCity(restaurant.getRestaurantCity())
+                            .setCoverImageUrl(restaurant.getCoverImageUrl() != null ? restaurant.getCoverImageUrl() : "")
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        // Build the response
+        Restaurant.RestaurantSummaryList response = Restaurant.RestaurantSummaryList.newBuilder()
+                .addAllSummaries(summaries)
                 .build();
 
-        Restaurant.RestaurantDto restaurant2 = Restaurant.RestaurantDto.newBuilder()
-                .setRestaurantId(2)
-                .setRestaurantName("Restaurant B")
-                .setRestaurantEmail("contact@restb.com")
-                .setRestaurantAddress("456 B St")
-                .setRestaurantPhone("987-654-3210")
-                .setRestaurantCity("City B")
-                .setRestaurantLocation("Loc B")
-                .setCoverImageUrl("http://example.com/cover2.jpg")
-                .build();
-
-        Restaurant.RestaurantList restaurantList = Restaurant.RestaurantList.newBuilder()
-                .addRestaurants(restaurant1)
-                .addRestaurants(restaurant2)
-                .build();
-
-        responseObserver.onNext(restaurantList);
+        responseObserver.onNext(response);
         responseObserver.onCompleted();
+        log.info("Finished processing all restaurant summaries");
     }
 
     @Override
-    public void getRestaurantById(Restaurant.RestaurantIdRequest request, StreamObserver<Restaurant.RestaurantDto> responseObserver) {
-        // Fetch restaurant by ID from database (dummy data for now)
-        int restaurantId = request.getRestaurantId();
-        Restaurant.RestaurantDto restaurant = Restaurant.RestaurantDto.newBuilder()
-                .setRestaurantId(restaurantId)
-                .setRestaurantName("Restaurant " + restaurantId)
-                .setRestaurantEmail("contact@rest" + restaurantId + ".com")
-                .setRestaurantAddress("Address " + restaurantId)
-                .setRestaurantPhone("123-456-789" + restaurantId)
-                .setRestaurantCity("City " + restaurantId)
-                .setRestaurantLocation("Loc " + restaurantId)
-                .setCoverImageUrl("http://example.com/cover" + restaurantId + ".jpg")
+    public void getRestaurantDetails(Restaurant.RestaurantIdRequest request, StreamObserver<Restaurant.RestaurantDetails> responseObserver) {
+        log.info("Fetching details for restaurant ID: {}", request.getRestaurantId());
+
+        com.ISA.Restaurant.Entity.Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
+                .filter(com.ISA.Restaurant.Entity.Restaurant::getActive)// Ensure the restaurant is active
+                .orElse(null);
+        log.info("Processing restaurant details: {}", restaurant);
+        if (restaurant == null) {
+            responseObserver.onError(new RuntimeException("Restaurant not found or inactive"));
+            return;
+        }
+        log.info("Processing restaurant details: {}", restaurant);
+        // Fetch menus and active menu items
+        List<Restaurant.Menu> menus = menuRepository.findByRestaurant_RestaurantId(restaurant.getRestaurantId())
+                .stream()
+                .filter(Menu::getActive) // Include only active menus
+                .map(menu -> {
+                    List<Restaurant.MenuItem> menuItems = menuItemRepository.findByMenu_MenuId(menu.getMenuId())
+                            .stream()
+                            .filter(MenuItem::getActive) // Include only active menu items
+                            .map(menuItem -> Restaurant.MenuItem.newBuilder()
+                                    .setMenuItemId(menuItem.getMenuItemId())
+                                    .setMenuItemName(menuItem.getMenuItemName())
+                                    .setMenuItemDescription(menuItem.getMenuItemDescription())
+                                    .setMenuItemPrice(menuItem.getMenuItemPrice())
+                                    .setImageUrl(menuItem.getCoverImageUrl() != null ? menuItem.getCoverImageUrl() : "")
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    return Restaurant.Menu.newBuilder()
+                            .setMenuId(menu.getMenuId())
+                            .setMenuName(menu.getMenuName())
+                            .setMenuDescription(menu.getMenuDescription())
+                            .addAllMenuItems(menuItems)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        log.info("Processing restaurant details: {}", restaurant);
+
+        // Build the restaurant details response
+        Restaurant.RestaurantDetails response = Restaurant.RestaurantDetails.newBuilder()
+                .setRestaurantId(restaurant.getRestaurantId())
+                .setRestaurantName(restaurant.getRestaurantName())
+                .setRestaurantAddress(restaurant.getRestaurantAddress())
+                .setRestaurantPhone(restaurant.getRestaurantPhone())
+                .setRestaurantCity(restaurant.getRestaurantCity())
+                .setRestaurantLocation(restaurant.getRestaurantLocation())
+                .setCoverImageUrl(restaurant.getCoverImageUrl() != null ? restaurant.getCoverImageUrl() : "")
+                .addAllMenus(menus)
                 .build();
 
-        responseObserver.onNext(restaurant);
+        log.info("Processing restaurant details: {}", response);
+
+        responseObserver.onNext(response);
+        log.info("Finished processing restaurant details");
         responseObserver.onCompleted();
+        log.info("Finished processing restaurant details for ID: {}", request.getRestaurantId());
     }
 }

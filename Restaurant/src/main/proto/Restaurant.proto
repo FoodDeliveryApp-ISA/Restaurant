@@ -2,31 +2,62 @@ syntax = "proto3";
 
 package restaurant;
 
+// Service definition
 service RestaurantService {
-  // Get all restaurants
-  rpc GetAllRestaurants (Empty) returns (RestaurantList);
+  // Get a summary of all restaurants
+  rpc GetAllRestaurantSummaries (Empty) returns (RestaurantSummaryList) {}
 
-  // Get a restaurant by its ID
-  rpc GetRestaurantById (RestaurantIdRequest) returns (RestaurantDto);
+  // Get detailed information about a specific restaurant
+  rpc GetRestaurantDetails (RestaurantIdRequest) returns (RestaurantDetails) {}
 }
 
-message RestaurantDto {
-  int32 restaurantId = 1;
-  string restaurantName = 2;
-  string restaurantEmail = 3;
-  string restaurantAddress = 4;
-  string restaurantPhone = 5;
-  string restaurantCity = 6;
-  string restaurantLocation = 7;
-  string coverImageUrl = 8;
+// Restaurant summary for general listing
+message RestaurantSummary {
+  int32 restaurantId = 1;        // Unique ID
+  string restaurantName = 2;     // Name
+  string restaurantCity = 3;     // City
+  string coverImageUrl = 4;      // Cover image URL
 }
 
+// Detailed restaurant information for a specific restaurant
+message RestaurantDetails {
+  int32 restaurantId = 1;         // Unique ID
+  string restaurantName = 2;      // Name
+  string restaurantAddress = 3;   // Address
+  string restaurantPhone = 4;     // Phone number
+  string restaurantCity = 5;      // City
+  string restaurantLocation = 6;  // GPS Location
+  string coverImageUrl = 7;       // Cover image URL
+  repeated Menu menus = 8;    // Menu items available
+}
+
+// Menu item details
+message Menu {
+  int64 menuId = 1;             // Unique item ID
+  string menuName = 2;            // Item name
+  string menuDescription = 3;     // Description of the item
+  string imageUrl = 4;            // Image URL
+  repeated MenuItem menuItems = 5;
+
+}
+
+message MenuItem {
+  int64 menuItemId = 1;
+  string menuItemName = 2;
+  string menuItemDescription = 3;
+  double menuItemPrice = 4;
+  string imageUrl = 5;
+}
+
+// Request to fetch details of a specific restaurant
 message RestaurantIdRequest {
-  int32 restaurantId = 1;
+  int32 restaurantId = 1; // ID of the restaurant
 }
 
-message RestaurantList {
-  repeated RestaurantDto restaurants = 1;
+// Response containing summaries of all restaurants
+message RestaurantSummaryList {
+  repeated RestaurantSummary summaries = 1;
 }
 
+// Empty message for requests that don't need additional data
 message Empty {}

@@ -14,7 +14,7 @@ public class MessageServiceImpl extends MessageServiceGrpc.MessageServiceImplBas
     public void send(Message request, StreamObserver<Message> responseObserver) {
         // create response
         Message message = Message.newBuilder()
-                .setMessage("Jayanthi received your message: Thank U ❤️ \n Ur message is: " + request.getMessage())
+                .setMessage("Jayanthi received your message from kotte: Thank U ❤️ \n Ur message is: " + request.getMessage())
                 .build();
 
         // add to stream observer
