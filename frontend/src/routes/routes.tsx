@@ -5,6 +5,7 @@ import AuthService from "../services/auth.service"; // Adjust path as needed
 import LoginRegister from "../pages/LoginRegister/LoginRegister";
 import Menu from "../pages/Menu/Menu";
 import MenuDetailsPage from "../pages/MenuDetailsPage/MenuDetailsPage";
+import MenuItemDetailPage from "../pages/MenuItemDetailsPage/MenuItemDetailsPage";
 import Profile from "../pages/Profile/Profile";
 import ForbiddenPage from "../pages/403";
 import NotFoundPage from "../pages/404";
@@ -40,6 +41,10 @@ const privateRoutes: RouteConfig[] = [
   {
     path: "/menu/:menuId",
     element: <MenuDetailsPage />,
+  },
+  {
+    path: "/menu/:menuId/item/:menuItemId",
+    element: <MenuItemDetailPage />,
   },
   {
     path: "/profile",

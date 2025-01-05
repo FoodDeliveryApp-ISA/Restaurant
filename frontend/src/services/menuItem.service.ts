@@ -38,17 +38,19 @@ class MenuItemService {
   }
 
   // Get a menu item by ID
-  async getMenuItemById(
+  async getMenuItemDetails(
     menuId: number,
     menuItemId: number
   ): Promise<MenuItemDto> {
     try {
+      console.log(`Fetching details for menu item IDo: ${menuItemId}`);
       const response = await axios.get<MenuItemDto>(
         `${API_URL}/${menuId}/menuitems/${menuItemId}`,
         {
           headers: authHeader(),
         }
       );
+      console.log("Menu Item Details:", response.data);
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -94,6 +96,8 @@ class MenuItemService {
           },
         }
       );
+      console.log(response);
+      console.log(response.data);
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -114,15 +118,33 @@ class MenuItemService {
   }
 
   // Centralized error handling
-  private handleError(error: unknown): void {
+  private async handleError(error: unknown, retries = 3): Promise<void> {
     if (axios.isAxiosError(error)) {
       console.error("API Error:", error.response?.data || error.message);
+
+      // Retry mechanism for network-related errors
+      if (
+        retries > 0 &&
+        (error.message.includes("Network Error") || !error.response)
+      ) {
+        console.log(`Retrying request... Attempts left: ${retries}`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return this.handleError(error, retries - 1); // Recursive retry
+      }
+
+      // Handle different status codes or special cases
       if (error.response?.status === 401) {
         console.error("Unauthorized access - Redirecting to login");
-        // Optionally, add redirect or logout logic here
+        // Add your redirect or logout logic here
+      } else if (error.response?.status === 500) {
+        console.error("Server error - Please try again later.");
+      } else {
+        console.error(
+          `Unexpected Error: ${error.response?.data || error.message}`
+        );
       }
     } else {
-      console.error("Unexpected Error:", error);
+      console.error("Unknown error occurred:", error);
     }
   }
 }

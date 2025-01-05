@@ -13,4 +13,5 @@ public class RequestUpdatedMenuItemDto {
     private String menuItemDescription;
     private Double menuItemPrice;
     private String coverImageUrl;
+    private Boolean active;
 }

@@ -70,6 +70,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setMenuItemDescription(updatedMenuItemDto.getMenuItemDescription());
         menuItem.setMenuItemPrice(updatedMenuItemDto.getMenuItemPrice());
         menuItem.setCoverImageUrl(updatedMenuItemDto.getCoverImageUrl());
+        menuItem.setActive(updatedMenuItemDto.getActive());
 
         MenuItem updatedMenuItem = menuItemRepository.save(menuItem);
         return mapEntityToDto(updatedMenuItem);

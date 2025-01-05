@@ -1,39 +1,42 @@
-import React, { useState } from "react";
-import { Modal, Form, Input } from "antd";
-import MenuItemService from "../../../services/menuItem.service";
-import { RequestMenuItemSaveDto } from "../../../services/dto/menuItem.dto";
-
 interface AddMenuItemModalProps {
   visible: boolean;
   onCancel: () => void;
-  onSave: (menuData: RequestMenuItemSaveDto) => void;
-  menuId: number; // Add menuId as a prop to the modal
+  onAdd: (menuData: RequestMenuItemSaveDto) => void; // Rename from onSave to onAdd
+  menuId: number;
 }
 
 const AddMenuItemModal: React.FC<AddMenuItemModalProps> = ({
   visible,
   onCancel,
-  onSave,
+  onAdd, // Updated prop
   menuId,
 }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false); // Loading state for API call
+  const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
     form
       .validateFields()
       .then(async (values) => {
-        setLoading(true); // Set loading state to true
+        setLoading(true);
         try {
-          const menuItemData: RequestMenuItemSaveDto = values;
+          const menuItemData: RequestMenuItemSaveDto = {
+            menuItemName: values.menuItemName.trim(),
+            menuItemDescription: values.menuItemDescription.trim(),
+            menuItemPrice: values.menuItemPrice,
+          };
           console.log(menuItemData);
-          await MenuItemService.createMenuItem(menuId, menuItemData); // Call the service
-          form.resetFields(); // Reset form fields after save
-          onSave(menuItemData); // Pass data back to parent
+          await MenuItemService.createMenuItem(menuId, menuItemData);
+          form.resetFields();
+          onAdd(menuItemData); // Use onAdd instead of onSave
         } catch (error) {
           console.error("Error saving menu item:", error);
+          notification.error({
+            message: "Error",
+            description: "Failed to save the menu item. Please try again.",
+          });
         } finally {
-          setLoading(false); // Reset loading state
+          setLoading(false);
         }
       })
       .catch((info) => console.error("Validation failed:", info));

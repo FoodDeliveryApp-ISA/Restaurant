@@ -1,7 +1,5 @@
-// src/pages/MenuDetailsPage/components/EditMenuItemModal.tsx
-
 import React, { useState, useEffect } from "react";
-import { Modal, Form, Input } from "antd";
+import { Modal, Form, Input, message } from "antd";
 import MenuItemService from "../../../services/menuItem.service";
 import {
   MenuItemDto,
@@ -25,7 +23,6 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [menuItem, setMenuItem] = useState<MenuItemDto | null>(null);
 
   useEffect(() => {
     if (menuId && menuItemId) {
@@ -36,10 +33,10 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
             menuId,
             menuItemId
           );
-          setMenuItem(fetchedMenuItem);
           form.setFieldsValue(fetchedMenuItem);
         } catch (error) {
           console.error("Error fetching menu item:", error);
+          message.error("Failed to load menu item details.");
         } finally {
           setLoading(false);
         }
@@ -52,7 +49,6 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
     form
       .validateFields()
       .then(async (values) => {
-        console.log("Form values:", values); // Debug form values
         setLoading(true);
         try {
           const updatedMenuItemData: RequestUpdatedMenuItemDto = values;
@@ -62,9 +58,10 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
             updatedMenuItemData
           );
           onUpdate(updatedMenuItem);
-          onCancel(); // Close the modal after successful update
+          onCancel();
         } catch (error) {
           console.error("Error updating menu item:", error);
+          message.error("Failed to update menu item. Please try again.");
         } finally {
           setLoading(false);
         }
@@ -82,12 +79,7 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
       okText="Update"
       cancelText="Cancel"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={menuItem}
-        className="space-y-4"
-      >
+      <Form form={form} layout="vertical" className="space-y-4">
         <Form.Item
           name="menuItemName"
           label="Menu Item Name"
@@ -100,14 +92,23 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
         <Form.Item
           name="menuItemDescription"
           label="Description"
+          rules={[{ required: true, message: "Please enter the description" }]}
+        >
+          <Input.TextArea placeholder="Enter description" rows={4} />
+        </Form.Item>
+        <Form.Item
+          name="menuItemPrice"
+          label="Price"
           rules={[
+            { required: true, message: "Please enter the menu item price" },
             {
-              required: true,
-              message: "Please enter the menu item description",
+              type: "number",
+              min: 0,
+              message: "Price must be a positive value",
             },
           ]}
         >
-          <Input.TextArea placeholder="Enter description" rows={4} />
+          <Input type="number" placeholder="Enter price" />
         </Form.Item>
       </Form>
     </Modal>

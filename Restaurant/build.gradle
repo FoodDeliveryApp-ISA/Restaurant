@@ -76,3 +76,7 @@ protobuf {
 		}
 	}
 }
+// Configure the main class for Spring Boot
+springBoot {
+	mainClass.set('com.ISA.Restaurant.RestaurantApplication')  // Replace with your actual main class
+}

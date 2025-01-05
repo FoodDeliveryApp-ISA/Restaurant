@@ -1,9 +1,8 @@
-// Enhanced MenuItemsTable Component with UI/UX Updates
 import React, { useState, useEffect } from "react";
 import { Table, Button, Popconfirm, message, Switch } from "antd";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import MenuItemService from "../../../services/menuItem.service";
 import { MenuItemDto } from "../../../services/dto/menuItem.dto";
-import EmailVerificationPopup from "../../../components/EmailVerificationPopup";
 import EditMenuItemModal from "./EditMenuItemModal";
 import AddMenuItemModal from "./AddMenuItemModal";
 
@@ -18,49 +17,13 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
     null
   );
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [isEmailVerificationVisible, setIsEmailVerificationVisible] =
-    useState(false);
-
-  const handleVerificationSuccess = async () => {
-    message.info("Verification successful!");
-    console.log("Verification successful, proceeding to the next step.");
-  };
-
-  const handleResend = async () => {
-    console.log("Resending email...");
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate async delay
-    message.info("Resending email verification...");
-  };
-
-  // const handleCheckCode = async (): Promise<boolean> => {
-  //   message.info("Checking Code...");
-  //   await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate async delay
-  //   const enteredCode = "111111"; // Replace with actual logic
-  //   return enteredCode === "111111";
-  // };
-
-  const handleCheckCode = async (): Promise<boolean> => {
-    message.info("Checking Code...");
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Get all input elements
-    const inputs = document.querySelectorAll('input[type="text"]');
-
-    // Get the value from each input and join them into a single string
-    const enteredCode = Array.from(inputs)
-      .map((input) => (input as HTMLInputElement).value) // Cast to HTMLInputElement to access .value
-      .join(""); // Join the values into a single string
-
-    message.info(`Entered Code: ${enteredCode}`);
-
-    // Check if the entered code matches the correct code
-    return enteredCode === "111111"; // Replace with your actual verification code
-  };
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
         const items = await MenuItemService.getAllMenuItems(menuId);
+        console.log("Fetched menu items:", items);
         setMenuItems(items);
       } catch (error) {
         message.error("Error fetching menu items!");
@@ -112,6 +75,7 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
   const toggleActiveStatus = async (menuItem: MenuItemDto) => {
     try {
       const updatedItem = { ...menuItem, active: !menuItem.active };
+      console.log("Toggling active status:", updatedItem);
       await MenuItemService.updateMenuItem(
         menuId,
         updatedItem.menuItemId,
@@ -122,6 +86,10 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
       message.error("Error toggling active status!");
       console.error("Error toggling active status:", error);
     }
+  };
+
+  const handleView = (menuItemId: number) => {
+    navigate(`/menu/${menuId}/item/${menuItemId}`); // Navigate to the detailed view
   };
 
   const columns = [
@@ -164,11 +132,7 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
             </Button>
           </Popconfirm>
           <Button
-            onClick={() => {
-              // Trigger email verification popup when View is clicked
-              message.info(`Viewing menu item: ${record.menuItemName}`);
-              setIsEmailVerificationVisible(true); // Show popup
-            }}
+            onClick={() => handleView(record.menuItemId)} // View button handler
             type="default"
             size="small"
           >
@@ -215,20 +179,6 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
           onCancel={() => setIsAddModalVisible(false)}
           onAdd={handleAddMenuItem}
           menuId={menuId}
-        />
-      )}
-
-      {isEmailVerificationVisible && (
-        <EmailVerificationPopup
-          visible={isEmailVerificationVisible}
-          onClose={() => setIsEmailVerificationVisible(false)}
-          onResend={handleResend}
-          onSend={handleVerificationSuccess}
-          onCheck={handleCheckCode} // Pass the onCheck function
-          title="Custom Email Verification"
-          description="Please enter the verification code to continue."
-          successMessage="Thank you for verifying your email!"
-          timerDuration={60}
         />
       )}
     </>

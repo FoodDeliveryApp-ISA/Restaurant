@@ -1,107 +1,94 @@
-import React, { useState } from "react";
-import { Card, Upload, Button, Switch, message, Space } from "antd";
-import { UploadOutlined, SaveOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { message, Spin, Divider, Typography } from "antd";
+import { motion } from "framer-motion";
+import RestaurantService from "../../services/restaurant.service";
+import ActiveStatusToggle from "./components/ActiveStatusToggle";
+import ProfilePictureUpload from "./components/ProfilePictureUpload";
+
+const { Title } = Typography;
 
 const LeftSection: React.FC = () => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [active, setActive] = useState(true);
-  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [restaurantData, setRestaurantData] = useState(null);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
-  const toggleEdit = () => setIsEditing(!isEditing);
+  useEffect(() => {
+    const fetchRestaurantData = async () => {
+      setIsLoadingData(true);
+      try {
+        const data = await RestaurantService.getAuthenticatedRestaurant();
+        if (data) {
+          setRestaurantData(data);
+        } else {
+          message.error("Failed to load restaurant details.");
+        }
+      } catch (error) {
+        console.error("Error fetching restaurant details:", error);
+        message.error("Error loading restaurant details.");
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+    fetchRestaurantData();
+  }, []);
 
-  const handleUpload = (info: any) => {
-    if (info.file.status === "done") {
-      setProfilePic(URL.createObjectURL(info.file.originFileObj));
-      message.success(`${info.file.name} uploaded successfully!`);
-    } else if (info.file.status === "error") {
-      message.error(`${info.file.name} upload failed.`);
+  const updateActiveStatus = async (newStatus: boolean) => {
+    try {
+      const updatedData = await RestaurantService.updateAuthenticatedRestaurant(
+        { ...restaurantData, active: newStatus }
+      );
+      setRestaurantData(updatedData);
+      message.success("Active status updated successfully!");
+    } catch (error) {
+      message.error("Failed to update active status.");
     }
   };
 
-  const handleSave = () => {
-    message.success("Profile picture and status saved successfully!");
-    toggleEdit();
+  const updateProfilePicture = async (newUrl: string) => {
+    try {
+      const updatedData = await RestaurantService.updateAuthenticatedRestaurant(
+        { ...restaurantData, coverImageUrl: newUrl }
+      );
+      setRestaurantData(updatedData);
+      message.success("Profile picture updated successfully!");
+    } catch (error) {
+      message.error("Failed to update profile picture.");
+    }
   };
 
+  if (isLoadingData) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Spin tip="Loading..." />
+      </div>
+    );
+  }
+
   return (
-    <Card
-      bordered={false}
-      style={{
-        borderRadius: "10px",
-        padding: "20px",
-        backgroundColor: "#ffffff",
-        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-      }}
+    <motion.div
+      className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-all max-w-md mx-auto"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
     >
-      <h3 style={{ marginBottom: "20px", textAlign: "center" }}>
-        Profile Picture & Status
-      </h3>
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        {/* Rectangular Profile Picture */}
-        <img
-          src={profilePic || "https://via.placeholder.com/400x200"}
-          alt="Profile"
-          style={{
-            width: "400px",
-            height: "200px",
-            objectFit: "cover", // Ensures the image is properly cropped
-            marginBottom: "15px",
-            border: "3px solid #1890ff",
-            borderRadius: "10px", // Keeps it rectangular with rounded corners
-          }}
-        />
-        <Upload
-          showUploadList={false}
-          accept="image/*"
-          customRequest={({ file, onSuccess }) => {
-            setTimeout(() => onSuccess && onSuccess("ok"), 0);
-          }}
-          onChange={handleUpload}
-          disabled={!isEditing}
-        >
-          <Button
-            icon={<UploadOutlined />}
-            disabled={!isEditing}
-          >
-            Upload Picture
-          </Button>
-        </Upload>
-      </div>
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <p>Status: {active ? "Active" : "Inactive"}</p>
-        <Switch
-          checked={active}
-          onChange={(checked) => setActive(checked)}
-          disabled={!isEditing}
-        />
-      </div>
-      <div style={{ textAlign: "center" }}>
-        {isEditing ? (
-          <Space>
-            <Button
-              type="primary"
-              onClick={handleSave}
-              icon={<SaveOutlined />}
-            >
-              Save Changes
-            </Button>
-            <Button
-              onClick={toggleEdit}
-              icon={<CloseOutlined />}
-            >
-              Cancel
-            </Button>
-          </Space>
-        ) : (
-          <Button
-            onClick={toggleEdit}
-            icon={<EditOutlined />}
-          >
-            Edit
-          </Button>
-        )}
-      </div>
-    </Card>
+
+      {restaurantData && (
+        <>
+          <div className="flex flex-col items-center mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg shadow">
+            <span className="text-lg text-gray-800 dark:text-gray-300 mb-2">
+              Active Status:
+            </span>
+            <ActiveStatusToggle
+              active={restaurantData.active}
+              onSave={updateActiveStatus}
+            />
+          </div>
+          <Divider />
+          <ProfilePictureUpload
+            profilePic={restaurantData.coverImageUrl}
+            onUpdate={updateProfilePicture}
+          />
+        </>
+      )}
+    </motion.div>
   );
 };
 

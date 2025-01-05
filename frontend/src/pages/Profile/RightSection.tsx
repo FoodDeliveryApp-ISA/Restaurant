@@ -8,6 +8,7 @@ import {
   Space,
   Typography,
   Tooltip,
+  Divider,
 } from "antd";
 import { SaveOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
 import RestaurantService from "../../services/restaurant.service";
@@ -53,8 +54,8 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
   // Function to handle save button click
   const handleSave = () => {
     Modal.confirm({
-      title: "Are you sure you want to save changes?",
-      content: "Once saved, the changes will be applied.",
+      title: "Confirm Save",
+      content: "Are you sure you want to save the changes?",
       okText: "Yes",
       cancelText: "No",
       onOk: async () => {
@@ -96,13 +97,14 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
     <Card
       style={{
         padding: "20px",
-        borderRadius: "8px",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        borderRadius: "12px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       }}
     >
-      <Title level={3} style={{ textAlign: "center", marginBottom: "20px" }}>
+      {/* <Title level={3} style={{ textAlign: "center", marginBottom: "20px" }}>
         Restaurant Details
       </Title>
+      <Divider /> */}
       <Form layout="vertical" form={form}>
         <Form.Item
           name="restaurantName"
@@ -113,6 +115,7 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
         >
           <Input disabled={!isEditing} />
         </Form.Item>
+        <Divider />
         <Form.Item
           name="restaurantEmail"
           label="Email"
@@ -123,6 +126,7 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
         >
           <Input disabled={!isEditing} />
         </Form.Item>
+        <Divider />
         <Form.Item
           name="restaurantAddress"
           label="Address"
@@ -130,6 +134,7 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
         >
           <Input disabled={!isEditing} />
         </Form.Item>
+        <Divider />
         <Form.Item
           name="restaurantPhone"
           label="Phone"
@@ -137,6 +142,7 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
         >
           <Input disabled={!isEditing} />
         </Form.Item>
+        <Divider />
         <Form.Item
           name="restaurantCity"
           label="City"
@@ -144,9 +150,11 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
         >
           <Input disabled={!isEditing} />
         </Form.Item>
-        <Form.Item name="restaurantLocation" label="Location">
+        <Divider />
+        {/* <Form.Item name="restaurantLocation" label="Location">
           <Input disabled={!isEditing} />
-        </Form.Item>
+        </Form.Item> */}
+        {/* <Divider /> */}
         <Form.Item style={{ textAlign: "center", marginTop: "20px" }}>
           {isEditing ? (
             <Space size="large">
