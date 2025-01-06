@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from "axios";
-import ToastNotification from "../components/ToastNotification"; // Adjust the path if necessary
+import ToastNotification from "../components/ToastNotification";
+import { jwtDecode } from "jwt-decode";
 import TokenUtil from "../utils/tokenUtil";
 import {
   RegisterRequest,
@@ -11,17 +12,21 @@ import {
 const API_URL = "http://localhost:8081/auth/";
 
 class AuthService {
-  // Login method
+  /**
+   * Logs in a user with provided credentials.
+   * @param data - Login request containing email and password.
+   * @returns Promise resolving to LoginResponse.
+   */
   login(data: LoginRequest): Promise<LoginResponse> {
     return axios
       .post<LoginResponse>(`${API_URL}login`, data, {
         headers: { "Content-Type": "application/json" },
-        withCredentials: true, // For cookies or session management
+        withCredentials: true,
       })
       .then((response: AxiosResponse<LoginResponse>) => {
         const { token } = response.data;
         if (token) {
-          TokenUtil.storeToken(token); // Store the token using TokenUtil
+          TokenUtil.storeToken(token);
           ToastNotification.success({
             message: "Login Successful",
             description: "Welcome back!",
@@ -30,26 +35,21 @@ class AuthService {
         return response.data;
       })
       .catch((error) => {
-        if (error.response && error.response.data) {
-          // Handle error from the response
-          ToastNotification.error({
-            message: "Login Failed",
-            description:
-              error.response.data.message || "An error occurred during login.",
-          });
-        } else {
-          // Handle unexpected errors
-          ToastNotification.error({
-            message: "Login Failed",
-            description: "An unexpected error occurred.",
-          });
-        }
+        const errorMessage =
+          error.response?.data?.message || "An error occurred during login.";
+        ToastNotification.error({
+          message: "Login Failed",
+          description: errorMessage,
+        });
         throw error;
       });
   }
 
-  // Register method
-  // Register method with auto-login after successful registration
+  /**
+   * Registers a new user and logs them in automatically after registration.
+   * @param data - Registration request containing user details.
+   * @returns Promise resolving to LoginResponse.
+   */
   register(data: RegisterRequest): Promise<LoginResponse> {
     return axios
       .post<Restaurant>(`${API_URL}signup`, data)
@@ -59,43 +59,21 @@ class AuthService {
           description: "Welcome! Your account has been created.",
         });
 
-        // // Assuming the response contains the restaurantId
-        // if (response.data.restaurantId) {
-        //   // Store the restaurantId in localStorage
-        //   localStorage.setItem(
-        //     "restaurantId",
-        //     response.data.restaurantId.toString()
-        //   );
-        // } else {
-        //   console.warn("Response does not contain restaurantId.");
-        // }
-
-        // Automatically log the user in after registration
+        // Auto-login using registration credentials
         const loginData: LoginRequest = {
           email: data.restaurantEmail,
           password: data.restaurantPassword,
         };
-
-        // Trigger login after successful registration
         return this.login(loginData);
       })
       .catch((error) => {
-        if (error.response && error.response.data) {
-          // Handle error from the response
-          ToastNotification.error({
-            message: "Registration Failed",
-            description:
-              error.response.data.message ||
-              "An error occurred during registration.",
-          });
-        } else {
-          // Handle unexpected errors
-          ToastNotification.error({
-            message: "Registration Failed",
-            description: "An unexpected error occurred.",
-          });
-        }
-
+        const errorMessage =
+          error.response?.data?.message ||
+          "An error occurred during registration.";
+        ToastNotification.error({
+          message: "Registration Failed",
+          description: errorMessage,
+        });
         console.error(
           "Registration error:",
           error.response?.data || error.message
@@ -104,12 +82,27 @@ class AuthService {
       });
   }
 
-  // Check if the user is authenticated
+  /**
+   * Checks if the user is authenticated by verifying the stored token.
+   * @returns True if the token exists and is valid, otherwise false.
+   */
   isAuthenticated(): boolean {
-    return TokenUtil.getToken() !== null; // Check if the token exists
+    const token = TokenUtil.getToken();
+    if (!token) return false;
+
+    try {
+      const decodedToken: { exp: number } = jwtDecode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+      return decodedToken.exp > currentTime; // Token is valid if not expired
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return false;
+    }
   }
 
-  // Logout method
+  /**
+   * Logs out the user by clearing the token and notifying them.
+   */
   logout(): void {
     TokenUtil.removeToken();
     ToastNotification.info({

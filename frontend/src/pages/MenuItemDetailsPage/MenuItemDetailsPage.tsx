@@ -1,23 +1,68 @@
-import React, { useState } from "react";
-import { Button, Input, Card, message, Tooltip } from "antd";
+import React, { useEffect, useState } from "react";
+import { message } from "antd";
 import { motion } from "framer-motion";
+import { useParams } from "react-router-dom"; // Import useParams
 import ImageAndActivePage from "./components/ImageAndActivePage";
 import EditPage from "./components/EditPage";
+import MenuItemService from "../../services/menuItem.service";
+
+interface Params {
+  menuId: string; // Define parameter type for menuId
+  menuItemId: string; // Define parameter type for menuItemId
+}
 
 const MainPage: React.FC = () => {
   const [active, setActive] = useState(true);
   const [images, setImages] = useState<string[]>([]);
-  const [menuItemName, setMenuItemName] = useState("");
-  const [menuItemDescription, setMenuItemDescription] = useState("");
+  const [menuItemName, setMenuItemName] = useState<string>("");
+  const [menuItemDescription, setMenuItemDescription] = useState<string>("");
   const [menuItemPrice, setMenuItemPrice] = useState<number | undefined>();
-  const [currentPage, setCurrentPage] = useState("imageAndActive");
+  const { menuId, menuItemId } = useParams<Params>(); // Get menuId and menuItemId from URL params
 
-  const handleSave = () => {
+  // Fetch data when the component mounts
+  useEffect(() => {
+    const fetchMenuItem = async () => {
+      try {
+        const response = await MenuItemService.getMenuItemDetails(
+          Number(menuId), // Convert menuId to number
+          Number(menuItemId) // Convert menuItemId to number
+        );
+
+        // Ensure that response.data is destructured correctly based on your API response
+        const { menuItemName, menuItemDescription, menuItemPrice } = response;
+
+        // Set the state with the fetched data
+        setMenuItemName(menuItemName);
+        setMenuItemDescription(menuItemDescription);
+        setMenuItemPrice(menuItemPrice);
+      } catch (error) {
+        console.error("Error fetching menu item:", error);
+        message.error("Failed to load menu item. Please try again.");
+      }
+    };
+
+    fetchMenuItem();
+  }, [menuId, menuItemId]); // Run when menuId or menuItemId changes
+
+  const handleSave = async () => {
     if (!menuItemName || menuItemPrice === undefined) {
       message.error("Name and Price are required!");
       return;
     }
-    message.success("Menu item saved successfully!");
+
+    const menuItemData = {
+      menuItemName, // Use the property names from your DTO
+      menuItemDescription,
+      menuItemPrice,
+    };
+
+    try {
+      await MenuItemService.createMenuItem(Number(menuId), menuItemData); // Convert menuId to number
+      message.success("Menu item saved successfully!");
+    } catch (error) {
+      console.error("Error saving menu item:", error);
+      message.error("Failed to save menu item. Try again.");
+    }
   };
 
   const handlePreview = () => {
@@ -25,56 +70,28 @@ const MainPage: React.FC = () => {
       message.error("Enter a menu item name to preview!");
       return;
     }
-    message.info(`Preview: ${menuItemName} - $${menuItemPrice}`);
+
+    const menuItem = {
+      name: menuItemName,
+      description: menuItemDescription,
+      price: menuItemPrice || 0,
+    };
+
+    message.info(`Preview: ${menuItem.name} - $${menuItem.price}`);
   };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card
-          title="Edit Menu Item"
-          className="mb-6 shadow-lg"
-          bordered={false}
-          bodyStyle={{ padding: "20px" }}
-        >
-          <div className="flex flex-col space-y-4">
-            <Input
-              placeholder="Menu Item Name"
-              value={menuItemName}
-              onChange={(e) => setMenuItemName(e.target.value)}
-            />
-            <Input.TextArea
-              placeholder="Description"
-              rows={3}
-              value={menuItemDescription}
-              onChange={(e) => setMenuItemDescription(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Price"
-              value={menuItemPrice}
-              onChange={(e) => setMenuItemPrice(Number(e.target.value))}
-            />
-            <div className="flex space-x-4">
-              <Tooltip title="Save menu item">
-                <Button type="primary" onClick={handleSave}>
-                  Save
-                </Button>
-              </Tooltip>
-              <Tooltip title="Preview menu item">
-                <Button type="default" onClick={handlePreview}>
-                  Preview
-                </Button>
-              </Tooltip>
-            </div>
-          </div>
-        </Card>
-      </motion.div>
-
+      <EditPage
+        menuItemName={menuItemName}
+        setMenuItemName={setMenuItemName}
+        menuItemDescription={menuItemDescription}
+        setMenuItemDescription={setMenuItemDescription}
+        menuItemPrice={menuItemPrice}
+        setMenuItemPrice={setMenuItemPrice}
+        handleSave={handleSave}
+        handlePreview={handlePreview}
+      />
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
