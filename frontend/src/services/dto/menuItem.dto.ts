@@ -11,7 +11,7 @@ export interface RequestUpdatedMenuItemDto {
   menuItemDescription?: string;
   menuItemPrice?: number;
   active?: boolean;
-  coverImageUrl?: string;
+  ImageUrls?: string[];  // Array to store multiple image URLs
 }
 
 // DTO for the response from API for a menu item
@@ -21,6 +21,6 @@ export interface MenuItemDto {
   menuItemDescription?: string;
   menuItemPrice?: number;
   active?: boolean;
-  coverImageUrl?: string;
+  imageUrls: string[];  // Array to store multiple image URLs
   menuId: number;
 }

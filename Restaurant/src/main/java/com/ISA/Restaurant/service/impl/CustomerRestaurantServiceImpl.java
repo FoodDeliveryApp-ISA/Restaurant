@@ -86,7 +86,7 @@ public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.Restaur
                                     .setMenuItemName(menuItem.getMenuItemName())
                                     .setMenuItemDescription(menuItem.getMenuItemDescription())
                                     .setMenuItemPrice(menuItem.getMenuItemPrice())
-                                    .setImageUrl(menuItem.getCoverImageUrl() != null ? menuItem.getCoverImageUrl() : "")
+                                    .addAllImageUrls(menuItem.getImageUrls() != null ? menuItem.getImageUrls() : List.of())
                                     .build())
                             .collect(Collectors.toList());
 

@@ -34,7 +34,11 @@ public class MenuItemController {
     public ResponseEntity<MenuItemDto> getMenuItemById(
             @PathVariable Long menuId,
             @PathVariable Long menuItemId) {
-        return ResponseEntity.ok(menuItemService.getMenuItemById(menuId, menuItemId));
+        log.info("getMenuItemById: {}", menuId);
+        log.info("getMenuItemById: {}", menuItemId);
+        MenuItemDto menuItemDto = menuItemService.getMenuItemById(menuItemId, menuId);
+        log.info("getMenuItemById: {}", menuItemDto);
+        return ResponseEntity.ok(menuItemDto);
     }
 
     // Update a menu item

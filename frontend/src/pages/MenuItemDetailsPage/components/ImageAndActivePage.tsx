@@ -9,6 +9,9 @@ interface ImageAndActivePageProps {
   setActive: (value: boolean) => void;
   images: string[];
   setImages: (value: string[]) => void;
+  menuId: string;
+  menuItemId: string;
+  handleSave: () => void; // Ensure this is defined and non-optional
 }
 
 const bucketName = "delivery";
@@ -20,6 +23,9 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
   setActive,
   images,
   setImages,
+  menuId,
+  menuItemId,
+  handleSave,
 }) => {
   const [uploading, setUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -27,19 +33,22 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
   const handleImageUpload = async (file: File) => {
     const key = `menu-items/${Date.now()}-${file.name}`;
     const mimeType = file.type;
-
+  
     try {
       setUploading(true);
       const publicUrl = await imageService.uploadImage(key, file, mimeType);
-      setImages((prev) => [...prev, publicUrl]);
+      console.log(publicUrl);
+      setImages((prev) => [...prev, publicUrl]); // Append the new image URL to the state
+      await handleSave(); // Ensure handleSave is saving image-related data
       message.success("Image uploaded successfully!");
     } catch (error) {
-      message.error("Failed to upload image.");
+      console.error("Image upload error:", error);
+      message.error("Failed to upload image. Please try again.");
     } finally {
       setUploading(false);
     }
   };
-
+  
   const handleImageClick = (imageUrl: string) => {
     setPreviewImage(imageUrl);
   };
@@ -48,23 +57,29 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
     setPreviewImage(null);
   };
 
+  const updateMenuStatus = async (isActive: boolean) => {
+    if (typeof handleSave === "function") {
+      await handleSave();
+      setActive(isActive);
+    } else {
+      console.error("handleSave is not a function");
+      message.error("Error updating menu status. Please try again.");
+    }
+  };
+
   const confirmToggleActive = () => {
     Modal.confirm({
       title: "Are you sure?",
-      content: `Do you really want to ${
-        active ? "deactivate" : "activate"
-      } this item?`,
+      content: `Do you really want to ${active ? "deactivate" : "activate"} this item?`,
       okText: "Yes",
       cancelText: "No",
-      onOk: () => setActive(!active),
+      onOk: () => updateMenuStatus(!active),
     });
   };
 
   return (
     <div className="p-6 bg-gray-50 rounded-lg shadow-lg">
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">
-        Image and Active Status
-      </h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Image and Active Status</h1>
 
       {/* Active Switch with Confirmation */}
       <div className="mb-6">
@@ -79,7 +94,7 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
           listType="picture-card"
           customRequest={({ file }) => handleImageUpload(file as File)}
           multiple
-          showUploadList={false}
+          showUploadList={false} // Do not display uploaded images in a list
         >
           <Tooltip title="Click to upload images">
             <div className="flex flex-col items-center justify-center">

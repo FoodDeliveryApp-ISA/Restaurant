@@ -1,40 +1,44 @@
 import React, { useEffect, useState } from "react";
 import { message } from "antd";
 import { motion } from "framer-motion";
-import { useParams } from "react-router-dom"; // Import useParams
+import { useParams } from "react-router-dom";
 import ImageAndActivePage from "./components/ImageAndActivePage";
 import EditPage from "./components/EditPage";
 import MenuItemService from "../../services/menuItem.service";
 
 interface Params {
-  menuId: string; // Define parameter type for menuId
-  menuItemId: string; // Define parameter type for menuItemId
+  menuId: string;
+  menuItemId: string;
 }
 
 const MainPage: React.FC = () => {
   const [active, setActive] = useState(true);
-  const [images, setImages] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [menuItemName, setMenuItemName] = useState<string>("");
   const [menuItemDescription, setMenuItemDescription] = useState<string>("");
   const [menuItemPrice, setMenuItemPrice] = useState<number | undefined>();
-  const { menuId, menuItemId } = useParams<Params>(); // Get menuId and menuItemId from URL params
+  const { menuId, menuItemId } = useParams<Params>();
 
-  // Fetch data when the component mounts
   useEffect(() => {
+    console.log("Menu id and menu item id :",menuId,menuItemId);
+    if (!menuId || !menuItemId) {
+      message.error("Invalid menu or menu item ID.");
+      return;
+    }
+
     const fetchMenuItem = async () => {
       try {
         const response = await MenuItemService.getMenuItemDetails(
-          Number(menuId), // Convert menuId to number
-          Number(menuItemId) // Convert menuItemId to number
+          Number(menuId),
+          Number(menuItemId)
         );
-
-        // Ensure that response.data is destructured correctly based on your API response
-        const { menuItemName, menuItemDescription, menuItemPrice } = response;
-
-        // Set the state with the fetched data
-        setMenuItemName(menuItemName);
-        setMenuItemDescription(menuItemDescription);
+        const { menuItemName, menuItemDescription, menuItemPrice , active , imageUrls } = response|| {};
+        console.log("responses : ",response);
+        setMenuItemName(menuItemName || "");
+        setMenuItemDescription(menuItemDescription || "");
         setMenuItemPrice(menuItemPrice);
+        setActive(active);
+        setImageUrls(imageUrls);
       } catch (error) {
         console.error("Error fetching menu item:", error);
         message.error("Failed to load menu item. Please try again.");
@@ -42,7 +46,7 @@ const MainPage: React.FC = () => {
     };
 
     fetchMenuItem();
-  }, [menuId, menuItemId]); // Run when menuId or menuItemId changes
+  }, [menuId, menuItemId]);
 
   const handleSave = async () => {
     if (!menuItemName || menuItemPrice === undefined) {
@@ -51,13 +55,20 @@ const MainPage: React.FC = () => {
     }
 
     const menuItemData = {
-      menuItemName, // Use the property names from your DTO
+      menuItemName,
       menuItemDescription,
       menuItemPrice,
+      active,
+      imageUrls,
     };
-
+    console.log(menuItemData);
+    console.log("@@@@@ images :",imageUrls);
     try {
-      await MenuItemService.createMenuItem(Number(menuId), menuItemData); // Convert menuId to number
+      if (menuItemId) {
+        await MenuItemService.updateMenuItem(Number(menuId), Number(menuItemId), menuItemData);
+      } else {
+        await MenuItemService.createMenuItem(Number(menuId), menuItemData);
+      }
       message.success("Menu item saved successfully!");
     } catch (error) {
       console.error("Error saving menu item:", error);
@@ -66,15 +77,15 @@ const MainPage: React.FC = () => {
   };
 
   const handlePreview = () => {
-    if (!menuItemName) {
-      message.error("Enter a menu item name to preview!");
+    if (!menuItemName || menuItemPrice === undefined) {
+      message.error("Name and Price are required for preview!");
       return;
     }
 
     const menuItem = {
       name: menuItemName,
       description: menuItemDescription,
-      price: menuItemPrice || 0,
+      price: menuItemPrice,
     };
 
     message.info(`Preview: ${menuItem.name} - $${menuItem.price}`);
@@ -98,11 +109,15 @@ const MainPage: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.3 }}
       >
         <ImageAndActivePage
-          active={active}
-          setActive={setActive}
-          images={images}
-          setImages={setImages}
-        />
+  active={active}
+  setActive={setActive}
+  images={imageUrls}
+  setImages={setImageUrls}
+  menuId={menuId!} // Add non-null assertion if you are sure it's not null/undefined
+  menuItemId={menuItemId!}
+  handleSave={handleSave} // Ensure this is passed correctly
+/>
+
       </motion.div>
     </div>
   );

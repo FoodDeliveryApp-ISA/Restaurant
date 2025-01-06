@@ -41,6 +41,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setMenuItemDescription(menuItemDto.getMenuItemDescription());
         menuItem.setMenuItemPrice(menuItemDto.getMenuItemPrice());
         menuItem.setMenu(menu);
+        menuItem.setActive(false);
 
         MenuItem savedMenuItem = menuItemRepository.save(menuItem);
         return mapEntityToDto(savedMenuItem);
@@ -48,10 +49,11 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItemDto getMenuItemById(Long menuId, Long menuItemId) {
-        MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuItemId, menuId);
+        MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuId,menuItemId);
         if (menuItem == null) {
             throw new MenuItemNotFoundException("Menu item not found with id " + menuItemId + " in menu " + menuId);
         }
+        log.info("Menu item found with id " + menuItemId + " in menu " + menuId);
         return mapEntityToDto(menuItem);
     }
 
@@ -69,8 +71,8 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setMenuItemName(updatedMenuItemDto.getMenuItemName());
         menuItem.setMenuItemDescription(updatedMenuItemDto.getMenuItemDescription());
         menuItem.setMenuItemPrice(updatedMenuItemDto.getMenuItemPrice());
-        menuItem.setCoverImageUrl(updatedMenuItemDto.getCoverImageUrl());
         menuItem.setActive(updatedMenuItemDto.getActive());
+        menuItem.setImageUrls(updatedMenuItemDto.getImageUrls()); // Update multiple image URLs
 
         MenuItem updatedMenuItem = menuItemRepository.save(menuItem);
         return mapEntityToDto(updatedMenuItem);
@@ -111,7 +113,9 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItemDto.setMenuItemDescription(menuItem.getMenuItemDescription());
         menuItemDto.setMenuItemPrice(menuItem.getMenuItemPrice());
         menuItemDto.setActive(menuItem.getActive());
-        menuItemDto.setCoverImageUrl(menuItem.getCoverImageUrl());
+        menuItemDto.setImageUrls(menuItem.getImageUrls()); // Map multiple image URLs
+
+        log.info(menuItem.toString());
 
         Double price = menuItemDto.getMenuItemPrice();
         if (price == null || price < 0) {
@@ -119,18 +123,6 @@ public class MenuItemServiceImpl implements MenuItemService {
         }
 
         return menuItemDto;
-    }
-
-    private MenuItem mapDtoToEntity(MenuItemDto menuItemDto) {
-        return new MenuItem(
-                menuItemDto.getMenuItemId(),
-                menuItemDto.getMenuItemName(),
-                menuItemDto.getMenuItemDescription(),
-                menuItemDto.getMenuItemPrice(),
-                null,
-                menuItemDto.getActive(),
-                menuItemDto.getCoverImageUrl()
-        );
     }
 }
 

@@ -3,6 +3,8 @@ package com.ISA.Restaurant.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 @Data
 @Entity
@@ -26,8 +28,11 @@ public class MenuItem {
     @Column(name = "active")
     private Boolean active;
 
-    @Column(name = "cover_image_url")
-    private String coverImageUrl;
+    @ElementCollection
+    @CollectionTable(name = "menu_item_images", joinColumns = @JoinColumn(name = "menu_item_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls;
+//    private String coverImageUrl;
 
     @Override
     public String toString() {

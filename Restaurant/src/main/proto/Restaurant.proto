@@ -46,7 +46,7 @@ message MenuItem {
   string menuItemName = 2;
   string menuItemDescription = 3;
   double menuItemPrice = 4;
-  string imageUrl = 5;
+  repeated string imageUrls = 5;
 }
 
 // Request to fetch details of a specific restaurant

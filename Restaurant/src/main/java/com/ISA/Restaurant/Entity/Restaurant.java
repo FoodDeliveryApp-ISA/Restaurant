@@ -62,15 +62,6 @@ public class Restaurant implements UserDetails {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Menu> menus;
 
-//    @Column(name = "verification_code")
-//    private String verificationCode;
-//
-//    @Column(name = "verification_expiration")
-//    private LocalDateTime verificationCodeExpiresAt;
-//
-//    @Column(name = "enabled" , nullable = false)
-//    private Boolean enabled = false;
-
     public Restaurant(
             String restaurantName,
             String restaurantEmail,

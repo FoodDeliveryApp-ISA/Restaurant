@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,6 +14,6 @@ public class RequestUpdatedMenuItemDto {
     private String menuItemName;
     private String menuItemDescription;
     private Double menuItemPrice;
-    private String coverImageUrl;
     private Boolean active;
+    private List<String> imageUrls;
 }
