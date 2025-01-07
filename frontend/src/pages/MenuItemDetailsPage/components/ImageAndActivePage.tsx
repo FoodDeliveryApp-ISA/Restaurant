@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Upload, Switch, message, Modal, Tooltip, Spin } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Upload, Switch, message, Modal, Tooltip, Spin, Button } from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import ImageService from "../../../services/image.service";
 
@@ -11,7 +11,7 @@ interface ImageAndActivePageProps {
   setImages: (value: string[]) => void;
   menuId: string;
   menuItemId: string;
-  handleSave: () => void; // Ensure this is defined and non-optional
+  handleSave: () => void;
 }
 
 const bucketName = "delivery";
@@ -29,28 +29,43 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
 }) => {
   const [uploading, setUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [hoveredImage, setHoveredImage] = useState<string | null>(null);
 
-  const handleImageUpload = async (file: File) => {
-    const key = `menu-items/${Date.now()}-${file.name}`;
-    const mimeType = file.type;
-  
-    try {
-      setUploading(true)
-      console.log(images);
-      const publicUrl = await imageService.uploadImage(key, file, mimeType);
-      console.log(publicUrl);
-      console.log(images);
-      setImages((prev) => [...prev, publicUrl]); // Append the new image URL to the state
-      await handleSave(); // Ensure handleSave is saving image-related data
-      message.success("Image uploaded successfully!");
-    } catch (error) {
-      console.error("Image upload error:", error);
-      message.error("Failed to upload image. Please try again.");
-    } finally {
-      setUploading(false);
-    }
+  const handleImageUpload = async (options: any) => {
+    const { file, onSuccess, onError } = options;
+
+    Modal.confirm({
+      title: "Confirm Upload",
+      content: "Are you sure you want to upload this image?",
+      okText: "Yes",
+      cancelText: "No",
+      onOk: async () => {
+        const rawFile = file.originFileObj || file;
+        const key = `menu-items/${Date.now()}-${rawFile.name}`;
+        const mimeType = rawFile.type;
+        const publicURL = `${publicDomain}/${key}`;
+
+        try {
+          setUploading(true);
+          await imageService.uploadImage(key, rawFile, mimeType);
+          setImages((prev) => [...prev, publicURL]);
+          await handleSave();
+          message.success(`${rawFile.name} uploaded successfully!`);
+          onSuccess && onSuccess("File uploaded successfully!");
+        } catch (error) {
+          console.error("Image upload error:", error);
+          message.error("Failed to upload image. Please try again.");
+          onError && onError(error);
+        } finally {
+          setUploading(false);
+        }
+      },
+      onCancel: () => {
+        message.info("Image upload canceled.");
+      },
+    });
   };
-  
+
   const handleImageClick = (imageUrl: string) => {
     setPreviewImage(imageUrl);
   };
@@ -59,15 +74,31 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
     setPreviewImage(null);
   };
 
-  const updateMenuStatus = async (isActive: boolean) => {
-    if (typeof handleSave === "function") {
-      await handleSave();
-      setActive(isActive);
-    } else {
-      console.error("handleSave is not a function");
-      message.error("Error updating menu status. Please try again.");
-    }
+  const handleDelete = (imageUrl: string) => {
+    Modal.confirm({
+      title: "Confirm Delete",
+      content: "Are you sure you want to delete this image?",
+      okText: "Yes",
+      cancelText: "No",
+      onOk: async () => {
+        try {
+          // Update state to remove the image
+          setImages((prev) => prev.filter((img) => img !== imageUrl));
+          
+          // Call the save function to persist changes
+          await handleSave();
+          
+          // Show success message
+          message.success("Image deleted successfully!");
+        } catch (error) {
+          // Handle errors if save fails
+          console.error("Error deleting image:", error);
+          message.error("Failed to delete the image. Please try again.");
+        }
+      },
+    });
   };
+  
 
   const confirmToggleActive = () => {
     Modal.confirm({
@@ -75,28 +106,30 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
       content: `Do you really want to ${active ? "deactivate" : "activate"} this item?`,
       okText: "Yes",
       cancelText: "No",
-      onOk: () => updateMenuStatus(!active),
+      onOk: async () => {
+        await handleSave();
+        setActive(!active);
+      },
     });
   };
 
   return (
-    <div className="p-6 bg-gray-50 rounded-lg shadow-lg">
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">Image and Active Status</h1>
+    <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg">
+      <div className="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Image and Active Status</h1>
 
-      {/* Active Switch with Confirmation */}
       <div className="mb-6">
-        <label className="block font-medium mb-2 text-gray-600">Active</label>
+        <label className="block font-medium mb-2 text-gray-600 dark:text-gray-300">Active</label>
         <Switch checked={active} onChange={confirmToggleActive} />
       </div>
 
-      {/* Image Upload */}
       <div className="mb-6">
-        <label className="block font-medium mb-2 text-gray-600">Images</label>
+        <label className="block font-medium mb-2 text-gray-600 dark:text-gray-300">Images</label>
         <Upload
           listType="picture-card"
-          customRequest={({ file }) => handleImageUpload(file as File)}
+          customRequest={handleImageUpload}
           multiple
-          showUploadList={false} // Do not display uploaded images in a list
+          showUploadList={false}
         >
           <Tooltip title="Click to upload images">
             <div className="flex flex-col items-center justify-center">
@@ -112,26 +145,44 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
         )}
       </div>
 
-      {/* Image Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {images.map((url, index) => (
-          <motion.div
-            key={index}
-            className="w-24 h-24 rounded-lg overflow-hidden shadow-md cursor-pointer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleImageClick(url)}
-          >
-            <img
-              src={url}
-              alt="Menu Item"
-              className="w-full h-full object-cover"
-            />
-          </motion.div>
-        ))}
-      </div>
+  {images.map((url, index) => (
+    <motion.div
+      key={index}
+      className="relative w-24 h-24 rounded-lg overflow-hidden shadow-md cursor-pointer glitter-effect"
+      onMouseEnter={() => {
+        console.log("Hovered:", url); // Debugging
+        setHoveredImage(url);
+      }}
+      onMouseLeave={() => {
+        console.log("Unhovered:", url); // Debugging
+        setHoveredImage(null);
+      }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <img
+        src={url}
+        alt="Menu Item"
+        className="w-full h-full object-cover"
+        onClick={() => handleImageClick(url)}
+      />
+      {hoveredImage === url && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+          <Button
+            className="bg-red-450 rounded-full border-2 border-white w-12 h-12 flex items-center justify-center transition-transform transform hover:scale-110"
+            onClick={() => handleDelete(url)}
+            icon={<DeleteOutlined />}
+            size="large"
+            aria-label="Delete Image"
+          />
+        </div>
+      )}
+    </motion.div>
+  ))}
+</div>
 
-      {/* Image Preview Modal */}
+
       <Modal
         open={!!previewImage}
         footer={null}

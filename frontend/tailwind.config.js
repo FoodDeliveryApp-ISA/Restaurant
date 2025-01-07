@@ -5,6 +5,7 @@ export default {
     extend: {
       animation: {
         shake: "shake 0.5s ease-in-out",
+        glitter: "glitter 1.5s linear infinite", // Add glitter animation
       },
       keyframes: {
         shake: {
@@ -12,6 +13,10 @@ export default {
           "25%": { transform: "translateX(-5px)" },
           "50%": { transform: "translateX(5px)" },
           "75%": { transform: "translateX(-5px)" },
+        },
+        glitter: {
+          from: { backgroundPosition: "0 0" },
+          to: { backgroundPosition: "100% 100%" },
         },
       },
     },

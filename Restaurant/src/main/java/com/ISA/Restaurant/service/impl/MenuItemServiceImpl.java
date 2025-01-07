@@ -49,6 +49,7 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItemDto getMenuItemById(Long menuId, Long menuItemId) {
+        log.info(menuItemId.toString(),menuId);
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuId,menuItemId);
         if (menuItem == null) {
             throw new MenuItemNotFoundException("Menu item not found with id " + menuItemId + " in menu " + menuId);
@@ -75,10 +76,10 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setImageUrls(updatedMenuItemDto.getImageUrls()); // Update multiple image URLs
         log.info(menuItem.toString());
         log.info(updatedMenuItemDto.toString());
-        log.info(updatedMenuItemDto.getImageUrls().toString());
+//        log.info(updatedMenuItemDto.getImageUrls().toString());
         MenuItem updatedMenuItem = menuItemRepository.save(menuItem);
         log.info(updatedMenuItem.toString());
-        log.info(updatedMenuItem.getImageUrls().toString());
+//        log.info(updatedMenuItem.getImageUrls().toString());
         return mapEntityToDto(updatedMenuItem);
     }
 
@@ -119,7 +120,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItemDto.setActive(menuItem.getActive());
         menuItemDto.setImageUrls(menuItem.getImageUrls()); // Map multiple image URLs
 
-        log.info(menuItemDto.getImageUrls().toString());
+//        log.info(menuItemDto.getImageUrls().toString());
 
         Double price = menuItemDto.getMenuItemPrice();
         if (price == null || price < 0) {
