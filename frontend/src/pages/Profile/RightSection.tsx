@@ -9,10 +9,14 @@ import {
   Typography,
   Tooltip,
   Divider,
+  message,
 } from "antd";
 import { SaveOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
 import RestaurantService from "../../services/restaurant.service";
 import ToastNotification from "../../components/ToastNotification";
+import emailVerificationService from "../../services/emailVerification.service";
+import { RequestVerificationDto,VerifyEmailDto } from "../../services/dto/emailVerification.dto";
+import EmailVerificationPopup from "../../components/EmailVerificationPopup";
 
 const { Title } = Typography;
 
@@ -36,6 +40,44 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isEmailVerificationVisible, setIsEmailVerificationVisible] = useState(false);
+
+  const handleVerificationSuccess = async () => {
+    const values = await handleSave();
+  };
+
+    // Handles resending the verification code
+    const handleResend = async () => {
+      try {
+        const dto: RequestVerificationDto = { email: restaurant.restaurantEmail };
+        await emailVerificationService.resendVerificationCode(dto);
+        message.success("Verification email resent. Please check your inbox.");
+      } catch (error) {
+        message.error("Failed to resend the verification email.");
+      }
+    };
+  
+    // Handles checking the verification code
+    const handleCheckCode = async (): Promise<boolean> => {
+      const inputs = document.querySelectorAll('input[type="text"]');
+      const verificationCode = Array.from(inputs)
+        .map((input) => (input as HTMLInputElement).value)
+        .join("")
+        .slice(-6); // Ensure only the last 6 characters are used
+  
+      try {
+        const dto: VerifyEmailDto = { email: restaurant.restaurantEmail, verificationCode };
+        console.log(restaurant);
+        console.log(dto);
+        await emailVerificationService.verifyUser(dto);
+        console.log(dto);
+        await handleVerificationSuccess();
+        return true;
+      } catch (error) {
+        message.error("Invalid or expired verification code.");
+        return false;
+      }
+    };
 
   // Set form fields when the restaurant object is available
   useEffect(() => {
@@ -94,6 +136,7 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
   };
 
   return (
+    <>
     <Card
       style={{
         padding: "20px",
@@ -151,16 +194,13 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
           <Input disabled={!isEditing} />
         </Form.Item>
         <Divider />
-        {/* <Form.Item name="restaurantLocation" label="Location">
-          <Input disabled={!isEditing} />
-        </Form.Item> */}
-        {/* <Divider /> */}
+
         <Form.Item style={{ textAlign: "center", marginTop: "20px" }}>
           {isEditing ? (
             <Space size="large">
               <Button
                 type="primary"
-                onClick={handleSave}
+                onClick={()=>setIsEmailVerificationVisible(true)}
                 icon={<SaveOutlined />}
                 loading={loading}
               >
@@ -185,6 +225,21 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
         </Form.Item>
       </Form>
     </Card>
+          {isEmailVerificationVisible && (
+            <EmailVerificationPopup
+              visible={isEmailVerificationVisible}
+              onClose={() => setIsEmailVerificationVisible(false)}
+              onResend={handleResend}
+              onSend={handleVerificationSuccess}
+              onCheck={handleCheckCode} // Pass the onCheck function
+              title="Custom Email Verification"
+              description="Please enter the verification code to continue."
+              successMessage="Thank you for verifying your email!"
+              timerDuration={60}
+            />
+          )}
+          </>
+    
   );
 };
 

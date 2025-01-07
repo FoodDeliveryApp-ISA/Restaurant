@@ -26,7 +26,8 @@ services:
       context: ./Restaurant
       dockerfile: Dockerfile  # Fixed path to Dockerfile
     ports:
-      - "8081:8081"
+      - "8081:8081" # HTTP Port
+      - "9191:9191" # gRPC Port
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/test1
       - SPRING_DATASOURCE_USERNAME=admin
