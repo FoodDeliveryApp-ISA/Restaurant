@@ -21,6 +21,5 @@ export interface MenuItemDto {
   menuItemDescription?: string;
   menuItemPrice?: number;
   active?: boolean;
-  imageUrls: string[];  // Array to store multiple image URLs
-  menuId: number;
+  imageUrls: string[];  
 }

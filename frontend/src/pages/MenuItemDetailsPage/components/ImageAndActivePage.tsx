@@ -35,9 +35,11 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
     const mimeType = file.type;
   
     try {
-      setUploading(true);
+      setUploading(true)
+      console.log(images);
       const publicUrl = await imageService.uploadImage(key, file, mimeType);
       console.log(publicUrl);
+      console.log(images);
       setImages((prev) => [...prev, publicUrl]); // Append the new image URL to the state
       await handleSave(); // Ensure handleSave is saving image-related data
       message.success("Image uploaded successfully!");

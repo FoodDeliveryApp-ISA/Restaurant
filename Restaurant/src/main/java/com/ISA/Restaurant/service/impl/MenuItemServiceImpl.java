@@ -73,8 +73,12 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setMenuItemPrice(updatedMenuItemDto.getMenuItemPrice());
         menuItem.setActive(updatedMenuItemDto.getActive());
         menuItem.setImageUrls(updatedMenuItemDto.getImageUrls()); // Update multiple image URLs
-
+        log.info(menuItem.toString());
+        log.info(updatedMenuItemDto.toString());
+        log.info(updatedMenuItemDto.getImageUrls().toString());
         MenuItem updatedMenuItem = menuItemRepository.save(menuItem);
+        log.info(updatedMenuItem.toString());
+        log.info(updatedMenuItem.getImageUrls().toString());
         return mapEntityToDto(updatedMenuItem);
     }
 
@@ -115,7 +119,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItemDto.setActive(menuItem.getActive());
         menuItemDto.setImageUrls(menuItem.getImageUrls()); // Map multiple image URLs
 
-        log.info(menuItem.toString());
+        log.info(menuItemDto.getImageUrls().toString());
 
         Double price = menuItemDto.getMenuItemPrice();
         if (price == null || price < 0) {
