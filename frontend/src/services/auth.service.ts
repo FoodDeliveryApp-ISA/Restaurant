@@ -27,10 +27,10 @@ class AuthService {
         const { token } = response.data;
         if (token) {
           TokenUtil.storeToken(token);
-          ToastNotification.success({
-            message: "Login Successful",
-            description: "Welcome back!",
-          });
+          // ToastNotification.success({
+          //   message: "Login Successful",
+          //   description: "Welcome back!",
+          // });
         }
         return response.data;
       })

@@ -76,9 +76,10 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
     try {
       const updatedItem = { ...menuItem, active: !menuItem.active };
       console.log("Toggling active status:", updatedItem);
+      console.log("Menu Item Id :",menuItem.menuItemId)
       await MenuItemService.updateMenuItem(
         menuId,
-        updatedItem.menuItemId,
+        menuItem.menuItemId,
         updatedItem
       );
       handleUpdate(updatedItem);

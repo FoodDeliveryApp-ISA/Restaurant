@@ -1,12 +1,26 @@
-import { ReactElement } from "react";
+import { ReactElement, Suspense , lazy} from "react";
 import { Navigate } from "react-router-dom";
-import AuthService from "../services/auth.service"; // Adjust path as needed
-import LoginRegister from "../pages/LoginRegister/LoginRegister";
-import Menu from "../pages/Menu/Menu";
-import MenuDetailsPage from "../pages/MenuDetailsPage/MenuDetailsPage";
-import MenuItemDetailPage from "../pages/MenuItemDetailsPage/MenuItemDetailsPage";
-import Profile from "../pages/Profile/Profile";
-import { Unauthorized, Forbidden, NotFound, ServerError } from "../pages/error"; // Importing new error pages
+import Spinner from "../components/Spinner";
+
+import useAuth from "../hooks/useAuth";
+
+// import LoginRegister from "../pages/LoginRegister/LoginRegister";
+// import Menu from "../pages/Menu/Menu";
+// import MenuDetailsPage from "../pages/MenuDetailsPage/MenuDetailsPage";
+// import MenuItemDetailPage from "../pages/MenuItemDetailsPage/MenuItemDetailsPage";
+// import Profile from "../pages/Profile/Profile";
+// import { Unauthorized, Forbidden, NotFound, ServerError } from "../pages/error"; // Importing new error pages
+
+// Lazy-loaded pages for better performance
+const LoginRegister = lazy(() => import("../pages/LoginRegister/LoginRegister"));
+const Menu = lazy(() => import("../pages/Menu/Menu"));
+const MenuDetailsPage = lazy(() => import("../pages/MenuDetailsPage/MenuDetailsPage"));
+const MenuItemDetailPage = lazy(() => import("../pages/MenuItemDetailsPage/MenuItemDetailsPage"));
+const Profile = lazy(() => import("../pages/Profile/Profile"));
+const Unauthorized = lazy(() => import("../pages/error/Unauthorized"));
+const Forbidden = lazy(() => import("../pages/error/Forbidden"));
+const NotFound = lazy(() => import("../pages/error/NotFound"));
+const ServerError = lazy(() => import("../pages/error/ServerError"));
 
 interface RouteConfig {
   path: string;
@@ -14,51 +28,58 @@ interface RouteConfig {
   isPrivate?: boolean;
 }
 
-const isAuthenticated = AuthService.isAuthenticated(); // Check authentication status
+const isAuthenticated = useAuth(); // Check authentication status
 
+// Reusable Suspense wrapper with Spinner
+const withSuspense = (Component: ReactElement) => (
+  <Suspense fallback={<Spinner fullscreen={false} tip="Loading..." />}>{Component}</Suspense>
+);
+
+// Public routes
 const publicRoutes: RouteConfig[] = [
   {
     path: "/",
     element: isAuthenticated ? (
       <Navigate to="/profile" replace />
     ) : (
-      <LoginRegister />
+      withSuspense(<LoginRegister />)
     ),
   },
   {
     path: "/401",
-    element: <Unauthorized />, // Using the new Unauthorized page
+    element: withSuspense(<Unauthorized />),
   },
   {
     path: "/403",
-    element: <Forbidden />, // Using the new Forbidden page
+    element: withSuspense(<Forbidden />),
   },
   {
     path: "/500",
-    element: <ServerError />, // Using the new ServerError page for 500 errors
+    element: withSuspense(<ServerError />),
   },
 ];
 
+// Private routes
 const privateRoutes: RouteConfig[] = [
   {
     path: "/menu",
-    element: <Menu />,
+    element: withSuspense(<Menu />),
   },
   {
     path: "/menu/:menuId",
-    element: <MenuDetailsPage />,
+    element: withSuspense(<MenuDetailsPage />),
   },
   {
     path: "/menu/:menuId/item/:menuItemId",
-    element: <MenuItemDetailPage />,
+    element: withSuspense(<MenuItemDetailPage />),
   },
   {
     path: "/profile",
-    element: <Profile />,
+    element: withSuspense(<Profile />),
   },
   {
     path: "*",
-    element: <NotFound />, // Using the new NotFound page for unmatched routes
+    element: withSuspense(<NotFound />),
   },
 ];
 

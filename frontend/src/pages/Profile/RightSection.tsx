@@ -104,75 +104,65 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
   }, [restaurant, form]);
 
   // Function to handle save button click
-  const handleSave = async () => {
-    return new Promise((resolve, reject) => {
-      Modal.confirm({
-        title: "Confirm Save",
-        content: "Are you sure you want to save the changes?",
-        okText: "Yes",
-        cancelText: "No",
-        onOk: async () => {
-          setLoading(true);
-          const values = form.getFieldsValue();
-          console.log("Values ", values);
-          try {
-            const updatedRestaurant =
-              await RestaurantService.updateAuthenticatedRestaurant(values);
+  // Function to handle save button click
+const handleSave = async () => {
+  setLoading(true);
+  try {
+    const values = form.getFieldsValue();
+    console.log("Values ", values);
 
-            ToastNotification.success({
-              message: "Restaurant updated successfully!",
-              description: `The restaurant "${updatedRestaurant?.restaurantName}" has been updated.`,
-            });
+    // Call the update service
+    const updatedRestaurant =
+      await RestaurantService.updateAuthenticatedRestaurant(values);
 
-            setIsEditing(false); // Disable editing after saving
-            resolve(values); // Resolve the promise with saved values
-          } catch (error) {
-            ToastNotification.error({
-              message: "Error updating restaurant",
-              description:
-                error?.response?.data?.message ||
-                "An unexpected error occurred. Please try again.",
-            });
-            reject(error); // Reject the promise with the error
-          } finally {
-            setLoading(false);
-          }
-        },
-        onCancel: () => {
-          resolve(null); // Resolve with `null` if canceled
-        },
-      });
+    // Show success toast notification
+    ToastNotification.success({
+      message: "Restaurant updated successfully!",
+      description: `The restaurant "${updatedRestaurant?.restaurantName}" has been updated.`,
     });
-  };
+
+    // Disable editing after saving
+    setIsEditing(false);
+  } catch (error) {
+    // Show error toast notification
+    ToastNotification.error({
+      message: "Error updating restaurant",
+      description:
+        error?.response?.data?.message ||
+        "An unexpected error occurred. Please try again.",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
   const handleSendCode = async () => {
     try {
       setLoading(true);
-
-      // Get the form values and filter changed fields
+  
+      // Get the form values
       const values = form.getFieldsValue();
-      const changedValues = Object.keys(values).reduce((acc, key) => {
-        if (values[key] !== restaurant?.[key]) {
-          acc[key] = values[key];
-        }
-        return acc;
-      }, {});
-
-      // If no changes detected, show a message and return early
-      if (Object.keys(changedValues).length === 0) {
-        message.info("No changes detected to send.");
+      console.log("values:", values);
+  
+      // Ensure email is included in the DTO, even if it hasn't changed
+      const email = values.restaurantEmail || restaurant?.restaurantEmail;
+  
+      // If email is not provided, show a message and return early
+      if (!email) {
+        message.info("Email is required to send a verification code.");
         setLoading(false);
         return;
       }
-
-      // Create the request DTO using only changed values
+  
+      // Create the request DTO
       const dto: RequestVerificationDto = {
-        email: changedValues.restaurantEmail,
+        email,
       };
-
+  
       // Send verification code
       await emailVerificationService.requestVerificationCode(dto);
       message.success("Verification email sent. Please check your inbox.");
-
+  
       // Update visibility state
       setIsEmailVerificationVisible(true);
     } catch (error) {
@@ -181,6 +171,7 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
       setLoading(false);
     }
   };
+  
 
   // Function to toggle editing state
   const toggleEdit = () => {

@@ -1,7 +1,7 @@
 // src/error/ErrorPage.tsx
 import React from "react";
 import { Result, Button } from "antd";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface ErrorPageProps {
   title: string;
@@ -10,7 +10,15 @@ interface ErrorPageProps {
 }
 
 const ErrorPage: React.FC<ErrorPageProps> = ({ title, subTitle, status }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
+
+  const handleGoBack = () => {
+    navigate(-1); // Navigate to the previous page
+  };
+
+  const handleGoHome = () => {
+    navigate("/"); // Navigate to the home page
+  };
 
   return (
     <div style={{ padding: "20px", textAlign: "center" }}>
@@ -19,9 +27,14 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ title, subTitle, status }) => {
         title={title}
         subTitle={subTitle}
         extra={
-          <Button type="primary" onClick={() => history.push("/")}>
-            Go Home
-          </Button>
+          <>
+            <Button type="primary" onClick={handleGoBack}>
+              Go Back
+            </Button>
+            <Button type="primary" onClick={handleGoHome} style={{ marginLeft: "10px" }}>
+              Go to Home
+            </Button>
+          </>
         }
       />
     </div>
@@ -29,3 +42,4 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ title, subTitle, status }) => {
 };
 
 export default ErrorPage;
+

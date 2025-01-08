@@ -56,6 +56,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/restaurants/**").permitAll()
                         .requestMatchers("/email/**").permitAll()
                         .requestMatchers("/api/validation/**").permitAll()
+                        .requestMatchers("/ws/rider-location","/ws/Customer-location").permitAll()
+                        .requestMatchers("/api/rider-request").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

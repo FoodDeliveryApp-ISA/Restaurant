@@ -29,7 +29,7 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
       const fetchMenuItem = async () => {
         setLoading(true);
         try {
-          const fetchedMenuItem = await MenuItemService.getMenuItemById(
+          const fetchedMenuItem = await MenuItemService.getMenuItemDetails(
             menuId,
             menuItemId
           );

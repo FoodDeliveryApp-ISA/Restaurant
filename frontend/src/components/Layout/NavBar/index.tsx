@@ -49,7 +49,7 @@ const Navbar = () => {
       <div className="flex justify-between items-center px-6 py-4">
         {/* Logo Section */}
         <div className="logo text-xl font-bold text-white tracking-wide">
-          Brand Here
+          aeroEat
         </div>
         {/* Desktop Menus */}
         <div className="hidden md:flex items-center gap-6">
