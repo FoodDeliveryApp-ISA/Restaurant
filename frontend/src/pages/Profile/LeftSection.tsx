@@ -74,7 +74,7 @@ const LeftSection: React.FC = () => {
         <>
           <div className="flex flex-col items-center mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg shadow">
             <span className="text-lg text-gray-800 dark:text-gray-300 mb-2">
-              Active Status:
+            Restaurant Status
             </span>
             <ActiveStatusToggle
               active={restaurantData.active}

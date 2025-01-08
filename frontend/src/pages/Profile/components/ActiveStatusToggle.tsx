@@ -42,8 +42,8 @@ const ActiveStatusToggle: React.FC<ActiveStatusToggleProps> = ({
           checked={isActive}
           onChange={handleToggle}
           className="bg-red-500 dark:bg-red-600"
-          checkedChildren="Active"
-          unCheckedChildren="Inactive"
+          checkedChildren="Open"
+          unCheckedChildren="Close"
         />
       </div>
       <Modal

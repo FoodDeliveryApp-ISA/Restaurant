@@ -1,4 +1,3 @@
-// src/routes/routes.ts
 import { ReactElement } from "react";
 import { Navigate } from "react-router-dom";
 import AuthService from "../services/auth.service"; // Adjust path as needed
@@ -7,8 +6,7 @@ import Menu from "../pages/Menu/Menu";
 import MenuDetailsPage from "../pages/MenuDetailsPage/MenuDetailsPage";
 import MenuItemDetailPage from "../pages/MenuItemDetailsPage/MenuItemDetailsPage";
 import Profile from "../pages/Profile/Profile";
-import ForbiddenPage from "../pages/403";
-import NotFoundPage from "../pages/404";
+import { Unauthorized, Forbidden, NotFound, ServerError } from "../pages/error"; // Importing new error pages
 
 interface RouteConfig {
   path: string;
@@ -28,8 +26,16 @@ const publicRoutes: RouteConfig[] = [
     ),
   },
   {
+    path: "/401",
+    element: <Unauthorized />, // Using the new Unauthorized page
+  },
+  {
     path: "/403",
-    element: <ForbiddenPage />,
+    element: <Forbidden />, // Using the new Forbidden page
+  },
+  {
+    path: "/500",
+    element: <ServerError />, // Using the new ServerError page for 500 errors
   },
 ];
 
@@ -52,7 +58,7 @@ const privateRoutes: RouteConfig[] = [
   },
   {
     path: "*",
-    element: <NotFoundPage />,
+    element: <NotFound />, // Using the new NotFound page for unmatched routes
   },
 ];
 
