@@ -21,6 +21,7 @@ const Unauthorized = lazy(() => import("../pages/error/Unauthorized"));
 const Forbidden = lazy(() => import("../pages/error/Forbidden"));
 const NotFound = lazy(() => import("../pages/error/NotFound"));
 const ServerError = lazy(() => import("../pages/error/ServerError"));
+const Orders = lazy(() => import("../pages/Order/OrdersPage"));
 
 interface RouteConfig {
   path: string;
@@ -76,6 +77,10 @@ const privateRoutes: RouteConfig[] = [
   {
     path: "/profile",
     element: withSuspense(<Profile />),
+  },
+  {
+   path: "/orders",
+   element: withSuspense(<Orders/>), 
   },
   {
     path: "*",
