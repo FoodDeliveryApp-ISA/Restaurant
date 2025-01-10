@@ -25,6 +25,7 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log(form);
     if (menuId && menuItemId) {
       const fetchMenuItem = async () => {
         setLoading(true);
@@ -96,20 +97,25 @@ const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
         >
           <Input.TextArea placeholder="Enter description" rows={4} />
         </Form.Item>
-        <Form.Item
-          name="menuItemPrice"
-          label="Price"
-          rules={[
-            { required: true, message: "Please enter the menu item price" },
-            {
-              type: "number",
-              min: 0,
-              message: "Price must be a positive value",
-            },
-          ]}
+          <Form.Item
+            name="menuItemPrice"
+            label="Price"
+            rules={[
+                { required: true, message: "Please enter the menu item price" },
+                {
+                  type: "number",
+                  min: 0,
+                  message: "Price must be a positive value",
+                 },
+             ]}
         >
-          <Input type="number" placeholder="Enter price" />
+        <InputNumber
+            placeholder="Enter price"
+            style={{ width: "100%" }}
+            min={0}
+        />
         </Form.Item>
+
       </Form>
     </Modal>
   );

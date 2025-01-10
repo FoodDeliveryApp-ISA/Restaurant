@@ -20,39 +20,55 @@ services:
     ports:
       - 9092:9092
 
-#   # Spring Boot Backend
-#   backend:
-#     build:
-#       context: ./Restaurant
-#       dockerfile: Dockerfile  # Fixed path to Dockerfile
-#     ports:
-#       - "8081:8081" # HTTP Port
-#       - "9191:9191" # gRPC Port
-#     environment:
-#       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/test1
-#       - SPRING_DATASOURCE_USERNAME=admin
-#       - SPRING_DATASOURCE_PASSWORD=admin
-#     depends_on:
-#       - db
-#       - kafka
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "8085:8080"
 
-#   # PostgreSQL Database
-#   db:
-#     image: postgres:13
-#     environment:
-#       POSTGRES_DB: test1
-#       POSTGRES_USER: admin
-#       POSTGRES_PASSWORD: admin
-#     ports:
-#       - "5433:5433"
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data # Volume for data persistence
+  #   # Spring Boot Backend
+  #   backend:
+  #     build:
+  #       context: ./Restaurant
+  #       dockerfile: Dockerfile  # Fixed path to Dockerfile
+  #     ports:
+  #       - "8081:8081" # HTTP Port
+  #       - "9191:9191" # gRPC Port
+  #     environment:
+  #       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/test1
+  #       - SPRING_DATASOURCE_USERNAME=admin
+  #       - SPRING_DATASOURCE_PASSWORD=admin
+  #     depends_on:
+  #       - db
+  #       - kafka
 
-#   # PostgreSQL Adminer for DB management
-#   adminer:
-#     image: adminer
-#     ports:
-#       - "8082:8080"  # Changed port to avoid conflict with backend
+  #   # PostgreSQL Database
+  #   db:
+  #     image: postgres:13
+  #     environment:
+  #       POSTGRES_DB: test1
+  #       POSTGRES_USER: admin
+  #       POSTGRES_PASSWORD: admin
+  #     ports:
+  #       - "5433:5433"
+  #     volumes:
+  #       - postgres_data:/var/lib/postgresql/data # Volume for data persistence
+
+  #   # PostgreSQL Adminer for DB management
+  #   adminer:
+  #     image: adminer
+  #     ports:
+  #       - "8082:8080"  # Changed port to avoid conflict with backend
+
+  hoppscotch:
+    image: hoppscotch/hoppscotch:latest
+    ports:
+      - "3000:3000"
+    restart: always
+
+
 
   # Portainer for Docker Management
   portainer:
@@ -68,8 +84,3 @@ services:
 volumes:
   # postgres_data:
   portainer_data:
-
-
-
-
-

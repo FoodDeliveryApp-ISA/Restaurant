@@ -5,10 +5,18 @@ import {
   RequestMenuSaveDto,
   RequestUpdatedMenuDto,
 } from "./dto/menu.dto";
+import { handleError } from "../utils/errorHandler";
+import { BASE_API_URL } from "../config/apiConfig";
 
-const API_URL = "http://localhost:8081/api/menus";
+const API_URL = `${BASE_API_URL}/api/menus`;
 
 class MenuService {
+  private handleError: (error: unknown) => Promise<void>;
+
+  constructor() { // Initialize error handler
+    this.handleError = handleError;
+  }
+
   // Create a new menu
   async saveMenu(menuData: RequestMenuSaveDto): Promise<MenuDto> {
     try {
@@ -22,7 +30,7 @@ class MenuService {
       console.log("Menu saved successfully:", response.data);
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error); // Use centralized error handler
       throw error;
     }
   }
@@ -35,7 +43,7 @@ class MenuService {
       });
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
     }
   }
@@ -46,7 +54,6 @@ class MenuService {
     menuData: Partial<RequestUpdatedMenuDto>
   ): Promise<MenuDto> {
     try {
-      // Fetch the current menu details to preserve other required fields (like menuName)
       const currentMenuResponse = await axios.get<MenuDto>(
         `${API_URL}/${menuId}`,
         {
@@ -59,13 +66,11 @@ class MenuService {
 
       const currentMenu = currentMenuResponse.data;
 
-      // Combine current menu data with the new data to ensure required fields like 'menuName' are included
       const updatedMenuData = {
         ...currentMenu,
-        ...menuData, // Merge the updated fields, like 'active'
+        ...menuData,
       };
 
-      // Send the update request with the merged data
       const response = await axios.put<MenuDto>(
         `${API_URL}/${menuId}`,
         updatedMenuData,
@@ -77,11 +82,10 @@ class MenuService {
         }
       );
 
-      // Log the response to confirm that the menu was updated correctly
       console.log("Response from updateMenu API:", response.data);
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
     }
   }
@@ -94,7 +98,7 @@ class MenuService {
       });
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
     }
   }
@@ -107,21 +111,8 @@ class MenuService {
       });
       console.log(`Menu with ID ${menuId} deleted successfully.`);
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
-    }
-  }
-
-  // Centralized error handling
-  private handleError(error: unknown): void {
-    if (axios.isAxiosError(error)) {
-      console.error("API Error:", error.response?.data || error.message);
-      if (error.response?.status === 401) {
-        console.error("Unauthorized access - Redirecting to login");
-        // Optionally, add redirect or logout logic here
-      }
-    } else {
-      console.error("Unexpected Error:", error);
     }
   }
 }

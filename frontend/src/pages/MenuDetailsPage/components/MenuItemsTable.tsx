@@ -31,7 +31,7 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
       }
     };
     fetchMenuItems();
-  }, [menuId]);
+  }, [menuId,menuItems]);
 
   const handleEdit = (menuItemId: number) => {
     setCurrentMenuItemId(menuItemId);

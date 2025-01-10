@@ -277,7 +277,7 @@ const handleSave = async () => {
           onResend={handleResend}
           onSend={handleVerificationSuccess}
           onCheck={handleCheckCode} // Pass the onCheck function
-          title="Custom Email Verification"
+          title="Verify Your Updates!"
           description="Please enter the verification code to continue."
           successMessage="Thank you for verifying your email!"
           timerDuration={60}

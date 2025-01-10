@@ -4,11 +4,19 @@ import {
   RestaurantResponseDto,
   RequestUpdatedRestaurantDto,
 } from "./dto/restaurant.dto";
+import { BASE_API_URL } from "../config/apiConfig"; // Import API URL from config
+import { handleError} from "../utils/errorHandler"; // Assuming you have a custom error handler
 
-// API URL for the backend
-const API_URL = "http://localhost:8081/restaurants/";
+
+const API_URL = `${BASE_API_URL}/restaurants/`;
 
 class RestaurantService {
+  private handleError: (error: unknown) => void;
+
+  constructor() {
+    this.handleError = handleError;
+  }
+
   // Get details of the authenticated restaurant
   async getAuthenticatedRestaurant(): Promise<RestaurantResponseDto | null> {
     try {
@@ -18,6 +26,7 @@ class RestaurantService {
       );
       return response.data;
     } catch (error) {
+      this.handleError(error);
       console.error("Error fetching authenticated restaurant details:", error);
       return null;
     }
@@ -35,6 +44,7 @@ class RestaurantService {
       );
       return response.data;
     } catch (error) {
+      this.handleError(error);
       console.error("Error updating authenticated restaurant:", error);
       return null;
     }
@@ -46,6 +56,7 @@ class RestaurantService {
       await axios.delete(`${API_URL}auth`, { headers: authHeader() }); // Include the auth header
       return true;
     } catch (error) {
+      this.handleError(error);
       console.error("Error deleting authenticated restaurant:", error);
       return false;
     }

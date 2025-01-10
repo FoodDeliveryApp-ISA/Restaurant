@@ -2,47 +2,53 @@ import axios, { AxiosResponse } from "axios";
 import ToastNotification from "../components/ToastNotification";
 import { jwtDecode } from "jwt-decode";
 import TokenUtil from "../utils/tokenUtil";
-import {
-  RegisterRequest,
-  LoginRequest,
-  LoginResponse,
-  Restaurant,
-} from "./dto/auth.dto";
+import { RegisterRequest, LoginRequest, LoginResponse, Restaurant } from "./dto/auth.dto";
+import { handleError } from "../utils/errorHandler"; // Assuming this hook is available for error handling
+import { BASE_API_URL } from "../config/apiConfig"; // BASE_API_URL from your configuration
 
-const API_URL = "http://localhost:8081/auth/";
+const API_URL = `${BASE_API_URL}/auth/`; // Base API URL from the configuration
 
 class AuthService {
+  private handleError: (error: unknown, retries?: number) => Promise<void>;
+
+  constructor() {
+    this.handleError = handleError;
+  }
+
   /**
    * Logs in a user with provided credentials.
    * @param data - Login request containing email and password.
    * @returns Promise resolving to LoginResponse.
    */
-  login(data: LoginRequest): Promise<LoginResponse> {
-    return axios
-      .post<LoginResponse>(`${API_URL}login`, data, {
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true,
-      })
-      .then((response: AxiosResponse<LoginResponse>) => {
-        const { token } = response.data;
-        if (token) {
-          TokenUtil.storeToken(token);
-          // ToastNotification.success({
-          //   message: "Login Successful",
-          //   description: "Welcome back!",
-          // });
+  async login(data: LoginRequest): Promise<LoginResponse> {
+    try {
+      const response: AxiosResponse<LoginResponse> = await axios.post(
+        `${API_URL}login`,
+        data,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
         }
-        return response.data;
-      })
-      .catch((error) => {
-        const errorMessage =
-          error.response?.data?.message || "An error occurred during login.";
-        ToastNotification.error({
-          message: "Login Failed",
-          description: errorMessage,
-        });
-        throw error;
+      );
+      const { token } = response.data;
+      if (token) {
+        TokenUtil.storeToken(token);
+        // ToastNotification.success({
+        //   message: "Login Successful",
+        //   description: "Welcome back!",
+        // });
+      }
+      return response.data;
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "An error occurred during login.";
+      ToastNotification.error({
+        message: "Login Failed",
+        description: errorMessage,
       });
+      await this.handleError(error);
+      throw error;
+    }
   }
 
   /**
@@ -50,36 +56,34 @@ class AuthService {
    * @param data - Registration request containing user details.
    * @returns Promise resolving to LoginResponse.
    */
-  register(data: RegisterRequest): Promise<LoginResponse> {
-    return axios
-      .post<Restaurant>(`${API_URL}signup`, data)
-      .then((response: AxiosResponse<Restaurant>) => {
-        ToastNotification.success({
-          message: "Registration Successful",
-          description: "Welcome! Your account has been created.",
-        });
-
-        // Auto-login using registration credentials
-        const loginData: LoginRequest = {
-          email: data.restaurantEmail,
-          password: data.restaurantPassword,
-        };
-        return this.login(loginData);
-      })
-      .catch((error) => {
-        const errorMessage =
-          error.response?.data?.message ||
-          "An error occurred during registration.";
-        ToastNotification.error({
-          message: "Registration Failed",
-          description: errorMessage,
-        });
-        console.error(
-          "Registration error:",
-          error.response?.data || error.message
-        );
-        throw error;
+  async register(data: RegisterRequest): Promise<LoginResponse> {
+    try {
+      const response: AxiosResponse<Restaurant> = await axios.post(
+        `${API_URL}signup`,
+        data
+      );
+      ToastNotification.success({
+        message: "Registration Successful",
+        description: "Welcome! Your account has been created.",
       });
+
+      // Auto-login using registration credentials
+      const loginData: LoginRequest = {
+        email: data.restaurantEmail,
+        password: data.restaurantPassword,
+      };
+      return this.login(loginData);
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "An error occurred during registration.";
+      ToastNotification.error({
+        message: "Registration Failed",
+        description: errorMessage,
+      });
+      console.error("Registration error:", error.response?.data || error.message);
+      await this.handleError(error);
+      throw error;
+    }
   }
 
   /**

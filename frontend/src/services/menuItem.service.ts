@@ -1,4 +1,5 @@
-// src/services/item.service.ts
+// src/services/menuitem.service.ts
+
 import axios from "axios";
 import authHeader from "./auth-header";
 import {
@@ -6,10 +7,18 @@ import {
   RequestMenuItemSaveDto,
   RequestUpdatedMenuItemDto,
 } from "./dto/menuItem.dto";
+import { handleError } from "../utils/errorHandler";
+import { BASE_API_URL } from "../config/apiConfig";
 
-const API_URL = "http://localhost:8081/api/menu";
+const API_URL = `${BASE_API_URL}/api/menu`;
 
 class MenuItemService {
+  private handleError: (error: unknown, retries?: number) => Promise<void>;
+
+  constructor() {
+    this.handleError = handleError;
+  }
+
   // Create a new menu item
   async createMenuItem(
     menuId: number,
@@ -32,7 +41,7 @@ class MenuItemService {
       console.log(response.data);
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
     }
   }
@@ -43,7 +52,7 @@ class MenuItemService {
     menuItemId: number
   ): Promise<MenuItemDto> {
     try {
-      console.log(`Fetching details for menu item IDo: ${menuItemId}`);
+      console.log(`Fetching details for menu item ID: ${menuItemId}`);
       const response = await axios.get<MenuItemDto>(
         `${API_URL}/${menuId}/menuitems/${menuItemId}`,
         {
@@ -53,7 +62,7 @@ class MenuItemService {
       console.log("Menu Item Details:", response.data);
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
     }
   }
@@ -63,7 +72,6 @@ class MenuItemService {
     try {
       console.log("Getting all menu items for menu ID: " + menuId);
 
-      // Uncomment the following line to simulate a delay in the API
       const response = await axios.get<MenuItemDto[]>(
         `${API_URL}/${menuId}/menuitems`,
         {
@@ -74,7 +82,7 @@ class MenuItemService {
       console.log("Menu items: " + response.data);
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
     }
   }
@@ -86,7 +94,7 @@ class MenuItemService {
     updatedMenuItemData: RequestUpdatedMenuItemDto
   ): Promise<MenuItemDto> {
     try {
-      console.log(updatedMenuItemData)
+      console.log(updatedMenuItemData);
       const response = await axios.put<MenuItemDto>(
         `${API_URL}/${menuId}/menuitems/${menuItemId}`,
         updatedMenuItemData,
@@ -101,7 +109,7 @@ class MenuItemService {
       console.log(response.data);
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
     }
   }
@@ -113,39 +121,8 @@ class MenuItemService {
         headers: authHeader(),
       });
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
       throw error;
-    }
-  }
-
-  // Centralized error handling
-  private async handleError(error: unknown, retries = 3): Promise<void> {
-    if (axios.isAxiosError(error)) {
-      console.error("API Error:", error.response?.data || error.message);
-
-      // Retry mechanism for network-related errors
-      if (
-        retries > 0 &&
-        (error.message.includes("Network Error") || !error.response)
-      ) {
-        console.log(`Retrying request... Attempts left: ${retries}`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        return this.handleError(error, retries - 1); // Recursive retry
-      }
-
-      // Handle different status codes or special cases
-      if (error.response?.status === 401) {
-        console.error("Unauthorized access - Redirecting to login");
-        // Add your redirect or logout logic here
-      } else if (error.response?.status === 500) {
-        console.error("Server error - Please try again later.");
-      } else {
-        console.error(
-          `Unexpected Error: ${error.response?.data || error.message}`
-        );
-      }
-    } else {
-      console.error("Unknown error occurred:", error);
     }
   }
 }
