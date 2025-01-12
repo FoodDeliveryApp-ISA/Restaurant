@@ -1,31 +1,60 @@
 package com.ISA.Restaurant.controller;
 
-import com.ISA.Restaurant.producer.OrderEvent;
-import com.ISA.Restaurant.producer.OrderEventProducer;
-import com.ISA.Restaurant.producer.OrderStatus;
-import lombok.extern.slf4j.Slf4j;
+import com.ISA.Restaurant.Dto.Event.CustomerOrderDto;
+import com.ISA.Restaurant.event.producer.CustomerOrderProducer;
+import com.ISA.Restaurant.service.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
-@Slf4j
 @RequestMapping("/order")
 public class OrderController {
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(OrderController.class);
+    private final OrderService orderService;
+    private final CustomerOrderProducer orderProducer;
 
-    private final OrderEventProducer producer;
-
-    public OrderController(OrderEventProducer producer) {
-        this.producer = producer;
+    public OrderController(OrderService orderService, CustomerOrderProducer orderProducer) {
+        this.orderService = orderService;
+        this.orderProducer = orderProducer;
     }
 
-    @PostMapping("/{orderId}/status")
-    public ResponseEntity<String> updateOrderStatus(@PathVariable String orderId, @RequestBody OrderStatus status) {
-        OrderEvent event = new OrderEvent();
-        event.setOrderId(orderId);
-        event.setStatus(status);
-        log.info("Sending order event: {}", event);
-        producer.sendOrderEvent(event);
-        return ResponseEntity.ok("Order status updated to: " + status);
+    @PostMapping
+    public ResponseEntity<String> createOrder(@RequestBody CustomerOrderDto orderDto) {
+        logger.info("Received new customer order: {}",orderDto.toString());
+        orderProducer.sendCustomerOrder(orderDto);
+        return ResponseEntity.ok("Order submitted successfully!");
+    }
+
+    @PostMapping("/accept/{orderId}")
+    public ResponseEntity<String> acceptOrder(@PathVariable String orderId) {
+        orderService.acceptOrder(orderId);
+        return ResponseEntity.ok("Order accepted and rider request initiated.");
+    }
+
+    @PostMapping("/request-riders/{orderId}")
+    public ResponseEntity<String> requestRiders(@PathVariable String orderId) {
+        orderService.requestRider(orderId);
+        return ResponseEntity.ok("Rider request initiated.");
+    }
+
+    @PostMapping("/on-the-way/{orderId}")
+    public ResponseEntity<String> orderOnTheWay(@PathVariable String orderId) {
+        orderService.orderOnTheWay(orderId);
+        return ResponseEntity.ok("Order status updated to 'ON_THE_WAY'.");
+    }
+
+    @PostMapping("/delivered/{orderId}")
+    public ResponseEntity<String> markOrderDelivered(@PathVariable String orderId) {
+        orderService.markOrderDelivered(orderId);
+        return ResponseEntity.ok("Order marked as 'ORDER_DELIVERED'.");
+    }
+
+    @PostMapping("/cancel/{orderId}")
+    public ResponseEntity<String> cancelOrder(@PathVariable String orderId) {
+        orderService.cancelOrder(orderId);
+        return ResponseEntity.ok("Order cancelled successfully.");
     }
 }
-

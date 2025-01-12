@@ -1,7 +1,7 @@
 package com.ISA.Restaurant.exception;
 
-public class InvalidOrderStateException extends RuntimeException {
-    public InvalidOrderStateException(String message) {
+public class SameOrderStateException extends RuntimeException {
+    public SameOrderStateException(String message) {
         super(message);
     }
 }

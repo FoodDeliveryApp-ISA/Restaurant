@@ -1,8 +1,16 @@
 package com.ISA.Restaurant.Dto.Event;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class RiderRequestDto {
+
     private String orderId;
     private List<Double> restaurantLocation;
     private List<Double> customerLocation;
@@ -12,6 +20,5 @@ public class RiderRequestDto {
     private String customerName;
     private String customerAddress;
     private String customerPhone;
-
     // Getters and setters
 }

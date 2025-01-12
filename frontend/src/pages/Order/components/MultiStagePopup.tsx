@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Steps, Card, message } from "antd";
 import { statusFlow } from "../../../utils/statusFlow";
-import { CheckCircleOutlined, FireOutlined, SearchOutlined, CarOutlined, SmileOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  FireOutlined,
+  SearchOutlined,
+  CarOutlined,
+  SmileOutlined,
+} from "@ant-design/icons";
 import OrderActions from "./OrderActions";
-import RiderRequestService from "../../../services/RiderRequest.service"; // Import RiderRequestService
+import orderService from "../../../services/order.service";
 
-// Order type definition
 export interface Order {
   orderId: string;
   customerName: string;
@@ -13,6 +18,7 @@ export interface Order {
   customerPhone: string;
   restaurantLocation: [number, number];
   customerLocation: [number, number];
+  status: string;
 }
 
 interface MultiStagePopupProps {
@@ -34,7 +40,9 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
   useEffect(() => {
     if (order) {
       setSelectedStatus(order.status);
-      const initialStep = statusFlow.findIndex((step) => step.title === order.status);
+      const initialStep = statusFlow.findIndex(
+        (step) => step.title === order.status
+      );
       setCurrentStep(initialStep !== -1 ? initialStep : 0);
     }
   }, [order]);
@@ -59,32 +67,62 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
     onClose();
   };
 
-  const handleAcceptOrder = () => {
-    message.success("Order accepted!");
-    handleNext();
+  const handleAcceptOrder = async () => {
+    if (order) {
+      try {
+        await orderService.acceptOrder(order.orderId);
+        message.success("Order accepted!");
+        handleNext();
+      } catch (error) {
+        message.error("Failed to accept order.");
+      }
+    }
   };
 
-  const handleRejectOrder = () => {
-    message.error("Order rejected.");
-    onClose();
+  const handleRejectOrder = async () => {
+    if (order) {
+      try {
+        await orderService.cancelOrder(order.orderId);
+        message.error("Order rejected.");
+        onClose();
+      } catch (error) {
+        message.error("Failed to reject order.");
+      }
+    }
   };
 
   const handleRequestRider = async () => {
     if (order) {
       try {
-        await RiderRequestService.sendRiderRequest({
-          orderId: order.orderId,
-          restaurantLocation: order.restaurantLocation,
-          customerLocation: order.customerLocation,
-          customerName: order.customerName,
-          customerAddress: order.customerAddress,
-          customerPhone: order.customerPhone,
-        });
-        console.log(order);
+        await orderService.requestRiders(order.orderId);
         message.success("Rider requested successfully!");
         handleNext();
       } catch (error) {
         message.error("Failed to request rider.");
+      }
+    }
+  };
+
+  const handleMarkOnTheWay = async () => {
+    if (order) {
+      try {
+        await orderService.markOrderOnTheWay(order.orderId);
+        message.success("Order marked as On the Way.");
+        handleNext();
+      } catch (error) {
+        message.error("Failed to mark order as On the Way.");
+      }
+    }
+  };
+
+  const handleMarkDelivered = async () => {
+    if (order) {
+      try {
+        await orderService.markOrderDelivered(order.orderId);
+        message.success("Order marked as Delivered.");
+        handleNext();
+      } catch (error) {
+        message.error("Failed to mark order as Delivered.");
       }
     }
   };
@@ -115,7 +153,11 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
         <Button key="prev" onClick={handlePrevious} disabled={currentStep === 0}>
           Previous
         </Button>,
-        <Button key="next" onClick={handleNext} disabled={currentStep === statusFlow.length - 1}>
+        <Button
+          key="next"
+          onClick={handleNext}
+          disabled={currentStep === statusFlow.length - 1}
+        >
           Next
         </Button>,
         <Button key="update" type="primary" onClick={handleUpdate}>
@@ -159,6 +201,8 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
             handleAcceptOrder={handleAcceptOrder}
             handleRejectOrder={handleRejectOrder}
             handleRequestRider={handleRequestRider}
+            handleMarkDelivered={handleMarkDelivered}
+            handleMarkOnTheWay={handleMarkOnTheWay}
           />
         </Card>
       ) : (

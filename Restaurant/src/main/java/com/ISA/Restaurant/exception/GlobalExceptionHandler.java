@@ -61,8 +61,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(e, HttpStatus.BAD_REQUEST, request);
     }
 
-    // New exception handlers for the added exceptions
-
     @ExceptionHandler(MenuNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleMenuNotFound(MenuNotFoundException e, WebRequest request) {
         log.warn("MenuNotFoundException: {}", e.getMessage());
@@ -73,6 +71,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException e, WebRequest request) {
         log.warn("UnauthorizedException: {}", e.getMessage());
         return buildErrorResponse(e, HttpStatus.FORBIDDEN, request);
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException e, WebRequest request) {
+        log.warn("OrderNotFoundException: {}", e.getMessage());
+        return buildErrorResponse(e, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(SameOrderStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOrderState(SameOrderStateException e, WebRequest request) {
+        log.warn("InvalidOrderStateException: {}", e.getMessage());
+        return buildErrorResponse(e, HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(InvalidOrderStateTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOrderStateTransition(InvalidOrderStateTransitionException e, WebRequest request) {
+        log.warn("InvalidOrderStateTransitionException: {}", e.getMessage());
+        return buildErrorResponse(e, HttpStatus.BAD_REQUEST, request);
     }
 
     // Fallback for unhandled exceptions

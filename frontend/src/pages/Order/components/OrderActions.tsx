@@ -1,11 +1,19 @@
 import React from "react";
 import { Button, Tooltip } from "antd";
-import { CheckCircleOutlined, FireOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  FireOutlined,
+  SearchOutlined,
+  CarOutlined,
+  SmileOutlined,
+} from "@ant-design/icons";
 
 interface OrderActionsProps {
   handleAcceptOrder: () => void;
   handleRejectOrder: () => void;
   handleRequestRider: () => void;
+  handleMarkOnTheWay: () => void;
+  handleMarkDelivered: () => void;
   currentStep: number;
 }
 
@@ -13,6 +21,8 @@ const OrderActions: React.FC<OrderActionsProps> = ({
   handleAcceptOrder,
   handleRejectOrder,
   handleRequestRider,
+  handleMarkOnTheWay,
+  handleMarkDelivered,
   currentStep,
 }) => {
   return (
@@ -50,6 +60,30 @@ const OrderActions: React.FC<OrderActionsProps> = ({
             icon={<SearchOutlined />}
           >
             Request Rider
+          </Button>
+        </Tooltip>
+      )}
+      {currentStep === 2 && (
+        <Tooltip title="Mark order as On the Way">
+          <Button
+            type="primary"
+            onClick={handleMarkOnTheWay}
+            style={{ flex: 1 }}
+            icon={<CarOutlined />}
+          >
+            Mark On the Way
+          </Button>
+        </Tooltip>
+      )}
+      {currentStep === 3 && (
+        <Tooltip title="Mark order as Delivered">
+          <Button
+            type="primary"
+            onClick={handleMarkDelivered}
+            style={{ flex: 1 }}
+            icon={<SmileOutlined />}
+          >
+            Mark Delivered
           </Button>
         </Tooltip>
       )}

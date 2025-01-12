@@ -3,6 +3,7 @@ import { Button } from "antd";
 import OrderDetailsPopup from "./components/OrderDetailsPopup";
 import OrderTable from "./components/OrderTable";
 import MultiStagePopup from "./components/MultiStagePopup";
+import orderService from "../../services/order.service";
 
 export interface Order {
     orderId: string;
@@ -28,18 +29,40 @@ const OrderStatusManager: React.FC = () => {
   const [isMultiStageModalVisible, setIsMultiStageModalVisible] =
     useState(false);
 
-    const addOrder = () => {
-        const newOrder: Order = {
-          orderId: `ORD${orders.length + 1}`,
-          restaurantLocation: [40.7128, -74.0060], // Example location for the restaurant (New York)
-          customerLocation: [34.0522, -118.2437], // Example location for the customer (Los Angeles)
-          customerName: `Customer ${orders.length + 1}`,
-          customerAddress: "123 Main St",
-          customerPhone: "0771234567",
-        };
-        setOrders([...orders, newOrder]);
+    const addOrder = async () => {
+      const restaurantIds = ["1", "2", "353", "353.452", "607"];
+      const randomRestaurantId =
+        restaurantIds[Math.floor(Math.random() * restaurantIds.length)];
+    
+      const newOrder = {
+        orderId: `ORD${orders.length + 1}`,
+        restaurantId: randomRestaurantId,
+        restaurantLocation: [40.7128, -74.0060], // Example location for the restaurant (New York)
+        customerLocation: [34.0522, -118.2437], // Example location for the customer (Los Angeles)
+        customerName: `Customer ${orders.length + 1}`,
+        customerAddress: "123 Main St",
+        customerPhone: "0771234567",
       };
-      
+    
+      // Update the local orders state
+      setOrders([...orders, newOrder]);
+    
+      // Send the new order to the server
+      const customerOrderDto = {
+        orderId: newOrder.orderId,
+        restaurantId: newOrder.restaurantId,
+        customerLocation: newOrder.customerLocation,
+        customerName: newOrder.customerName,
+        customerAddress: newOrder.customerAddress,
+        customerPhone: newOrder.customerPhone,
+      };
+    
+      try {
+        await orderService.createOrder(customerOrderDto);
+      } catch (error) {
+        console.error("Failed to create order on the server:", error);
+      }
+    };
 
   const updateOrderStatus = (orderId: string, newStatus: string) => {
     setOrders((prevOrders) =>
@@ -64,23 +87,7 @@ const OrderStatusManager: React.FC = () => {
     setSelectedOrder(null);
   };
 
-  // Simulate state changes for other orders
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setOrders((prevOrders) =>
-        prevOrders.map((order) => {
-          if (order.status !== "Delivered") {
-            const currentIndex = statusFlow.indexOf(order.status);
-            const nextStatus = statusFlow[currentIndex + 1] || order.status;
-            return { ...order, status: nextStatus };
-          }
-          return order;
-        })
-      );
-    }, 15000); // Every 15 seconds
-    return () => clearInterval(interval);
-  }, []);
-
+  
   return (
     <div>
       <h1>Order Management</h1>
