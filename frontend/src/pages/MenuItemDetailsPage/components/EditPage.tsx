@@ -26,7 +26,6 @@ const EditPage: React.FC<EditPageProps> = ({
 }) => {
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Edit Menu Item</h1>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -63,9 +62,6 @@ const EditPage: React.FC<EditPageProps> = ({
                 </Button>
               </Tooltip>
               <Tooltip title="Preview menu item">
-                <Button type="default" onClick={handlePreview}>
-                  Preview
-                </Button>
               </Tooltip>
             </div>
           </div>

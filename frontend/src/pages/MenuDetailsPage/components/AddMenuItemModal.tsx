@@ -1,19 +1,19 @@
-import React,{useState} from "react";
-import { Form, Input, Modal, notification } from "antd";
+import React, { useState } from "react";
+import { Form, Input, Modal, Button, notification } from "antd";
 import MenuItemService from "../../../services/menuItem.service";
 import { RequestMenuItemSaveDto } from "../../../services/dto/menuItem.dto";
 
 interface AddMenuItemModalProps {
   visible: boolean;
   onCancel: () => void;
-  onAdd: (menuData: RequestMenuItemSaveDto) => void; // Rename from onSave to onAdd
+  onAdd: (menuData: RequestMenuItemSaveDto) => void;
   menuId: number;
 }
 
 const AddMenuItemModal: React.FC<AddMenuItemModalProps> = ({
   visible,
   onCancel,
-  onAdd, // Updated prop
+  onAdd,
   menuId,
 }) => {
   const [form] = Form.useForm();
@@ -30,10 +30,13 @@ const AddMenuItemModal: React.FC<AddMenuItemModalProps> = ({
             menuItemDescription: values.menuItemDescription.trim(),
             menuItemPrice: values.menuItemPrice,
           };
-          console.log(menuItemData);
           await MenuItemService.createMenuItem(menuId, menuItemData);
           form.resetFields();
-          onAdd(menuItemData); // Use onAdd instead of onSave
+          onAdd(menuItemData);
+          notification.success({
+            message: "Success",
+            description: "Menu item added successfully.",
+          });
         } catch (error) {
           console.error("Error saving menu item:", error);
           notification.error({
@@ -53,56 +56,42 @@ const AddMenuItemModal: React.FC<AddMenuItemModalProps> = ({
       visible={visible}
       onCancel={onCancel}
       footer={null}
-      className="rounded-lg p-4 bg-white shadow-lg"
-      bodyStyle={{ padding: "20px" }}
     >
-      <Form form={form} layout="vertical" className="space-y-4">
+      <Form form={form} layout="vertical">
         <Form.Item
           name="menuItemName"
           label="Menu Item Name"
-          rules={[
-            { required: true, message: "Please enter the menu item name" },
-          ]}
+          rules={[{ required: true, message: "Please enter the menu item name" }]}
         >
           <Input placeholder="Enter menu item name" />
         </Form.Item>
         <Form.Item
           name="menuItemDescription"
           label="Description"
-          rules={[
-            {
-              required: true,
-              message: "Please enter the menu item description",
-            },
-          ]}
+          rules={[{ required: true, message: "Please enter the menu item description" }]}
         >
           <Input.TextArea placeholder="Enter description" rows={4} />
         </Form.Item>
         <Form.Item
           name="menuItemPrice"
           label="Price"
-          rules={[
-            { required: true, message: "Please enter the menu item price" },
-          ]}
+          rules={[{ required: true, message: "Please enter the menu item price" }]}
         >
           <Input type="number" placeholder="Enter menu item price" />
         </Form.Item>
+        <div style={{ textAlign: "right" }}>
+          <Button onClick={onCancel} style={{ marginRight: 8 }}>
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSave}
+            loading={loading}
+          >
+            Add
+          </Button>
+        </div>
       </Form>
-      <div className="flex justify-end space-x-2 mt-4">
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 text-gray-700 hover:bg-gray-400 rounded-lg transition"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition disabled:bg-gray-300"
-        >
-          {loading ? "Saving..." : "Add"}
-        </button>
-      </div>
     </Modal>
   );
 };

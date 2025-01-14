@@ -9,6 +9,9 @@ import com.ISA.Restaurant.repo.RestaurantRepository;
 import com.ISA.Restaurant.service.RestaurentService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,7 @@ import java.util.stream.StreamSupport;
 @AllArgsConstructor
 public class RestaurentImpl implements RestaurentService {
 
+    private static final String RESTAURANT_CACHE = "restaurants";
     private final RestaurantRepository repository;
 
     private Restaurant mapDtoToEntity(RestaurantDto dto) {
@@ -53,6 +57,7 @@ public class RestaurentImpl implements RestaurentService {
 
 
         @Override
+        @Cacheable(value = RESTAURANT_CACHE, key = "#restaurantId")
         public RestaurantDto getRestaurantById(int restaurantId) {
             try {
                 return repository.findById(restaurantId)
@@ -66,6 +71,7 @@ public class RestaurentImpl implements RestaurentService {
         }
 
         @Override
+        @Cacheable(value = RESTAURANT_CACHE, key = "#email")
         public RestaurantDto findByRestaurentEmail(String email) {
             try {
                 return repository.findByRestaurantEmail(email)
@@ -79,6 +85,7 @@ public class RestaurentImpl implements RestaurentService {
         }
 
         @Override
+        @CachePut(value = RESTAURANT_CACHE, key = "#restaurantId")
         public RestaurantDto updateRestaurant(int restaurantId, RestaurantDto restaurantDto) {
             validateRestaurantDto(restaurantDto);
 
@@ -107,6 +114,7 @@ public class RestaurentImpl implements RestaurentService {
         }
 
         @Override
+        @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantId")
         public boolean deleteRestaurant(int restaurantId) {
             try {
                 if (repository.existsById(restaurantId)) {
@@ -121,6 +129,7 @@ public class RestaurentImpl implements RestaurentService {
         }
 
         @Override
+        @Cacheable(value = RESTAURANT_CACHE, key = "'all'")
         public Iterable<RestaurantDto> getAllRestaurants() {
             try {
                 Iterable<Restaurant> restaurants = repository.findAll();

@@ -1,10 +1,8 @@
 package com.ISA.Restaurant.service.impl;
 
-//import com.ISA.Restaurant.Entity.Menu;
-//import com.ISA.Restaurant.Entity.MenuItem;
 import com.ISA.Restaurant.Entity.Menu;
-import com.ISA.Restaurant.Entity.MenuItem;
 import com.ISA.Restaurant.exception.RestaurantNotFoundException;
+import com.ISA.Restaurant.mapper.GrpcMapper;
 import com.ISA.Restaurant.repo.MenuItemRepository;
 import com.ISA.Restaurant.repo.MenuRepository;
 import com.ISA.Restaurant.repo.RestaurantRepository;
@@ -15,13 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import restaurant.Restaurant;
 import restaurant.RestaurantServiceGrpc;
 
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 @GrpcService
 @Slf4j
 public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
+
     @Autowired
     private RestaurantRepository restaurantRepository;
 
@@ -35,23 +33,12 @@ public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.Restaur
     public void getAllRestaurantSummaries(Restaurant.Empty request, StreamObserver<Restaurant.RestaurantSummaryList> responseObserver) {
         log.info("Fetching all active restaurant summaries");
 
-        // Filter and map active restaurants
         List<Restaurant.RestaurantSummary> summaries = restaurantRepository.findAll()
                 .stream()
-                .filter(restaurant -> restaurant != null && restaurant.getActive()) // Include only active restaurants
-                .map(restaurant -> {
-                    log.info("Processing restaurant: {} (ID: {})", restaurant.getRestaurantName(), restaurant.getRestaurantId());
-
-                    return Restaurant.RestaurantSummary.newBuilder()
-                            .setRestaurantId(restaurant.getRestaurantId())
-                            .setRestaurantName(restaurant.getRestaurantName())
-                            .setRestaurantCity(restaurant.getRestaurantCity())
-                            .setCoverImageUrl(restaurant.getCoverImageUrl() != null ? restaurant.getCoverImageUrl() : "")
-                            .build();
-                })
+                .filter(restaurant -> restaurant != null && restaurant.getActive())
+                .map(GrpcMapper::mapRestaurantToSummary)
                 .collect(Collectors.toList());
 
-        // Build the response
         Restaurant.RestaurantSummaryList response = Restaurant.RestaurantSummaryList.newBuilder()
                 .addAllSummaries(summaries)
                 .build();
@@ -65,23 +52,17 @@ public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.Restaur
     public void getRestaurantDetails(Restaurant.RestaurantIdRequest request, StreamObserver<Restaurant.RestaurantDetails> responseObserver) {
         try {
             log.info("Fetching details for restaurant ID: {}", request.getRestaurantId());
-            log.info("*******************************************************************************");
 
-            // Fetch restaurant
             var restaurant = restaurantRepository.findById(request.getRestaurantId())
                     .filter(com.ISA.Restaurant.Entity.Restaurant::getActive)
                     .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found or inactive"));
 
-            // Fetch menus and menu items
             List<Restaurant.Menu> menus = menuRepository.findByRestaurant_RestaurantId(restaurant.getRestaurantId())
                     .stream()
                     .filter(Menu::getActive)
-                    .map(this::mapMenuToGrpc)
+                    .map(menu -> GrpcMapper.mapMenuToGrpc(menu, menuItemRepository.findByMenu_MenuId(menu.getMenuId())))
                     .collect(Collectors.toList());
 
-            log.info("Found {} menu(s)", menus.size());
-            log.info("Menus: {}", menus);
-            // Build response
             Restaurant.RestaurantDetails response = Restaurant.RestaurantDetails.newBuilder()
                     .setRestaurantId(restaurant.getRestaurantId())
                     .setRestaurantName(restaurant.getRestaurantName())
@@ -105,31 +86,4 @@ public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.Restaur
             responseObserver.onCompleted();
         }
     }
-
-    private Restaurant.Menu mapMenuToGrpc(Menu menu) {
-        List<Restaurant.MenuItem> menuItems = menuItemRepository.findByMenu_MenuId(menu.getMenuId())
-                .stream()
-                .filter(MenuItem::getActive)
-                .map(this::mapMenuItemToGrpc)
-                .collect(Collectors.toList());
-                log.info("Processing grpc menu items: {}", menuItems);
-        return Restaurant.Menu.newBuilder()
-                .setMenuId(menu.getMenuId())
-                .setMenuName(menu.getMenuName())
-                .setMenuDescription(menu.getMenuDescription())
-                .addAllMenuItems(menuItems)
-                .build();
-    }
-
-    private Restaurant.MenuItem mapMenuItemToGrpc(MenuItem menuItem) {
-        log.info("Menu items urls : {}",menuItem.getImageUrls().toString());
-        return Restaurant.MenuItem.newBuilder()
-                .setMenuItemId(menuItem.getMenuItemId())
-                .setMenuItemName(menuItem.getMenuItemName())
-                .setMenuItemDescription(menuItem.getMenuItemDescription())
-                .setMenuItemPrice(menuItem.getMenuItemPrice())
-                .addAllImageUrls(menuItem.getImageUrls() != null ? menuItem.getImageUrls() : List.of())
-                .build();
-    }
-
 }

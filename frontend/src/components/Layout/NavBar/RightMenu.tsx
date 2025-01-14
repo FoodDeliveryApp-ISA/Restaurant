@@ -12,10 +12,16 @@ const RightMenu = ({ mode }) => {
     navigate("/profile"); // Navigate to profile page
   };
 
-  const handleLogout = () => {
-    authService.logout(); // Clear authentication state
-    navigate("/"); // Redirect to login page after logout
+  const handleLogout = async () => {
+    try {
+      await authService.logout(); // Ensure logout is fully processed
+      navigate("/"); // Redirect after logout
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Optionally handle or display an error
+    }
   };
+  
 
   // Menu items with a black background and white text
   const menuItems = (

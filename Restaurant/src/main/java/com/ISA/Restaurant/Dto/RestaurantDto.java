@@ -6,20 +6,31 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Builder
 @Getter
 @Setter
-public class RestaurantDto {
+public class RestaurantDto implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L; // Unique identifier for serialization
+
     private int restaurantId;
 
+    @NotBlank
     private String restaurantName;
 
+    @NotBlank
+    @Email
     private String restaurantEmail;
 
     private String restaurantAddress;
 
+    @NotBlank
     private String restaurantPhone;
 
+    @NotBlank
     private String restaurantCity;
 
     private String restaurantLocation;
@@ -38,8 +49,7 @@ public class RestaurantDto {
             String restaurantLocation,
             Boolean active,
             String coverImageUrl
-    )
-    {
+    ) {
         this.restaurantId = restaurantId;
         this.restaurantName = restaurantName;
         this.restaurantEmail = restaurantEmail;

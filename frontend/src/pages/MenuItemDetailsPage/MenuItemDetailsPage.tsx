@@ -36,9 +36,9 @@ const MainPage: React.FC = () => {
         console.log("responses : ",response);
         setMenuItemName(menuItemName || "");
         setMenuItemDescription(menuItemDescription || "");
-        setMenuItemPrice(menuItemPrice);
-        setActive(active);
-        setImageUrls(imageUrls);
+        setMenuItemPrice(menuItemPrice || 0);
+        setActive(active || false);
+        setImageUrls(imageUrls || []);
       } catch (error) {
         console.error("Error fetching menu item:", error);
         message.error("Failed to load menu item. Please try again.");
@@ -48,24 +48,32 @@ const MainPage: React.FC = () => {
     fetchMenuItem();
   }, [menuId, menuItemId]);
 
-  const handleSave = async () => {
+  const handleSave = async (
+    updatedImages = imageUrls,
+    updatedActive = active
+  ) => {
     if (!menuItemName || menuItemPrice === undefined) {
       message.error("Name and Price are required!");
       return;
     }
-
+  
     const menuItemData = {
       menuItemName,
       menuItemDescription,
       menuItemPrice,
-      active,
-      imageUrls,
+      active: updatedActive, // Use updated active state
+      imageUrls: updatedImages, // Use updated images
     };
-    console.log(menuItemData);
-    console.log("@@@@@ images :",imageUrls);
+  
+    console.log("Saving Menu Item Data:", menuItemData);
+  
     try {
       if (menuItemId) {
-        await MenuItemService.updateMenuItem(Number(menuId), Number(menuItemId), menuItemData);
+        await MenuItemService.updateMenuItem(
+          Number(menuId),
+          Number(menuItemId),
+          menuItemData
+        );
       } else {
         await MenuItemService.createMenuItem(Number(menuId), menuItemData);
       }
@@ -75,6 +83,9 @@ const MainPage: React.FC = () => {
       message.error("Failed to save menu item. Try again.");
     }
   };
+  
+  
+  
 
   const handlePreview = () => {
     if (!menuItemName || menuItemPrice === undefined) {
@@ -109,14 +120,14 @@ const MainPage: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.3 }}
       >
         <ImageAndActivePage
-  active={active}
-  setActive={setActive}
-  images={imageUrls}
-  setImages={setImageUrls}
-  menuId={menuId!} // Add non-null assertion if you are sure it's not null/undefined
-  menuItemId={menuItemId!}
-  handleSave={handleSave} // Ensure this is passed correctly
-/>
+          active={active}
+          setActive={setActive}
+          images={imageUrls}
+          setImages={setImageUrls}
+          menuId={menuId!} // Add non-null assertion if you are sure it's not null/undefined
+          menuItemId={menuItemId!}
+          handleSave={handleSave} // Ensure this is passed correctly
+        />
 
       </motion.div>
     </div>

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { message, Spin, Divider, Typography } from "antd";
+import { Spin, Divider, Typography, message, Card } from "antd";
 import { motion } from "framer-motion";
 import MenuService from "../../../services/menu.service";
 import ActiveStatusToggle from "./ActiveStatusToggle";
 import MenuPictureUpload from "./MenuPictureUpload";
 
-const { Title } = Typography;
+const { Text, Title } = Typography;
 
 interface LeftSectionProps {
-  menuId: number; // menuId passed as a prop to fetch specific menu data
+  menuId: number;
 }
 
 const LeftSection: React.FC<LeftSectionProps> = ({ menuId }) => {
@@ -20,15 +20,13 @@ const LeftSection: React.FC<LeftSectionProps> = ({ menuId }) => {
     const fetchMenuData = async () => {
       setIsLoadingData(true);
       try {
-        const data = await MenuService.getMenuById(menuId); // Fetch menu by ID
-        console.log("Fetched menu data:", data);
+        const data = await MenuService.getMenuById(menuId);
         if (data) {
           setMenuData(data);
         } else {
           setErrorMessage("No menu data found.");
         }
       } catch (error: any) {
-        console.error("Error fetching menu data:", error);
         setErrorMessage("Failed to load menu data.");
       } finally {
         setIsLoadingData(false);
@@ -36,22 +34,15 @@ const LeftSection: React.FC<LeftSectionProps> = ({ menuId }) => {
     };
 
     if (menuId) {
-      fetchMenuData(); // Fetch the menu data if menuId is provided
+      fetchMenuData();
     } else {
       setErrorMessage("Menu ID is required.");
       setIsLoadingData(false);
     }
-  }, [menuId]); // Re-fetch when menuId changes
-
-  useEffect(() => {
-    if (menuData) {
-      console.log("Menu Data Updated:", menuData);
-      console.log("Menu coverImageUrl:", menuData.coverImageUrl);
-    }
-  }, [menuData]);
+  }, [menuId]);
 
   const updateActiveStatus = async (newStatus: boolean) => {
-    if (!menuData) return; // Ensure menuData is available
+    if (!menuData) return;
     try {
       const updatedMenuData = await MenuService.updateMenu(menuData.menuId, {
         active: newStatus,
@@ -64,7 +55,7 @@ const LeftSection: React.FC<LeftSectionProps> = ({ menuId }) => {
   };
 
   const updateMenuPicture = async (newUrl: string) => {
-    if (!menuData) return; // Ensure menuData is available
+    if (!menuData) return;
     try {
       const updatedMenuData = await MenuService.updateMenu(menuData.menuId, {
         coverImageUrl: newUrl,
@@ -78,7 +69,7 @@ const LeftSection: React.FC<LeftSectionProps> = ({ menuId }) => {
 
   if (isLoadingData) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px" }}>
         <Spin tip="Loading..." />
       </div>
     );
@@ -86,36 +77,38 @@ const LeftSection: React.FC<LeftSectionProps> = ({ menuId }) => {
 
   if (errorMessage) {
     return (
-      <div className="text-center mt-6">
-        <Typography.Text type="danger">{errorMessage}</Typography.Text>
+      <div style={{ textAlign: "center", marginTop: "20px" }}>
+        <Text type="danger">{errorMessage}</Text>
       </div>
     );
   }
 
   return (
     <motion.div
-      className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transition-all max-w-md mx-auto"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      {menuData && (
-        <>
-          <div className="flex flex-col items-center mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg shadow">
-            <span className="text-lg text-gray-800 dark:text-gray-300 mb-2">
-              Menu Active Status:
-            </span>
-            <ActiveStatusToggle
-              active={menuData.active}
-              onSave={updateActiveStatus}
+      <div
+      >
+        {menuData && (
+          <>
+            <div style={{ marginBottom: "16px" }}>
+              <Text strong>Active Status:</Text>
+              <div style={{ marginTop: "8px" }}>
+                <ActiveStatusToggle
+                  active={menuData.active}
+                  onSave={updateActiveStatus}
+                />
+              </div>
+            </div>
+            <Divider />
+            <MenuPictureUpload
+              avatarUrl={menuData?.coverImageUrl}
+              onUpdate={updateMenuPicture}
             />
-          </div>
-          <Divider />
-          <MenuPictureUpload
-            avatarUrl={menuData?.coverImageUrl}
-            onUpdate={updateMenuPicture}
-          />
-        </>
-      )}
+          </>
+        )}
+      </div>
     </motion.div>
   );
 };

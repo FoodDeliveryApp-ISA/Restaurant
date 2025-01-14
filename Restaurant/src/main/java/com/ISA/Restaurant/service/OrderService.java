@@ -13,9 +13,11 @@ import com.ISA.Restaurant.exception.OrderNotFoundException;
 import com.ISA.Restaurant.exception.SameOrderStateException;
 import com.ISA.Restaurant.mapper.OrderMapper;
 import com.ISA.Restaurant.repo.OrderRepository;
+import com.ISA.Restaurant.utils.TimeUtility;
+import com.ISA.Restaurant.utils.ValidationUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,97 +30,204 @@ public class OrderService {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
+    private static final int ORDER_PLACED_DELAY_MINUTES = 30;
+    private static final int PREPARING_DELAY_MINUTES = 45;
+    private static final int ON_THE_WAY_DELAY_MINUTES = 60;
+
     private final OrderRepository orderRepository;
     private final OrderStatusProducer orderStatusProducer;
     private final RiderRequestProducer riderRequestProducer;
-    private final RestaurentService restaurantService ;
+    private final RestaurentService restaurantService;
+    private final NotificationService notificationService;
 
-    public OrderService(OrderRepository orderRepository,
-                        OrderStatusProducer orderStatusProducer,
-                        RiderRequestProducer riderRequestProducer,
-                        RestaurentService restaurantService) {
+    public OrderService(OrderRepository orderRepository, OrderStatusProducer orderStatusProducer,
+                        RiderRequestProducer riderRequestProducer, RestaurentService restaurantService,
+                        NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.orderStatusProducer = orderStatusProducer;
         this.riderRequestProducer = riderRequestProducer;
         this.restaurantService = restaurantService;
+        this.notificationService = notificationService;
     }
 
     public void handleNewOrder(CustomerOrderDto orderDto) {
         logger.info("Handling new order: {}", orderDto);
-        int restaurantId = Integer.parseInt(orderDto.getRestaurantId());
+        try {
+            RestaurantDto restaurantDetails = fetchRestaurantDetails(orderDto);
+            Order order = OrderMapper.createOrderEntity(orderDto, restaurantDetails);
 
-        // Fetch restaurant details
-        RestaurantDto restaurantDetails = restaurantService.getRestaurantById(restaurantId);
-        logger.info("Fetched restaurant details: {}", restaurantDetails);
+            orderRepository.save(order);
+            orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ORDER_PLACED);
 
-        // Map CustomerOrderDto to Order and fill restaurant details
-        Order order = OrderMapper.toEntity(orderDto);
-        order.setRestaurantName(restaurantDetails.getRestaurantName());
-        order.setRestaurantAddress(restaurantDetails.getRestaurantAddress());
-        order.setRestaurantPhone(restaurantDetails.getRestaurantPhone());
+            sendNotifications(orderDto, order);
 
-        // Convert restaurant location from String to List<Double>
-        List<Double> restaurantLocation = convertStringToList(restaurantDetails.getRestaurantLocation());
-        order.setRestaurantLocation(restaurantLocation);
-
-        // Set default status
-        order.setStatus(OrderStatus.ORDER_PLACED);
-
-        // Set the created date
-        order.setCreatedDate(LocalDateTime.now());
-
-        // Save the order to the repository
-        orderRepository.save(order);
-
-        // Send initial status update to Kafka
-        orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ORDER_PLACED);
-
-        logger.info("New order created with ID: {} and initial status: {}", order.getOrderId(), OrderStatus.ORDER_PLACED);
+            logger.info("Order created successfully. ID: {}, Status: {}", order.getOrderId(), OrderStatus.ORDER_PLACED);
+        } catch (Exception e) {
+            logger.error("Error while handling new order: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to handle new order", e);
+        }
     }
 
-
     public void acceptOrder(String orderId) {
-        logger.info("Accepting order with ID: {}", orderId);
-        Order order = getOrderById(orderId);
-        validateStateTransition(order.getStatus(), OrderStatus.PREPARING);
-
-        orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.PREPARING);
-
+        transitionOrderStatus(orderId, OrderStatus.PREPARING);
     }
 
     public void requestRider(String orderId) {
         Order order = getOrderById(orderId);
-        validateStateTransition(order.getStatus(), OrderStatus.ASSIGNING_RIDER);
+        transitionOrderStatus(order, OrderStatus.ASSIGNING_RIDER);
         RiderRequestDto riderRequest = OrderMapper.toRiderRequestDto(order);
         riderRequestProducer.sendRiderRequest(riderRequest);
-        orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ASSIGNING_RIDER);
     }
 
     public void orderOnTheWay(String orderId) {
-        logger.info("Updating order ID {} to 'ON_THE_WAY'", orderId);
-        Order order = getOrderById(orderId);
-        validateStateTransition(order.getStatus(), OrderStatus.ON_THE_WAY);
-        orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ON_THE_WAY);
+        transitionOrderStatus(orderId, OrderStatus.ON_THE_WAY);
     }
 
     public void markOrderDelivered(String orderId) {
-        logger.info("Marking order ID {} as 'ORDER_DELIVERED'", orderId);
-        Order order = getOrderById(orderId);
-        validateStateTransition(order.getStatus(), OrderStatus.ORDER_DELIVERED);
-        orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ORDER_DELIVERED);
+        transitionOrderStatus(orderId, OrderStatus.ORDER_DELIVERED);
     }
 
     public void cancelOrder(String orderId) {
-        logger.warn("Cancelling order ID {}", orderId);
-        Order order = getOrderById(orderId);
-        validateStateTransition(order.getStatus(), OrderStatus.ORDER_CANCELLED);
-        orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ORDER_CANCELLED);
+        transitionOrderStatus(orderId, OrderStatus.ORDER_CANCELLED);
     }
 
     private Order getOrderById(String orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
     }
+
+    public List<Order> getOrdersByRestaurantId(String restaurantId, String sortBy, boolean ascending, List<String> statusFilters, String timeRange) {
+        logger.info("Fetching orders for restaurant ID: {}", restaurantId);
+
+        List<Order> orders = orderRepository.findByRestaurantId(restaurantId);
+        if (statusFilters != null && !statusFilters.isEmpty()) {
+            orders = filterOrdersByStatus(orders, statusFilters);
+        }
+
+        if (timeRange != null) {
+            orders = filterOrdersByTime(orders, timeRange);
+        }
+
+        sortOrders(orders, sortBy, ascending);
+
+        logger.info("Fetched {} orders for restaurant ID: {}", orders.size(), restaurantId);
+        return orders;
+    }
+
+    private List<Order> filterOrdersByTime(List<Order> orders, String timeRange) {
+        LocalDateTime startTime = TimeUtility.calculateCutoffTime(timeRange);
+
+        if (startTime == null) {
+            return orders; // No filtering if time range is "all"
+        }
+
+        return orders.stream()
+                .filter(order -> order.getCreatedDate().isAfter(startTime))
+                .collect(Collectors.toList());
+    }
+
+
+
+    @Scheduled(fixedRate = 300000)
+    public void scheduleOrderStatusUpdate() {
+        List<Order> activeOrders = orderRepository.findByStatusNotIn(
+                List.of(OrderStatus.ORDER_DELIVERED, OrderStatus.ORDER_CANCELLED));
+        LocalDateTime now = LocalDateTime.now();
+
+        activeOrders.forEach(order -> handleScheduledUpdate(order, now));
+    }
+
+    private void transitionOrderStatus(String orderId, OrderStatus newStatus) {
+        Order order = getOrderById(orderId);
+        transitionOrderStatus(order, newStatus);
+    }
+
+    private void transitionOrderStatus(Order order, OrderStatus newStatus) {
+        validateStateTransition(order.getStatus(), newStatus);
+        order.setStatus(newStatus);
+        order.setLastUpdated(LocalDateTime.now());
+        orderRepository.save(order);
+        orderStatusProducer.sendOrderStatus(order.getOrderId(), newStatus);
+        logger.info("Order ID {} status transitioned to {}", order.getOrderId(), newStatus);
+    }
+
+    private void validateStateTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+        ValidationUtility.validateStateTransition(currentStatus, newStatus);
+    }
+
+    private List<Order> filterOrdersByStatus(List<Order> orders, List<String> statusFilters) {
+        List<OrderStatus> statuses = statusFilters.stream()
+                .map(status -> OrderStatus.valueOf(status.toUpperCase()))
+                .collect(Collectors.toList());
+        return orders.stream()
+                .filter(order -> statuses.contains(order.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    private void sortOrders(List<Order> orders, String sortBy, boolean ascending) {
+        if ("status".equalsIgnoreCase(sortBy)) {
+            orders.sort((o1, o2) -> ascending ? o1.getStatus().compareTo(o2.getStatus())
+                    : o2.getStatus().compareTo(o1.getStatus()));
+        } else if ("createdDate".equalsIgnoreCase(sortBy)) {
+            orders.sort((o1, o2) -> ascending ? o1.getCreatedDate().compareTo(o2.getCreatedDate())
+                    : o2.getCreatedDate().compareTo(o1.getCreatedDate()));
+        }
+    }
+
+    private void handleScheduledUpdate(Order order, LocalDateTime now) {
+        LocalDateTime lastUpdated = order.getLastUpdated();
+        LocalDateTime fallbackDate = order.getCreatedDate();
+
+        // Fallback to createdDate if lastUpdated is null
+        if (lastUpdated == null) {
+            logger.warn("Order {} has no lastUpdated timestamp.", order.getOrderId());
+            lastUpdated = fallbackDate;
+
+            // If createdDate is also null, log a warning and skip this order
+            if (lastUpdated == null) {
+                logger.error("Order {} has no lastUpdated or createdDate. Skipping update.", order.getOrderId());
+                return;
+            }
+
+            logger.warn("Using createdDate as fallback for order {}: {}", order.getOrderId(), lastUpdated);
+        }
+
+        long minutesSinceUpdate = java.time.Duration.between(lastUpdated, now).toMinutes();
+
+        switch (order.getStatus()) {
+            case ORDER_PLACED:
+                if (minutesSinceUpdate > ORDER_PLACED_DELAY_MINUTES) {
+                    transitionOrderStatus(order, OrderStatus.ORDER_CANCELLED);
+                }
+                break;
+            case PREPARING:
+                if (minutesSinceUpdate > PREPARING_DELAY_MINUTES) {
+                    transitionOrderStatus(order, OrderStatus.ORDER_CANCELLED);
+                }
+                break;
+            case ON_THE_WAY:
+                if (minutesSinceUpdate > ON_THE_WAY_DELAY_MINUTES) {
+                    transitionOrderStatus(order, OrderStatus.ORDER_CANCELLED);
+                }
+                break;
+            default:
+                logger.info("Order {} in status {} needs no update.", order.getOrderId(), order.getStatus());
+        }
+    }
+
+
+
+    private RestaurantDto fetchRestaurantDetails(CustomerOrderDto orderDto) {
+        int restaurantId = Integer.parseInt(orderDto.getRestaurantId());
+        return restaurantService.getRestaurantById(restaurantId);
+    }
+
+    private void sendNotifications(CustomerOrderDto orderDto, Order order) {
+        String restaurantNotificationMessage = String.format("New order #%s has been placed at your restaurant.", order.getOrderId());
+        notificationService.sendNotificationToUser(orderDto.getRestaurantId(), restaurantNotificationMessage);
+    }
+
+
     public void updateOrderStatus(String orderId, String status) {
         try {
             logger.info("Updating order status. Order ID: {}, New Status: {}", orderId, status);
@@ -126,18 +235,17 @@ public class OrderService {
             Order order = orderRepository.findById(orderId)
                     .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
 
-            OrderStatus currentStatus = order.getStatus();
             OrderStatus newStatus = OrderStatus.valueOf(status);
 
-            // Skip update if the current status matches the new status
-            if (currentStatus != null && currentStatus.equals(newStatus)) {
-                logger.warn("Order ID {} is already in the state: {}. Skipping update.", orderId, currentStatus);
+            if (order.getStatus().equals(newStatus)) {
+                logger.warn("Order ID {} is already in the state: {}. Skipping update.", orderId, newStatus);
                 return;
             }
 
-            validateStateTransition(currentStatus, newStatus);
+            validateStateTransition(order.getStatus(), newStatus);
 
             order.setStatus(newStatus);
+            order.setLastUpdated(LocalDateTime.now());
             orderRepository.save(order);
 
             logger.info("Order ID {} updated successfully to status {}", orderId, newStatus);
@@ -150,50 +258,5 @@ public class OrderService {
             throw e;
         }
     }
-
-    private void validateStateTransition(OrderStatus currentStatus, OrderStatus newStatus) {
-        logger.info("Validating state transition: currentStatus={}, newStatus={}", currentStatus, newStatus);
-
-        if (currentStatus == null) {
-            logger.info("Current status is null. Allowing transition to initial state: {}", newStatus);
-            if (newStatus != OrderStatus.ORDER_PLACED) {
-                throw new InvalidOrderStateTransitionException(
-                        "Invalid initial state transition to " + newStatus
-                );
-            }
-            return;
-        }
-
-        if (currentStatus.equals(newStatus)) {
-            logger.warn("Order is already in the state: {}. Skipping update.", newStatus);
-            return; // Skip the update instead of throwing an exception
-        }
-
-        if (newStatus == OrderStatus.ORDER_CANCELLED) {
-            logger.info("Transition to ORDER_CANCELLED is allowed at any time.");
-            return;
-        }
-
-        if (!currentStatus.canTransitionTo(newStatus)) {
-            throw new InvalidOrderStateTransitionException(
-                    "Invalid state transition from " + currentStatus + " to " + newStatus
-            );
-        }
-    }
-
-    private List<Double> convertStringToList(String locationString) {
-        if (locationString == null || locationString.isEmpty()) {
-            throw new IllegalArgumentException("Location string is null or empty");
-        }
-
-        try {
-            return Arrays.stream(locationString.split(","))
-                    .map(Double::parseDouble)
-                    .collect(Collectors.toList());
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid location format: " + locationString, e);
-        }
-    }
-
 
 }

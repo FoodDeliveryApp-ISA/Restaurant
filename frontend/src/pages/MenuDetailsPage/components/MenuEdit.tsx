@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Spin, Alert, Typography } from "antd";
+import { Row, Col, Spin, Alert, Typography, Card } from "antd";
 import LeftSection from "./LeftSection";
 import RightSection from "./RightSection";
 import MenuService from "../../../services/menu.service";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 interface MenuEditProps {
   menuId: number;
@@ -36,56 +36,73 @@ const MenuEdit: React.FC<MenuEditProps> = ({ menuId }) => {
     }
   }, [menuId]);
 
-  if (loading)
+  if (loading) {
     return (
-      <div style={styles.centeredContainer}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <Spin size="large" tip="Loading menu details..." />
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
-      <div style={styles.centeredContainer}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <Alert message="Error" description={error} type="error" showIcon />
       </div>
     );
+  }
 
   return (
-    <div style={styles.container}>
-      <Title level={3} style={styles.title}>
-        Edit Menu
-      </Title>
-      <Row gutter={[16, 16]} align="top">
-        <Col xs={24} sm={24} md={10} lg={8}>
-          <LeftSection menuId={menuId} />
-        </Col>
-        <Col xs={24} sm={24} md={14} lg={16}>
-          <RightSection menu={menu} />
-        </Col>
-      </Row>
+    <div>
+      <div
+        // style={{
+        //   margin: "0 auto",
+        //   maxWidth: "1200px",
+        //   borderRadius: "8px",
+        //   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+        // }}
+        // bodyStyle={{ padding: "24px" }}
+      >
+        {/* <Title level={3} style={{ textAlign: "center", marginBottom: "24px" }}>
+          Edit Menu
+        </Title> */}
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={24} md={10} lg={8}>
+            <Card
+              title={<Text strong>Change Profile and Status</Text>}
+              bordered
+              bodyStyle={{ padding: "16px" }}
+            >
+              <LeftSection menuId={menuId} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={24} md={14} lg={16}>
+            <Card
+              title={<Text strong>Edit Menu Details</Text>}
+              bordered
+              bodyStyle={{ padding: "16px" }}
+            >
+              <RightSection menu={menu} />
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    padding: "20px",
-    backgroundColor: "#f9f9f9",
-    borderRadius: "8px",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-    minHeight: "100vh",
-  },
-  centeredContainer: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    backgroundColor: "#fff",
-  },
-  title: {
-    marginBottom: "20px",
-    textAlign: "center",
-  },
 };
 
 export default MenuEdit;

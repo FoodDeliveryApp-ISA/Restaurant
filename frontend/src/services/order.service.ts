@@ -2,17 +2,9 @@ import axios from "axios";
 import authHeader from "./auth-header";
 import { BASE_API_URL } from "../config/apiConfig";
 import { handleError } from "../utils/errorHandler";
+import { Order,CustomerOrderDto } from "./dto/order.dto";
 
 const API_URL = `${BASE_API_URL}/order`;
-
-export interface CustomerOrderDto {
-  orderId?: string;
-  restaurantId: string;
-  customerLocation: number[];
-  customerName: string;
-  customerAddress: string;
-  customerPhone: string;
-}
 
 class OrderService {
   private handleError: (error: unknown) => Promise<void>;
@@ -122,6 +114,36 @@ class OrderService {
       throw error;
     }
   }
+
+// Fetch orders by restaurant ID with sorting, filtering, and time range
+async getOrdersByRestaurantId(
+  restaurantId: string,
+  sortBy?: string,
+  ascending: boolean = true,
+  statuses?: string[],
+  timeRange: string = "2h" // Default to 2 hours
+): Promise<Order[]> {
+  try {
+    const params = new URLSearchParams();
+
+    if (sortBy) params.append("sortBy", sortBy);
+    params.append("ascending", ascending.toString());
+    if (statuses) params.append("statuses", statuses.join(","));
+    params.append("timeRange", timeRange); // Add timeRange parameter
+
+    const response = await axios.get<Order[]>(`${API_URL}/restaurant/${restaurantId}`, {
+      headers: authHeader(),
+      params,
+    });
+
+    console.log("Fetched orders:", response.data);
+    return response.data;
+  } catch (error) {
+    await this.handleError(error);
+    throw error;
+  }
+}
+
 }
 
 export default new OrderService();

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Table, Button, Switch, message, Empty } from "antd";
+import { Table, Button, Switch, message, Empty, Tag, Tooltip } from "antd";
+import { EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import { MenuDto } from "../../../services/dto/menu.dto";
 
 interface MenuTableProps {
@@ -17,42 +18,28 @@ const MenuTable: React.FC<MenuTableProps> = ({
   onView,
   onToggleActive,
 }) => {
-  const [editingName, setEditingName] = useState<number | null>(null);
-  const [newName, setNewName] = useState<string>("");
-
-  const handleNameChange = (menuId: number, name: string) => {
-    setEditingName(menuId);
-    setNewName(name);
-  };
-
-  const handleSaveName = async (menuId: number) => {
-    if (newName.trim()) {
-      console.log("Saving new name:", newName);
-      message.success("Menu item name updated successfully!");
-      setEditingName(null);
-    } else {
-      message.error("Menu item name cannot be empty!");
-    }
-  };
-
   const columns = [
     {
       title: "Menu Item Name",
       dataIndex: "menuName",
       key: "menuName",
-      render: (text: string, record: MenuDto) => (
-        <div className="flex items-center">
-          <span className="text-blue-600 hover:text-blue-800 cursor-pointer">
-            {text}
-          </span>
-        </div>
+      sorter: (a: MenuDto, b: MenuDto) => a.menuName.localeCompare(b.menuName),
+      render: (text: string) => (
+        <Tooltip title={text}>
+          <span className="text-blue-600 hover:underline">{text}</span>
+        </Tooltip>
       ),
     },
     {
       title: "Description",
       dataIndex: "menuDescription",
       key: "menuDescription",
-      render: (text: string) => <div className="text-gray-700">{text}</div>,
+      ellipsis: true,
+      render: (text: string) => (
+        <Tooltip title={text}>
+          <span>{text}</span>
+        </Tooltip>
+      ),
     },
     {
       title: "Active",
@@ -60,60 +47,61 @@ const MenuTable: React.FC<MenuTableProps> = ({
       render: (_: any, record: MenuDto) => (
         <Switch
           checked={record.active}
-          onChange={(checked) => {
-            onToggleActive(record.menuId, checked);
-          }}
-          className="bg-red-600"
+          onChange={(checked) => onToggleActive(record.menuId, checked)}
+          checkedChildren="Active"
+          unCheckedChildren="Inactive"
         />
       ),
+      filters: [
+        { text: "Active", value: true },
+        { text: "Inactive", value: false },
+      ],
+      onFilter: (value: boolean, record: MenuDto) => record.active === value,
     },
     {
       title: "Actions",
       key: "actions",
       render: (_: any, record: MenuDto) => (
         <div className="flex space-x-3">
-          <Button
-            type="link"
-            onClick={() => onEdit(record)}
-            className="text-yellow-600 hover:text-yellow-700"
-          >
-            Edit
-          </Button>
-          <Button
-            type="link"
-            danger
-            onClick={() => onDelete(record.menuId)}
-            className="text-red-600 hover:text-red-700"
-          >
-            Delete
-          </Button>
-          <Button
-            type="link"
-            onClick={() => onView(record.menuId)}
-            className="text-teal-600 hover:text-teal-700"
-          >
-            View
-          </Button>
+          <Tooltip title="Edit">
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => onEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => onDelete(record.menuId)}
+            />
+          </Tooltip>
+          <Tooltip title="View">
+            <Button
+              type="link"
+              icon={<EyeOutlined />}
+              onClick={() => onView(record.menuId)}
+            />
+          </Tooltip>
         </div>
       ),
     },
   ];
 
   return (
-    <div className="overflow-x-auto p-6 bg-gray-50 rounded-lg shadow-md">
-      {console.log("Menus:", menus)}
-      {Array.isArray(menus) && menus.length > 0 ? (
+    <div >
+      {menus && menus.length > 0 ? (
         <Table
           dataSource={menus}
           columns={columns}
           rowKey="menuId"
-          pagination={false}
-          className="rounded-lg bg-white"
+          pagination={{ pageSize: 10 }}
+          bordered
         />
       ) : (
-        <div className="text-center p-10">
-          <Empty description="No menu items available" />
-        </div>
+        <Empty description="No menu items available" />
       )}
     </div>
   );

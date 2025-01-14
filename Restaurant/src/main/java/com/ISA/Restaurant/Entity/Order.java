@@ -17,6 +17,7 @@ import java.util.List;
 public class Order {
     @Id
     private String orderId;
+    private String restaurantId;
     @ElementCollection
     private List<Double> restaurantLocation;
     @ElementCollection
@@ -30,6 +31,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
     private LocalDateTime createdDate;
+    private LocalDateTime lastUpdated;
 
     public Order(String orderId,
                  List<Double> customerLocation,
@@ -42,6 +44,8 @@ public class Order {
         this.customerName = customerName;
         this.customerAddress = customerAddress;
         this.customerPhone = customerPhone;
+        this.createdDate = LocalDateTime.now();
+        this.lastUpdated = LocalDateTime.now();
 
     }
 

@@ -1,31 +1,21 @@
-import React, { useState, useEffect } from "react";
-import { Modal, Button, Steps, Card, message } from "antd";
-import { statusFlow } from "../../../utils/statusFlow";
-import {
-  CheckCircleOutlined,
-  FireOutlined,
-  SearchOutlined,
-  CarOutlined,
-  SmileOutlined,
-} from "@ant-design/icons";
+import React, { useEffect, useState } from "react";
+import { Modal, Button, message, Collapse, Typography } from "antd";
+import OrderDetails from "./OrderDetails";
+import StepsWithIcons from "./StepsWithIcons";
 import OrderActions from "./OrderActions";
 import orderService from "../../../services/order.service";
+import { Order } from "./order.type";
+import { statusFlow } from "../../../utils/statusFlow";
 
-export interface Order {
-  orderId: string;
-  customerName: string;
-  customerAddress: string;
-  customerPhone: string;
-  restaurantLocation: [number, number];
-  customerLocation: [number, number];
-  status: string;
-}
+const { Panel } = Collapse;
+const { Text } = Typography;
 
 interface MultiStagePopupProps {
   order: Order | null;
   visible: boolean;
-  onClose: () => void;
-  updateStatus: (orderId: string, newStatus: string) => void;
+  onClose: () => void; // Callback to trigger after modal close
+  updateStatus: (orderId: string, newStatus: number) => void;
+  refetchOrders: () => void; // New prop to trigger data refresh
 }
 
 const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
@@ -33,178 +23,154 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
   visible,
   onClose,
   updateStatus,
+  refetchOrders,
 }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedStatus, setSelectedStatus] = useState<number>(1);
+  const [isCancelled, setIsCancelled] = useState(false);
 
   useEffect(() => {
-    if (order) {
-      setSelectedStatus(order.status);
-      const initialStep = statusFlow.findIndex(
-        (step) => step.title === order.status
-      );
-      setCurrentStep(initialStep !== -1 ? initialStep : 0);
+    if (order && visible) {
+      console.log(order.status);
+      // console.log();
+      const stepIndex = statusFlow.find((step) => step.name === order.status)?.state || 1;
+      setCurrentStep(stepIndex);
+      setSelectedStatus(stepIndex);
+      console.log(currentStep);
+      console.log(selectedStatus);
+      setIsCancelled(order.status === "ORDER_CANCELLED");
     }
-  }, [order]);
+  }, [order, visible]);
 
-  const handleNext = () => {
-    const nextStep = Math.min(currentStep + 1, statusFlow.length - 1);
-    setCurrentStep(nextStep);
-    setSelectedStatus(statusFlow[nextStep].title);
+  const handleCancel = async () => {
+    if (order) {
+      setIsCancelled(true);
+      updateStatus(order.orderId, 6); // ORDER_CANCELLED
+      await orderService.cancelOrder(order.orderId);
+      await message.error("The order has been cancelled.");
+      refetchOrders();
+      onClose();
+    }
   };
 
-  const handlePrevious = () => {
-    const previousStep = Math.max(currentStep - 1, 0);
-    setCurrentStep(previousStep);
-    setSelectedStatus(statusFlow[previousStep].title);
-  };
-
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (order) {
       updateStatus(order.orderId, selectedStatus);
-      message.success(`Order status updated to "${selectedStatus}"`);
+      await message.success(
+        `Order status updated to "${statusFlow[selectedStatus - 1]?.title}"`
+      );
+      refetchOrders();
     }
     onClose();
   };
 
-  const handleAcceptOrder = async () => {
-    if (order) {
-      try {
-        await orderService.acceptOrder(order.orderId);
-        message.success("Order accepted!");
-        handleNext();
-      } catch (error) {
-        message.error("Failed to accept order.");
-      }
-    }
+  const handleNext = () => {
+    const nextStep = Math.min(currentStep + 1, statusFlow.length);
+    setCurrentStep(nextStep);
+    setSelectedStatus(nextStep);
   };
 
-  const handleRejectOrder = async () => {
-    if (order) {
-      try {
-        await orderService.cancelOrder(order.orderId);
-        message.error("Order rejected.");
-        onClose();
-      } catch (error) {
-        message.error("Failed to reject order.");
-      }
-    }
-  };
-
-  const handleRequestRider = async () => {
-    if (order) {
-      try {
-        await orderService.requestRiders(order.orderId);
-        message.success("Rider requested successfully!");
-        handleNext();
-      } catch (error) {
-        message.error("Failed to request rider.");
-      }
-    }
-  };
-
-  const handleMarkOnTheWay = async () => {
-    if (order) {
-      try {
-        await orderService.markOrderOnTheWay(order.orderId);
-        message.success("Order marked as On the Way.");
-        handleNext();
-      } catch (error) {
-        message.error("Failed to mark order as On the Way.");
-      }
-    }
-  };
-
-  const handleMarkDelivered = async () => {
-    if (order) {
-      try {
-        await orderService.markOrderDelivered(order.orderId);
-        message.success("Order marked as Delivered.");
-        handleNext();
-      } catch (error) {
-        message.error("Failed to mark order as Delivered.");
-      }
-    }
-  };
-
-  const getStepIcon = (iconName: string) => {
-    switch (iconName) {
-      case "check-circle":
-        return <CheckCircleOutlined />;
-      case "fire":
-        return <FireOutlined />;
-      case "search":
-        return <SearchOutlined />;
-      case "car":
-        return <CarOutlined />;
-      case "smile":
-        return <SmileOutlined />;
-      default:
-        return null;
-    }
+  const handlePrevious = () => {
+    const prevStep = Math.max(currentStep - 1, 1);
+    setCurrentStep(prevStep);
+    setSelectedStatus(prevStep);
   };
 
   return (
     <Modal
-      title="Order Management"
+      title={isCancelled ? "Order Cancelled" : "Order Management"}
       visible={visible}
       onCancel={onClose}
-      footer={[
-        <Button key="prev" onClick={handlePrevious} disabled={currentStep === 0}>
-          Previous
-        </Button>,
-        <Button
-          key="next"
-          onClick={handleNext}
-          disabled={currentStep === statusFlow.length - 1}
-        >
-          Next
-        </Button>,
-        <Button key="update" type="primary" onClick={handleUpdate}>
-          Update
-        </Button>,
-      ]}
+      footer={
+        isCancelled
+          ? [
+              <Button key="close" onClick={onClose}>
+                Close
+              </Button>,
+            ]
+          : [
+              <Button key="prev" onClick={handlePrevious} disabled={currentStep === 1}>
+                Previous
+              </Button>,
+              <Button
+                key="next"
+                onClick={handleNext}
+                disabled={currentStep === statusFlow.length}
+              >
+                Next
+              </Button>,
+              <Button key="cancel" danger onClick={handleCancel}>
+                Cancel Order
+              </Button>,
+              <Button key="update" type="primary" onClick={handleUpdate}>
+                Update
+              </Button>,
+            ]
+      }
       centered
     >
       {order ? (
-        <Card
-          bordered={false}
-          style={{
-            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-            borderRadius: "8px",
-          }}
-        >
-          <p>
-            <strong>Order ID:</strong> {order.orderId}
-          </p>
-          <p>
-            <strong>Customer Name:</strong> {order.customerName}
-          </p>
-          <p>
-            <strong>Address:</strong> {order.customerAddress}
-          </p>
-          <p>
-            <strong>Phone:</strong> {order.customerPhone}
-          </p>
-          <Steps current={currentStep} direction="vertical" style={{ marginTop: 20 }}>
-            {statusFlow.map((step) => (
-              <Steps.Step
-                key={step.title}
-                title={step.title}
-                icon={getStepIcon(step.icon)}
-                description={step.description}
-              />
-            ))}
-          </Steps>
-          <OrderActions
-            currentStep={currentStep}
-            handleAcceptOrder={handleAcceptOrder}
-            handleRejectOrder={handleRejectOrder}
-            handleRequestRider={handleRequestRider}
-            handleMarkDelivered={handleMarkDelivered}
-            handleMarkOnTheWay={handleMarkOnTheWay}
-          />
-        </Card>
+        isCancelled ? (
+          <div>
+            <Text type="danger">
+              This order has been cancelled. No further actions can be taken.
+            </Text>
+            <OrderDetails order={order} />
+          </div>
+        ) : (
+          <>
+            <Collapse defaultActiveKey={[]} style={{ marginBottom: "16px" }}>
+              <Panel header="Order Details" key="1">
+                <OrderDetails order={order} />
+              </Panel>
+            </Collapse>
+            <StepsWithIcons currentStep={currentStep - 1} />
+            <OrderActions
+              currentStep={currentStep - 1}
+              handleAcceptOrder={async () => {
+                try {
+                  await orderService.acceptOrder(order.orderId);
+                  handleNext();
+                  refetchOrders();
+                  message.success("Order has been accepted.");
+                } catch {
+                  message.error("Failed to accept the order. Please try again.");
+                }
+              }}
+              handleRejectOrder={handleCancel}
+              handleRequestRider={async () => {
+                try {
+                  await orderService.requestRiders(order.orderId);
+                  handleNext();
+                  refetchOrders();
+                  message.success("Rider requested successfully.");
+                } catch {
+                  message.error("Failed to request a rider. Please try again.");
+                }
+              }}
+              handleMarkOnTheWay={async () => {
+                try {
+                  await orderService.markOrderOnTheWay(order.orderId);
+                  handleNext();
+                  refetchOrders();
+                  message.success("Order marked as 'On the Way'.");
+                } catch {
+                  message.error("Failed to mark the order as 'On the Way'. Please try again.");
+                }
+              }}
+              handleMarkDelivered={async () => {
+                try {
+                  await orderService.markOrderDelivered(order.orderId);
+                  handleNext();
+                  refetchOrders();
+                  message.success("Order marked as 'Delivered'.");
+                } catch {
+                  message.error("Failed to mark the order as 'Delivered'. Please try again.");
+                }
+              }}
+            />
+          </>
+        )
       ) : (
         <p>No order selected.</p>
       )}

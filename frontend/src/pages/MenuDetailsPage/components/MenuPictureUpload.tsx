@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Upload, Button, message, Spin, Progress, Modal } from "antd";
 import ImgCrop from "antd-img-crop";
-import {
-  UploadOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { UploadOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import ImageService from "../../../services/image.service";
 
 interface AvatarUploadProps {
@@ -21,61 +17,43 @@ const MenuUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, onUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(avatarUrl);
   const [showDelete, setShowDelete] = useState(false);
-  const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
-    console.log("Avatar URL:", avatarUrl);
-    if (avatarUrl) {
-      setImageUrl(avatarUrl); // Set image URL from props on initial render
-    }
+    setImageUrl(avatarUrl || null);
   }, [avatarUrl]);
 
   const beforeUpload = (file: File) => {
-    const isImage = file.type.startsWith("image/");
-    if (!isImage) {
+    if (!file.type.startsWith("image/")) {
       message.error("You can only upload image files!");
       return Upload.LIST_IGNORE;
     }
-
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    if (!isLt2M) {
+    if (file.size / 1024 / 1024 >= 2) {
       message.error("Image must be smaller than 2MB!");
       return Upload.LIST_IGNORE;
     }
-
     return true;
   };
 
   const handleUpload = async (options: any) => {
     const { file, onSuccess, onError } = options;
 
-    Modal.confirm({
-      title: "Confirm Upload",
-      content: "Are you sure you want to upload this image?",
-      okText: "Yes",
-      cancelText: "No",
-      onOk: async () => {
-        try {
-          setLoading(true);
-          setIsActive(true);
-          const rawFile = file.originFileObj || file;
-          const key = `menus/${rawFile.name}`;
-          const publicURL = `${publicDomain}/${key}`;
+    try {
+      setLoading(true);
+      const rawFile = file.originFileObj || file;
+      const key = `menus/${rawFile.name}`;
+      const publicURL = `${publicDomain}/${key}`;
 
-          await imageService.uploadImage(key, rawFile, rawFile.type);
-          await onUpdate(publicURL); // Update image URL in parent component
-          setImageUrl(publicURL); // Update local state
-          message.success(`${rawFile.name} uploaded successfully!`);
-          onSuccess("File uploaded successfully!");
-        } catch (error) {
-          message.error("Failed to upload image.");
-          onError(error);
-        } finally {
-          setLoading(false);
-          setIsActive(false);
-        }
-      },
-    });
+      await imageService.uploadImage(key, rawFile, rawFile.type);
+      await onUpdate(publicURL);
+      setImageUrl(publicURL);
+      message.success("Image uploaded successfully!");
+      onSuccess("File uploaded successfully!");
+    } catch (error) {
+      message.error("Failed to upload image.");
+      onError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = () => {
@@ -84,9 +62,9 @@ const MenuUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, onUpdate }) => {
       content: "Are you sure you want to delete this image?",
       okText: "Yes",
       cancelText: "No",
-      onOk: () => {
-        setImageUrl(null); // Remove image URL
-        onUpdate(null); // Notify parent component
+      onOk: async () => {
+        setImageUrl(null);
+        await onUpdate(null);
         message.success("Image deleted successfully!");
       },
     });
@@ -95,53 +73,33 @@ const MenuUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, onUpdate }) => {
   return (
     <div className="text-center">
       {imageUrl ? (
-        <>
-          <div
-            className="relative inline-block mb-4"
-            onMouseEnter={() => setShowDelete(true)}
-            onMouseLeave={() => setShowDelete(false)}
-          >
-            <img
-              src={imageUrl}
-              alt="Menu Image"
-              className="w-96 h-96 object-cover rounded-lg transition-transform transform hover:scale-105"
+        <div
+          className="relative inline-block mb-4"
+          onMouseEnter={() => setShowDelete(true)}
+          onMouseLeave={() => setShowDelete(false)}
+        >
+          <img
+            src={imageUrl}
+            alt="Menu Image"
+            className="w-64 h-64 object-cover rounded-lg shadow-md"
+          />
+          {showDelete && (
+            <Button
+              type="primary"
+              danger
+              shape="circle"
+              icon={<DeleteOutlined />}
+              size="large"
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+              }}
+              onClick={handleDelete}
+              aria-label="Delete Image"
             />
-            {showDelete && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Button
-                  className="bg-red-450 rounded-full border-2 border-white w-12 h-12 flex items-center justify-center transition-transform transform hover:scale-110"
-                  onClick={handleDelete}
-                  icon={<DeleteOutlined />}
-                  size="large"
-                  aria-label="Delete Image"
-                />
-              </div>
-            )}
-          </div>
-          <ImgCrop rotate aspect={1}>
-            <Upload
-              showUploadList={false}
-              accept="image/*"
-              customRequest={handleUpload}
-              beforeUpload={beforeUpload}
-            >
-              <Button
-                type="primary"
-                icon={<UploadOutlined />}
-                disabled={loading || isActive}
-                className="transition-transform transform hover:scale-105"
-                aria-label="Update Image"
-              >
-                {loading ? <Spin /> : "Update Image"}
-              </Button>
-            </Upload>
-          </ImgCrop>
-          {loading && (
-            <div className="mt-4">
-              <Progress percent={100} size="small" />
-            </div>
           )}
-        </>
+        </div>
       ) : (
         <ImgCrop rotate aspect={1}>
           <Upload
@@ -150,16 +108,37 @@ const MenuUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, onUpdate }) => {
             customRequest={handleUpload}
             beforeUpload={beforeUpload}
           >
-            <button
-              className="w-96 h-96 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center bg-white transition-transform transform hover:scale-105"
-              type="button"
-              aria-label="Upload Image"
-            >
-              <PlusOutlined className="text-gray-400" />
-              <div className="mt-2 text-gray-600">Upload Image</div>
-            </button>
+            <div className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-100 cursor-pointer">
+              <PlusOutlined style={{ fontSize: "24px", color: "#8c8c8c" }} />
+              <p className="mt-2 text-gray-500">Upload Image</p>
+            </div>
           </Upload>
         </ImgCrop>
+      )}
+      {imageUrl && (
+        <ImgCrop rotate aspect={1}>
+          <Upload
+            showUploadList={false}
+            accept="image/*"
+            customRequest={handleUpload}
+            beforeUpload={beforeUpload}
+          >
+            <Button
+              icon={<UploadOutlined />}
+              type="primary"
+              style={{ marginTop: "16px" }}
+              disabled={loading}
+              loading={loading}
+            >
+              Update Image
+            </Button>
+          </Upload>
+        </ImgCrop>
+      )}
+      {loading && (
+        <div style={{ marginTop: "16px" }}>
+          <Progress percent={100} status="active" />
+        </div>
       )}
     </div>
   );

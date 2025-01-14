@@ -3,16 +3,18 @@ package com.ISA.Restaurant.controller;
 import com.ISA.Restaurant.Dto.Event.CustomerOrderDto;
 import com.ISA.Restaurant.event.producer.CustomerOrderProducer;
 import com.ISA.Restaurant.service.OrderService;
+import com.ISA.Restaurant.Entity.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 @RestController
 @RequestMapping("/order")
 public class OrderController {
-    private static final Logger logger = (Logger) LoggerFactory.getLogger(OrderController.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
     private final OrderService orderService;
     private final CustomerOrderProducer orderProducer;
 
@@ -23,7 +25,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<String> createOrder(@RequestBody CustomerOrderDto orderDto) {
-        logger.info("Received new customer order: {}",orderDto.toString());
+        logger.info("Received new customer order: {}", orderDto.toString());
         orderProducer.sendCustomerOrder(orderDto);
         return ResponseEntity.ok("Order submitted successfully!");
     }
@@ -57,4 +59,20 @@ public class OrderController {
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok("Order cancelled successfully.");
     }
+
+    @GetMapping("/restaurant/{restaurantId}")
+    public ResponseEntity<List<Order>> getOrdersByRestaurantId(
+            @PathVariable String restaurantId,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "true") boolean ascending,
+            @RequestParam(required = false) List<String> statuses,
+            @RequestParam(defaultValue = "2h") String timeRange) {
+        logger.info("Fetching orders for restaurant ID: {}, sortBy: {}, ascending: {}, statuses: {}, timeRange: {}",
+                restaurantId, sortBy, ascending, statuses, timeRange);
+
+        List<Order> orders = orderService.getOrdersByRestaurantId(restaurantId, sortBy, ascending, statuses, timeRange);
+
+        return ResponseEntity.ok(orders);
+    }
+
 }

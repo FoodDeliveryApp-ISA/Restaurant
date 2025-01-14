@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Tooltip } from "antd";
+import { Button, Tooltip, Card } from "antd";
 import {
   CheckCircleOutlined,
   FireOutlined,
@@ -26,68 +26,102 @@ const OrderActions: React.FC<OrderActionsProps> = ({
   currentStep,
 }) => {
   return (
-    <div style={{ marginTop: 20, display: "flex", gap: "10px" }}>
-      {currentStep === 0 && (
-        <>
-          <Tooltip title="Accept the order">
+    <Card
+      style={{
+        marginTop: 20,
+        padding: "20px",
+        textAlign: "center",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+        borderRadius: "10px",
+      }}
+      bodyStyle={{ padding: "10px" }}
+      bordered={false}
+    >
+      <div
+        style={{
+          display: "flex",
+          gap: "15px",
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        {currentStep === 0 && (
+          <>
+            <Tooltip title="Accept the order">
+              <Button
+                type="primary"
+                size="large"
+                onClick={handleAcceptOrder}
+                icon={<CheckCircleOutlined />}
+                style={{
+                  minWidth: "150px",
+                }}
+              >
+                Accept Order
+              </Button>
+            </Tooltip>
+            <Tooltip title="Reject the order">
+              <Button
+                danger
+                size="large"
+                onClick={handleRejectOrder}
+                icon={<FireOutlined />}
+                style={{
+                  minWidth: "150px",
+                }}
+              >
+                Reject Order
+              </Button>
+            </Tooltip>
+          </>
+        )}
+        {currentStep === 1 && (
+          <Tooltip title="Request a delivery partner">
             <Button
               type="primary"
-              onClick={handleAcceptOrder}
-              style={{ flex: 1 }}
-              icon={<CheckCircleOutlined />}
+              size="large"
+              onClick={handleRequestRider}
+              icon={<SearchOutlined />}
+              style={{
+                minWidth: "200px",
+              }}
             >
-              Accept Order
+              Request Rider
             </Button>
           </Tooltip>
-          <Tooltip title="Reject the order">
+        )}
+        {currentStep === 2 && (
+          <Tooltip title="Mark order as On the Way">
             <Button
-              danger
-              onClick={handleRejectOrder}
-              style={{ flex: 1 }}
-              icon={<FireOutlined />}
+              type="primary"
+              size="large"
+              onClick={handleMarkOnTheWay}
+              icon={<CarOutlined />}
+              style={{
+                minWidth: "200px",
+              }}
             >
-              Reject Order
+              Mark On the Way
             </Button>
           </Tooltip>
-        </>
-      )}
-      {currentStep === 1 && (
-        <Tooltip title="Request a delivery partner">
-          <Button
-            type="primary"
-            onClick={handleRequestRider}
-            style={{ flex: 1 }}
-            icon={<SearchOutlined />}
-          >
-            Request Rider
-          </Button>
-        </Tooltip>
-      )}
-      {currentStep === 2 && (
-        <Tooltip title="Mark order as On the Way">
-          <Button
-            type="primary"
-            onClick={handleMarkOnTheWay}
-            style={{ flex: 1 }}
-            icon={<CarOutlined />}
-          >
-            Mark On the Way
-          </Button>
-        </Tooltip>
-      )}
-      {currentStep === 3 && (
-        <Tooltip title="Mark order as Delivered">
-          <Button
-            type="primary"
-            onClick={handleMarkDelivered}
-            style={{ flex: 1 }}
-            icon={<SmileOutlined />}
-          >
-            Mark Delivered
-          </Button>
-        </Tooltip>
-      )}
-    </div>
+        )}
+        {currentStep === 3 && (
+          <Tooltip title="Mark order as Delivered">
+            <Button
+              type="primary"
+              size="large"
+              onClick={handleMarkDelivered}
+              icon={<SmileOutlined />}
+              style={{
+                minWidth: "200px",
+              }}
+            >
+              Mark Delivered
+            </Button>
+          </Tooltip>
+        )}
+      </div>
+    </Card>
   );
 };
 

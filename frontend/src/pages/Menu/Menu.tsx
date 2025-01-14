@@ -9,7 +9,7 @@ import {
   RequestMenuSaveDto,
   RequestUpdatedMenuDto,
 } from "../../services/dto/menu.dto"; // Adjust the path as necessary
-import MenuTable from "./components/MenuTable"; // Import MenuTable
+import MenuTable from "./components/MenuTable";
 
 const MenusPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,10 +22,7 @@ const MenusPage: React.FC = () => {
     const fetchMenus = async () => {
       try {
         const fetchedMenus = await MenuService.getAllMenus();
-        // Ensure menus is always an array
-        setMenus(fetchedMenus || []);
-        console.log("fet :{}", fetchedMenus);
-        console.log("menus : {}", menus);
+        setMenus(fetchedMenus || []); // Ensure menus is always an array
       } catch (error) {
         message.error("Failed to fetch menus!");
         console.error(error);
@@ -38,7 +35,7 @@ const MenusPage: React.FC = () => {
   const handleAddMenu = async (menu: RequestMenuSaveDto) => {
     try {
       const newMenu = await MenuService.saveMenu(menu);
-      setMenus((prev) => [newMenu, ...prev]); // Add new menu at the top
+      setMenus((prev) => [newMenu, ...prev]);
       setIsAddModalVisible(false);
       message.success("Menu added successfully!");
     } catch (error) {
@@ -80,59 +77,50 @@ const MenusPage: React.FC = () => {
 
   const handleToggleActive = async (menuId: number, isActive: boolean) => {
     try {
-      const updatedMenu = await MenuService.updateMenu(menuId, {
-        active: isActive,
-      });
+      const updatedMenu = await MenuService.updateMenu(menuId, { active: isActive });
       setMenus((prev) =>
         prev.map((item) => (item.menuId === menuId ? updatedMenu : item))
       );
       message.success("Menu status updated successfully!");
     } catch (error) {
-      console.error(error);
       message.error("Failed to update menu status!");
+      console.error(error);
     }
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      <div className="max-w-5xl mx-auto">
-        <Card
-          title={<h2 className="text-lg font-semibold">Menus</h2>}
-          extra={
-            <Button
-              type="primary"
-              className="bg-blue-500 hover:bg-blue-600"
-              onClick={() => setIsAddModalVisible(true)}
-            >
-              Add Menu
-            </Button>
-          }
-          className="shadow-md"
-        >
-          <MenuTable
-            menus={menus}
-            onEdit={setEditingMenu}
-            onDelete={handleDeleteMenu}
-            onView={(menuId) => navigate(`/menu/${menuId}`)}
-            onToggleActive={handleToggleActive}
-          />
-        </Card>
-
-        <AddModal
-          visible={isAddModalVisible}
-          onCancel={() => setIsAddModalVisible(false)}
-          onSave={handleAddMenu}
+    <div className="container">
+      <Card
+        title="Menus"
+        extra={
+          <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
+            Add Menu
+          </Button>
+        }
+      >
+        <MenuTable
+          menus={menus}
+          onEdit={setEditingMenu}
+          onDelete={handleDeleteMenu}
+          onView={(menuId) => navigate(`/menu/${menuId}`)}
+          onToggleActive={handleToggleActive}
         />
+      </Card>
 
-        {editingMenu && (
-          <EditModal
-            visible={!!editingMenu}
-            item={editingMenu}
-            onCancel={() => setEditingMenu(null)}
-            onSave={handleEditMenu}
-          />
-        )}
-      </div>
+      <AddModal
+        visible={isAddModalVisible}
+        onCancel={() => setIsAddModalVisible(false)}
+        onSave={handleAddMenu}
+      />
+
+      {editingMenu && (
+        <EditModal
+          visible={!!editingMenu}
+          item={editingMenu}
+          onCancel={() => setEditingMenu(null)}
+          onSave={handleEditMenu}
+        />
+      )}
     </div>
   );
 };

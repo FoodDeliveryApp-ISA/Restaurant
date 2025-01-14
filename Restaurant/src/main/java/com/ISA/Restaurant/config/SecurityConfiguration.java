@@ -34,17 +34,17 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow both localhost and 127.0.0.1 for the frontend origin
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173","http://localhost:8081"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173")); // Add specific origins
+        configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
         configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true); // Allow cookies or credentials
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -54,9 +54,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/restaurants/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/email/**").permitAll()
                         .requestMatchers("/api/validation/**").permitAll()
-                        .requestMatchers("/ws/rider-location","/ws/Customer-location").permitAll()
                         .requestMatchers("/api/rider-request").permitAll()
                         .anyRequest().authenticated()
                 )

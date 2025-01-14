@@ -12,6 +12,9 @@ import com.ISA.Restaurant.repo.MenuRepository;
 import com.ISA.Restaurant.service.MenuItemService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +23,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class MenuItemServiceImpl implements MenuItemService {
+
+    private static final String MENU_ITEM_CACHE = "menuItems";
 
     @Autowired
     private MenuItemRepository menuItemRepository;
@@ -48,6 +53,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
+    @Cacheable(value = MENU_ITEM_CACHE, key = "#menuItemId")
     public MenuItemDto getMenuItemById(Long menuId, Long menuItemId) {
         log.info(menuItemId.toString(),menuId);
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuId,menuItemId);
@@ -59,6 +65,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
+    @CachePut(value = MENU_ITEM_CACHE, key = "#menuItemId")
     public MenuItemDto updateMenuItem(Long menuId, Long menuItemId, RequestUpdatedMenuItemDto updatedMenuItemDto) {
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuItemId, menuId);
         if (menuItem == null) {
@@ -84,6 +91,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
+    @CacheEvict(value = MENU_ITEM_CACHE, key = "#menuItemId")
     public void deleteMenuItem(Long menuId, Long menuItemId) {
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuItemId, menuId);
         if (menuItem == null) {
@@ -93,6 +101,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
+    @Cacheable(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId")
     public List<MenuItemDto> getAllMenuItemsForMenu(Long menuId) {
         log.info("Get all menu items for menu with id: " + menuId);
         Menu menu = menuRepository.findById(menuId)

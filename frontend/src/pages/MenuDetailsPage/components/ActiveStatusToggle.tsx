@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { Switch, Modal, message, Spin, Button } from "antd";
+import { Switch, Modal, message, Spin, Button, Typography, Badge, Tooltip } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
+
+const { Text } = Typography;
 
 interface ActiveStatusToggleProps {
   active: boolean;
@@ -36,39 +39,49 @@ const ActiveStatusToggle: React.FC<ActiveStatusToggleProps> = ({
 
   return (
     <>
-      <div className="flex items-center">
-        {/* <span className="mr-2">{isActive ? "Active" : "Inactive"}</span> */}
+      <div className="flex items-center gap-4">
+        <Tooltip title={isActive ? "Currently active" : "Currently inactive"}>
+          <Badge
+            status={isActive ? "success" : "default"}
+            text={<Text>{isActive ? "Active" : "Inactive"}</Text>}
+          />
+        </Tooltip>
         <Switch
           checked={isActive}
           onChange={handleToggle}
-          className="bg-red-500 dark:bg-red-600"
           checkedChildren="Active"
           unCheckedChildren="Inactive"
         />
       </div>
+
       <Modal
-        title="Confirm Change"
+        title="Confirm Status Change"
         visible={isModalVisible}
-        onOk={confirmChange}
         onCancel={() => setIsModalVisible(false)}
-        okText="Yes"
-        cancelText="No"
         footer={[
           <Button key="cancel" onClick={() => setIsModalVisible(false)}>
-            No
+            Cancel
           </Button>,
           <Button
             key="confirm"
             type="primary"
             loading={loading}
             onClick={confirmChange}
+            icon={loading ? <LoadingOutlined /> : null}
           >
-            Yes
+            Confirm
           </Button>,
         ]}
       >
-        <p>Are you sure you want to change the active status?</p>
-        {loading && <Spin />}
+        <p>
+          Are you sure you want to change the status to{" "}
+          <Text strong>{pendingStatus ? "Active" : "Inactive"}</Text>?
+        </p>
+        {loading && (
+          <div className="text-center">
+            <Spin />
+          </div>
+        )}
       </Modal>
     </>
   );

@@ -1,139 +1,170 @@
-import type { FC } from "react";
-import { LoadingOutlined, BellOutlined } from "@ant-design/icons";
-import { Avatar, Badge, List, Popover, Spin, Tabs, Tooltip } from "antd";
-import { useEffect, useState } from "react";
+import { FC, useState, useEffect } from "react";
+import { BellOutlined } from "@ant-design/icons";
+import { Badge, Popover, Tooltip, Spin, Drawer } from "antd";
+import { motion } from "framer-motion";
+import NotificationService from "../../../services/notification.service";
+import NotificationList from "./NotificationList";
 
-// Sample Notice Interface
 interface Notice {
-  type: "notification" | "message" | "event";
-  avatar: string;
+  id: number;
+  type: string;
   title: string;
   description: string;
   datetime: string;
-  status?: string; // For event status
-  extra?: string; // Extra information for events
+  isRead: boolean;
 }
-
-const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 
 const HeaderNoticeComponent: FC = () => {
   const [visible, setVisible] = useState(false);
   const [noticeList, setNoticeList] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(false);
+  const isMobile = window.innerWidth <= 768;
 
-  // Fetch Notices Function
-  const fetchNotices = async () => {
-    setLoading(true);
-    // Simulated API call
-    const mockNotices: Notice[] = [
-      {
-        type: "notification",
-        avatar: "https://via.placeholder.com/40",
-        title: "New Message from John",
-        description: "Hey, how are you doing?",
-        datetime: "2024-12-29 10:30",
-      },
-      {
-        type: "message",
-        avatar: "https://via.placeholder.com/40",
-        title: "System Update",
-        description: "The system will be updated at midnight.",
-        datetime: "2024-12-29 09:00",
-      },
-      {
-        type: "event",
-        avatar: "https://via.placeholder.com/40",
-        title: "Meeting Reminder",
-        description: "Don’t forget about the meeting at 3 PM.",
-        datetime: "2024-12-29 08:00",
-        status: "ongoing",
-        extra: "Ongoing",
-      },
-    ];
+  const useFetch = (fetchFunction: () => Promise<Notice[]>, dependencies: any[]) => {
+    useEffect(() => {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const data = await fetchFunction();
+          setNoticeList(data);
+        } catch (error) {
+          console.error("Failed to fetch data:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+    }, dependencies);
+  };
 
-    // Simulate delay
-    setTimeout(() => {
-      setLoading(false);
-      setNoticeList(mockNotices);
-    }, 1000);
+  useFetch(
+    async () => {
+      const notices = await NotificationService.getAllNotifications();
+      return notices
+        .map((n) => ({
+          id: n.id,
+          type: n.type || "notification",
+          title: n.title || "Notification",
+          description: n.message,
+          datetime: new Date(n.createdAt).toLocaleString(),
+          isRead: n.isRead,
+        }))
+        .sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());
+    },
+    [visible]
+  );
+
+  const handleNewNotification = (message: string) => {
+    const newNotification: Notice = {
+      id: Date.now(),
+      type: "notification",
+      title: "New Notification",
+      description: message,
+      datetime: new Date().toLocaleString(),
+      isRead: false,
+    };
+    setNoticeList((prev) => [newNotification, ...prev]);
+  };
+
+  const markAsRead = async (notificationId: number) => {
+    try {
+      await NotificationService.markNotificationAsRead(notificationId);
+      setNoticeList((prev) =>
+        prev.map((notice) =>
+          notice.id === notificationId ? { ...notice, isRead: true } : notice
+        )
+      );
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      await NotificationService.markAllAsRead();
+      setNoticeList((prev) => prev.map((notice) => ({ ...notice, isRead: true })));
+    } catch (error) {
+      console.error("Failed to clear notifications:", error);
+    }
   };
 
   useEffect(() => {
-    fetchNotices();
+    NotificationService.connectWebSocket("user123", handleNewNotification);
+
+    return () => {
+      NotificationService.disconnectStompWebSocket();
+    };
   }, []);
 
-  // Render Tab Content
-  const renderTabContent = (type: Notice["type"]) => (
-    <List
-      dataSource={noticeList.filter((notice) => notice.type === type)}
-      renderItem={(item) => (
-        <List.Item>
-          <List.Item.Meta
-            avatar={<Avatar src={item.avatar} />}
-            title={<a href="#">{item.title}</a>}
-            description={
-              <div>
-                <span>{item.description}</span>
-                <div className="text-gray-500">{item.datetime}</div>
-              </div>
-            }
-          />
-        </List.Item>
-      )}
-    />
-  );
-
-  const tabs = (
-    <Spin tip="Loading..." indicator={antIcon} spinning={loading}>
-      <Tabs defaultActiveKey="1" className="w-80">
-        <Tabs.TabPane
-          tab={`Notifications (${
-            noticeList.filter((n) => n.type === "notification").length
-          })`}
-          key="1"
-        >
-          {renderTabContent("notification")}
-        </Tabs.TabPane>
-        <Tabs.TabPane
-          tab={`Messages (${
-            noticeList.filter((n) => n.type === "message").length
-          })`}
-          key="2"
-        >
-          {renderTabContent("message")}
-        </Tabs.TabPane>
-        <Tabs.TabPane
-          tab={`Events (${
-            noticeList.filter((n) => n.type === "event").length
-          })`}
-          key="3"
-        >
-          {renderTabContent("event")}
-        </Tabs.TabPane>
-      </Tabs>
-    </Spin>
-  );
-
   return (
-    <Popover
-      content={tabs}
-      placement="bottomRight"
-      trigger={["click"]}
-      open={visible}
-      onOpenChange={setVisible}
-      overlayStyle={{ width: 336 }}
-    >
-      <Tooltip title="Notifications">
-        <Badge
-          count={noticeList.filter((n) => n.type === "notification").length}
-          overflowCount={999}
+    <>
+      {isMobile ? (
+        <Drawer
+          visible={visible}
+          onClose={() => setVisible(false)}
+          title="Notifications"
+          placement="right"
+          closable
         >
-          <span className="cursor-pointer">
-            <BellOutlined style={{ fontSize: "20px", color: "white" }} />
-          </span>
-        </Badge>
-      </Tooltip>
-    </Popover>
+          {loading ? (
+            <div className="flex justify-center items-center p-6">
+              <Spin size="large" />
+            </div>
+          ) : (
+            <NotificationList
+              loading={loading}
+              noticeList={noticeList}
+              markAsRead={markAsRead}
+              clearAllNotifications={clearAllNotifications}
+            />
+          )}
+        </Drawer>
+      ) : (
+        <Popover
+          content={
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              {loading ? (
+                <div className="flex justify-center items-center p-6">
+                  <Spin size="large" />
+                </div>
+              ) : (
+                <NotificationList
+                  loading={loading}
+                  noticeList={noticeList}
+                  markAsRead={markAsRead}
+                  clearAllNotifications={clearAllNotifications}
+                />
+              )}
+            </motion.div>
+          }
+          placement="bottomRight"
+          trigger={["click"]}
+          open={visible}
+          onOpenChange={setVisible}
+          overlayStyle={{ width: 336 }}
+        >
+          <Tooltip title="Notifications">
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative cursor-pointer"
+            >
+              <Badge
+                count={noticeList.filter((n) => !n.isRead).length}
+                overflowCount={999}
+              >
+                <BellOutlined style={{ fontSize: "24px", color: "#fff" }} />
+              </Badge>
+            </motion.div>
+          </Tooltip>
+        </Popover>
+      )}
+    </>
   );
 };
 

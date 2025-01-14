@@ -60,6 +60,8 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test' // Security testing utilities
 	testImplementation 'org.junit.jupiter:junit-jupiter' // JUnit 5 testing framework
 
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 	// --- Additional Dependencies ---
 	implementation 'org.json:json:20230227' // JSON parsing library
 }
