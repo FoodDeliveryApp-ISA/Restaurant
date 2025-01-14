@@ -10,6 +10,7 @@ import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import restaurant.Restaurant;
 import restaurant.RestaurantServiceGrpc;
 
@@ -29,8 +30,24 @@ public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.Restaur
     @Autowired
     private MenuItemRepository menuItemRepository;
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
     @Override
     public void getAllRestaurantSummaries(Restaurant.Empty request, StreamObserver<Restaurant.RestaurantSummaryList> responseObserver) {
+        String cacheKey = "allRestaurantSummaries";
+
+        // Check Redis cache
+        @SuppressWarnings("unchecked")
+        Restaurant.RestaurantSummaryList cachedResponse = (Restaurant.RestaurantSummaryList) redisTemplate.opsForValue().get(cacheKey);
+        if (cachedResponse != null) {
+            log.info("Cache hit for all restaurant summaries");
+            responseObserver.onNext(cachedResponse);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        log.info("Cache miss for all restaurant summaries. Fetching from database.");
         log.info("Fetching all active restaurant summaries");
 
         List<Restaurant.RestaurantSummary> summaries = restaurantRepository.findAll()
@@ -50,6 +67,20 @@ public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.Restaur
 
     @Override
     public void getRestaurantDetails(Restaurant.RestaurantIdRequest request, StreamObserver<Restaurant.RestaurantDetails> responseObserver) {
+        String cacheKey = "restaurantDetails:" + request.getRestaurantId();
+
+        // Check Redis cache
+        @SuppressWarnings("unchecked")
+        Restaurant.RestaurantDetails cachedResponse = (Restaurant.RestaurantDetails) redisTemplate.opsForValue().get(cacheKey);
+        if (cachedResponse != null) {
+            log.info("Cache hit for restaurant ID: {}", request.getRestaurantId());
+            responseObserver.onNext(cachedResponse);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        log.info("Cache miss for restaurant ID: {}. Fetching from database.", request.getRestaurantId());
+
         try {
             log.info("Fetching details for restaurant ID: {}", request.getRestaurantId());
 
@@ -86,4 +117,5 @@ public class CustomerRestaurantServiceImpl extends RestaurantServiceGrpc.Restaur
             responseObserver.onCompleted();
         }
     }
+
 }

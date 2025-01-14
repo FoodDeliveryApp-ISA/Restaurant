@@ -64,6 +64,9 @@ dependencies {
 
 	// --- Additional Dependencies ---
 	implementation 'org.json:json:20230227' // JSON parsing library
+
+	// Dotenv library for loading environment variables from .env files
+	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 }
 
 // Configure test task to use JUnit Platform

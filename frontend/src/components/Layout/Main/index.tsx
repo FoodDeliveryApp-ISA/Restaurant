@@ -17,7 +17,7 @@ const Main = () => {
   const toggleDrawer = () => setVisible(!visible);
 
   return (
-    <Layout className="flex min-h-screen">
+    <Layout className="min-h-screen">
       {/* Backdrop for Mobile Drawer */}
       {visible && (
         <div
@@ -28,7 +28,7 @@ const Main = () => {
 
       {/* Mobile Drawer Sidebar */}
       <div
-        className={`fixed top-0 left-0 z-50 w-64 h-full bg-white transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 z-50 w-64 h-full bg-white transition-transform duration-300 ${
           visible ? "translate-x-0" : "-translate-x-full"
         } md:hidden`}
       >
@@ -38,16 +38,18 @@ const Main = () => {
       {/* Sidebar for Desktop */}
       <Sider
         trigger={null}
+        collapsible
+        collapsedWidth={0}
         width={250}
         theme="light"
-        className="hidden md:block bg-white shadow-lg"
+        className="hidden md:block bg-white shadow-md"
       >
         <Sidenav color={sidenavColor} />
       </Sider>
 
       {/* Main Content Area */}
       <Layout className="flex-1">
-        <Content className="p-6 md:p-8 bg-gray-100 transition-all duration-300">
+        <Content className="p-4 md:p-8 bg-gray-100">
           <Outlet />
         </Content>
       </Layout>
@@ -56,7 +58,7 @@ const Main = () => {
       <Button
         type="primary"
         onClick={toggleDrawer}
-        className="fixed top-6 left-6 z-50 md:hidden"
+        className="fixed top-4 left-4 z-50 md:hidden"
         aria-label="Toggle Menu"
         style={{
           backgroundColor: sidenavColor,

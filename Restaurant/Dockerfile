@@ -28,8 +28,14 @@ WORKDIR /app
 # Copy the jar file from the build stage
 COPY --from=build /app/build/libs/*.jar app.jar
 
+# Copy the .env file into the image
+COPY .env /app/.env
+
 # Expose the application port
 EXPOSE 8081
+
+# Set environment variables for the app
+ENV DOTENV_PATH=/app/.env
 
 # Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]

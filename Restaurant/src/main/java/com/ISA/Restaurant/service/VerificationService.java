@@ -5,9 +5,11 @@ import com.ISA.Restaurant.Dto.Request.VerifyEmailDto;
 import com.ISA.Restaurant.Entity.Verification;
 import com.ISA.Restaurant.repo.VerificationRepository;
 import jakarta.mail.MessagingException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -73,25 +75,64 @@ public class VerificationService {
     }
 
 
-     private void sendVerificationEmail(Verification verification) { // Email sending commented out
-         String subject = "Account Verification";
-         String verificationCode = "VERIFICATION CODE " + verification.getVerificationCode();
-         String htmlMessage = "<html>"
-                 + "<body style=\"font-family: Arial, sans-serif;\">"
-                 + "<div style=\"background-color: #f5f5f5; padding: 20px;\">"
-                 + "<h2 style=\"color: #333;\">Welcome to our app!</h2>"
-                 + "<p style=\"font-size: 16px;\">Please enter the verification code below to continue:</p>"
-                 + "<div style=\"background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);\">"
-                 + "<h3 style=\"color: #333;\">Verification Code:</h3>"
-                 + "<p style=\"font-size: 18px; font-weight: bold; color: #007bff;\">" + verificationCode + "</p>"
-                 + "</div>"
-                 + "</div>"
-                 + "</body>"
-                 + "</html>";
-              try {
-                  emailService.sendVerificationEmail(verification.getEmail(), subject, htmlMessage);
-              } catch (MessagingException e) {
-                  e.printStackTrace();
-              }
-     }
+    private void sendVerificationEmail(Verification verification) {
+        String subject = "Account Verification";
+        String verificationCode = verification.getVerificationCode();
+        String htmlMessage = "<html>"
+                + "<body style=\"font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0;\">"
+                + "<table align=\"center\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 20px auto; padding: 20px;\">"
+                + "<tr>"
+                + "<td align=\"center\" style=\"padding: 20px 0;\">"
+                + "<h2 style=\"color: #333; margin: 0;\">Welcome to Our App!</h2>"
+                + "</td>"
+                + "</tr>"
+                + "<tr>"
+                + "<td align=\"center\" style=\"padding: 10px 20px;\">"
+                + "<p style=\"font-size: 16px; color: #666; margin: 0;\">Please use the verification code below to continue:</p>"
+                + "</td>"
+                + "</tr>"
+                + "<tr>"
+                + "<td align=\"center\" style=\"padding: 20px 0;\">"
+                + "<div style=\"background-color: #007bff; color: #ffffff; padding: 15px 20px; border-radius: 8px; display: inline-block;\">"
+                + "<span style=\"font-size: 24px; font-weight: bold;\">" + verificationCode + "</span>"
+                + "</div>"
+                + "</td>"
+                + "</tr>"
+                + "<tr>"
+                + "<td align=\"center\" style=\"padding: 20px 20px;\">"
+                + "<p style=\"font-size: 14px; color: #999; margin: 0;\">This code will expire in 15 minutes. Please do not share it with anyone.</p>"
+                + "</td>"
+                + "</tr>"
+                + "<tr>"
+                + "<td align=\"center\" style=\"padding: 20px 20px;\">"
+                + "<a href=\"#\" style=\"font-size: 14px; color: #007bff; text-decoration: none;\">Need help? Contact Support</a>"
+                + "</td>"
+                + "</tr>"
+                + "</table>"
+                + "<footer style=\"text-align: center; font-size: 12px; color: #aaa; margin: 20px 0;\">"
+                + "&copy; 2025 Our App, Inc. All rights reserved."
+                + "</footer>"
+                + "</body>"
+                + "</html>";
+
+        try {
+            emailService.sendVerificationEmail(verification.getEmail(), subject, htmlMessage);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Scheduled(fixedRate = 3600000) // Run every hour
+    public void deleteExpiredVerifications() {
+        LocalDateTime threshold = LocalDateTime.now().minusHours(12);
+        List<Verification> expiredVerifications = verificationRepository.findExpiredVerifications(threshold);
+
+        if (!expiredVerifications.isEmpty()) {
+            verificationRepository.deleteAll(expiredVerifications);
+            System.out.println("Deleted " + expiredVerifications.size() + " expired verification records.");
+        } else {
+            System.out.println("No expired verification records to delete.");
+        }
+    }
+
 }
