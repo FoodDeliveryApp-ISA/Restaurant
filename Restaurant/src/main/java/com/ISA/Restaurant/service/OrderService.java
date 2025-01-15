@@ -54,6 +54,7 @@ public class OrderService {
         logger.info("Handling new order: {}", orderDto);
         try {
             RestaurantDto restaurantDetails = fetchRestaurantDetails(orderDto);
+            logger.info("********************************* {}",orderDto.toString());
             Order order = OrderMapper.createOrderEntity(orderDto, restaurantDetails);
 
             orderRepository.save(order);
@@ -100,6 +101,7 @@ public class OrderService {
         logger.info("Fetching orders for restaurant ID: {}", restaurantId);
 
         List<Order> orders = orderRepository.findByRestaurantId(restaurantId);
+        logger.info("********************************S {}", orders.toString());
         if (statusFilters != null && !statusFilters.isEmpty()) {
             orders = filterOrdersByStatus(orders, statusFilters);
         }

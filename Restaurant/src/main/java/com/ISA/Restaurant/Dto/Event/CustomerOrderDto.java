@@ -2,6 +2,7 @@ package com.ISA.Restaurant.Dto.Event;
 
 import lombok.Data;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -12,7 +13,7 @@ public class CustomerOrderDto {
     private String customerName;
     private String customerAddress;
     private String customerPhone;
-
-//    private List<OrderItem> items;
+    private List<OrderItemDto> orderItems;
+    private Date orderDate;
 
 }

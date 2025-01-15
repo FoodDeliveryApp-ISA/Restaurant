@@ -20,5 +20,6 @@ public class RiderRequestDto {
     private String customerName;
     private String customerAddress;
     private String customerPhone;
+    private Double paymentAmount;
     // Getters and setters
 }

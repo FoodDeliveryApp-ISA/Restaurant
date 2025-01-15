@@ -97,24 +97,29 @@ const EmailVerificationPopup: React.FC<EmailVerificationPopupProps> = ({
     index: number
   ) => {
     const value = e.target.value;
-
+  
     if (/[^0-9]/.test(value) && value !== "") return;
-
+  
     const newVerificationCode = [...verificationCode];
     newVerificationCode[index] = value;
-
+  
     setVerificationCode(newVerificationCode);
-
+  
     if (value && index < 5) {
+      // Move focus to the next input
       const nextInput = document.getElementById(`input-${index + 1}`);
       nextInput?.focus();
+    } else if (!value && index > 0 && e.nativeEvent.inputType === "deleteContentBackward") {
+      // Move focus to the previous input on backspace
+      const prevInput = document.getElementById(`input-${index - 1}`);
+      prevInput?.focus();
     }
-
+  
     if (newVerificationCode.join("").length === 6) {
       startLoading();
       const isValid = await onCheck();
       stopLoading();
-
+  
       if (isValid) {
         handleSubmitVerification();
       } else {
@@ -126,6 +131,7 @@ const EmailVerificationPopup: React.FC<EmailVerificationPopupProps> = ({
       }
     }
   };
+  
 
   const handleSubmitVerification = async () => {
     startLoading();

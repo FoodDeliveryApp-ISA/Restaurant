@@ -6,6 +6,7 @@ import orderService from "../../services/order.service";
 
 export interface Order {
   orderId: string;
+  restaurantId: string; // Added restaurantId to track by restaurant
   restaurantLocation: [number, number];
   customerLocation: [number, number];
   customerName: string;
@@ -37,21 +38,27 @@ const OrderStatusManager: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>("2h"); // Default time range
 
   const addOrder = async () => {
-    const restaurantIds = ["1", "2", "353", "353.452", "607"];
+    const restaurantIds = ["353"];
     const randomRestaurantId =
       restaurantIds[Math.floor(Math.random() * restaurantIds.length)];
   
     const newOrder: Order = {
       orderId: `ORD${orders.length + 1}`,
+      restaurantId: randomRestaurantId,
       restaurantLocation: [40.7128, -74.0060], // Example restaurant location
       customerLocation: [34.0522, -118.2437], // Example customer location
-      customerName: `Customer ${orders.length + 1}`,
-      customerAddress: "123 Main St",
-      customerPhone: "0771234567",
+      customerName: `Customer ${orders.length + 1}`, // Dynamic customer name
+      customerAddress: "789 Customer Ave, Client City, CC 67890", // Example customer address
+      customerPhone: "0771234567", // Example customer phone
       status: "ORDER_PLACED", // Default status
+      createdDate: new Date().toISOString(), // Add creation date
     };
   
-    setOrders([...orders, newOrder]);
+    // Generate dummy order items
+    const orderItems = [
+      { menuItemId: "40", quantity: 2 },
+      { menuItemId: "39", quantity: 1 },
+    ];
   
     const customerOrderDto = {
       orderId: newOrder.orderId,
@@ -60,18 +67,27 @@ const OrderStatusManager: React.FC = () => {
       customerName: newOrder.customerName,
       customerAddress: newOrder.customerAddress,
       customerPhone: newOrder.customerPhone,
+      orderItems: orderItems.map((item) => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity,
+      })), // Ensure no nested `order` references
+      orderDate: new Date(), // Include order date
     };
+    
+    setOrders([...orders, newOrder]);
   
     try {
       await orderService.createOrder(customerOrderDto);
+      console.log("Order successfully created:", customerOrderDto);
     } catch (error) {
       console.error("Failed to create order on the server:", error);
     }
   };
+  
 
   const fetchOrders = async () => {
     try {
-      const restaurantId = "1";
+      const restaurantId = "353";
       const fetchedOrders = await orderService.getOrdersByRestaurantId(
         restaurantId,
         sortBy,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Row, Col, Spin, Alert } from "antd";
 import LeftSection from "./LeftSection";
 import RightSection from "./RightSection";
+import LocationSelector from "./LocationSelector";
 import RestaurantService from "../../services/restaurant.service"; // Import the RestaurantService
 
 const Profile = () => {
@@ -50,6 +51,14 @@ const Profile = () => {
           <RightSection restaurant={restaurant} />
         </Col>
       </Row>
+
+      {/* Location Selector */}
+      {/* <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
+        <Col xs={24}>
+          <h2>Select Location</h2>
+          <LocationSelector />
+        </Col>
+      </Row> */}
     </div>
   );
 };

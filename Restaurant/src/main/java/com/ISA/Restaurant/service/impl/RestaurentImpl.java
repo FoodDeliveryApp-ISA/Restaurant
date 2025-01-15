@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,20 @@ import java.util.stream.StreamSupport;
 @Service
 @AllArgsConstructor
 public class RestaurentImpl implements RestaurentService {
+
+    private static final String ALL_RESTAURANTS_KEY = "'all'";
+
+    // Helper to evict specific cache keys
+    private void evictCache(int restaurantId, String email) {
+        log.info("Evicting cache for restaurantId: {} and email: {}", restaurantId, email);
+        // Use manual eviction if using programmatic cache management
+    }
+
+    // Helper to evict all cache entries for the 'all' key
+    private void evictAllRestaurantsCache() {
+        log.info("Evicting cache for all restaurants.");
+    }
+
 
     private static final String RESTAURANT_CACHE = "restaurants";
     private final RestaurantRepository repository;
@@ -85,7 +100,11 @@ public class RestaurentImpl implements RestaurentService {
         }
 
         @Override
-        @CachePut(value = RESTAURANT_CACHE, key = "#restaurantId")
+        @Caching(evict = {
+                @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantId"),
+                @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantDto.restaurantEmail", beforeInvocation = true),
+                @CacheEvict(value = RESTAURANT_CACHE, key = ALL_RESTAURANTS_KEY)
+        })
         public RestaurantDto updateRestaurant(int restaurantId, RestaurantDto restaurantDto) {
             validateRestaurantDto(restaurantDto);
 
@@ -114,7 +133,11 @@ public class RestaurentImpl implements RestaurentService {
         }
 
         @Override
-        @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantId")
+        @Caching(evict = {
+                @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantId"),
+                @CacheEvict(value = RESTAURANT_CACHE, key = "#email", beforeInvocation = true),
+                @CacheEvict(value = RESTAURANT_CACHE, key = ALL_RESTAURANTS_KEY)
+        })
         public boolean deleteRestaurant(int restaurantId) {
             try {
                 if (repository.existsById(restaurantId)) {
@@ -129,7 +152,7 @@ public class RestaurentImpl implements RestaurentService {
         }
 
         @Override
-        @Cacheable(value = RESTAURANT_CACHE, key = "'all'")
+        @Cacheable(value = RESTAURANT_CACHE, key = ALL_RESTAURANTS_KEY)
         public Iterable<RestaurantDto> getAllRestaurants() {
             try {
                 Iterable<Restaurant> restaurants = repository.findAll();

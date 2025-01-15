@@ -30,6 +30,7 @@ const AddMenuItemModal: React.FC<AddMenuItemModalProps> = ({
             menuItemDescription: values.menuItemDescription.trim(),
             menuItemPrice: values.menuItemPrice,
           };
+          console.log(menuItemData);
           await MenuItemService.createMenuItem(menuId, menuItemData);
           form.resetFields();
           onAdd(menuItemData);

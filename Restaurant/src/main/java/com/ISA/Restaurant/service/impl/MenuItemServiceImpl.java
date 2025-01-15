@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,6 +34,9 @@ public class MenuItemServiceImpl implements MenuItemService {
     private MenuRepository menuRepository;
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId") // Evict menu-wide cache
+    })
     public MenuItemDto createMenuItem(RequestMenuItemSaveDto menuItemDto, Long menuId) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new MenuItemNotFoundException("Menu not found with id " + menuId));
@@ -65,7 +69,10 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    @CachePut(value = MENU_ITEM_CACHE, key = "#menuItemId")
+    @Caching(evict = {
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "#menuItemId"), // Evict individual menu item cache
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId") // Evict menu-wide items cache
+    })
     public MenuItemDto updateMenuItem(Long menuId, Long menuItemId, RequestUpdatedMenuItemDto updatedMenuItemDto) {
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuItemId, menuId);
         if (menuItem == null) {
@@ -90,8 +97,10 @@ public class MenuItemServiceImpl implements MenuItemService {
         return mapEntityToDto(updatedMenuItem);
     }
 
-    @Override
-    @CacheEvict(value = MENU_ITEM_CACHE, key = "#menuItemId")
+    @Caching(evict = {
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "#menuItemId"),
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId")
+    })
     public void deleteMenuItem(Long menuId, Long menuItemId) {
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuItemId, menuId);
         if (menuItem == null) {

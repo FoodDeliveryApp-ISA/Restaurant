@@ -13,9 +13,8 @@ import java.util.Optional;
 @Repository
 public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
     MenuItem findByMenuItemIdAndMenu_MenuId(Long menuItemId, Long menuId);
+    MenuItem findByMenuItemId(Long menuItemId);
     List<MenuItem> findByMenu(Menu menu);
     List<MenuItem> findByMenu_MenuId(Long menuMenuId);
-
-
 }
 

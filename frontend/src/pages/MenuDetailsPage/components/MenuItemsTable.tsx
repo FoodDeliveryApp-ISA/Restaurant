@@ -22,6 +22,8 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
     const fetchMenuItems = async () => {
       try {
         const items = await MenuItemService.getAllMenuItems(menuId);
+        console.log(menuId);
+        console.log("Fetched menu items:", items); // Debug
         setMenuItems(items || []);
       } catch (error) {
         message.error("Error fetching menu items!");
@@ -30,6 +32,8 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
     };
     fetchMenuItems();
   }, [menuId]);
+  
+  
 
   const handleEdit = (menuItemId: number) => {
     setCurrentMenuItemId(menuItemId);
@@ -74,9 +78,15 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
     }
   };
 
-  const handleView = (menuItemId: number) => {
+  const handleView = (menuItemId: number | undefined) => {
+    if (!menuItemId) {
+      message.error("Invalid menu item ID");
+      return;
+    }
+    console.log("Navigating to menu item:", menuId, menuItemId);
     navigate(`/menu/${menuId}/item/${menuItemId}`);
   };
+  
 
   const columns = [
     {
@@ -96,7 +106,13 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
       dataIndex: "menuItemPrice",
       key: "menuItemPrice",
       sorter: (a: MenuItemDto, b: MenuItemDto) => a.menuItemPrice - b.menuItemPrice,
-      render: (price: number) => `$${price.toFixed(2)}`,
+      render: (price: number | null | undefined) => {
+        if (typeof price === "number") {
+          return `$${price.toFixed(2)}`;
+        }
+        return `$0.00`; // Default display for invalid or missing price
+      },
+      
     },
     {
       title: "Active",
@@ -133,7 +149,7 @@ const MenuItemsTable: React.FC<MenuItemsTableProps> = ({ menuId }) => {
             <Button icon={<EyeOutlined />} onClick={() => handleView(record.menuItemId)} />
           </Tooltip>
         </div>
-      ),
+      ),      
     },
   ];
 

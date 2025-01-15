@@ -17,19 +17,33 @@ import java.util.List;
 public class Order {
     @Id
     private String orderId;
+
     private String restaurantId;
+
     @ElementCollection
+    @CollectionTable(name = "restaurant_location", joinColumns = @JoinColumn(name = "order_id"))
+    @Column(name = "coordinate")
     private List<Double> restaurantLocation;
+
     @ElementCollection
+    @CollectionTable(name = "customer_location", joinColumns = @JoinColumn(name = "order_id"))
+    @Column(name = "coordinate")
     private List<Double> customerLocation;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems;
+
     private String restaurantName;
     private String restaurantAddress;
     private String restaurantPhone;
     private String customerName;
     private String customerAddress;
     private String customerPhone;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
+    private Double paymentAmount;
+
     private LocalDateTime createdDate;
     private LocalDateTime lastUpdated;
 
@@ -44,10 +58,6 @@ public class Order {
         this.customerName = customerName;
         this.customerAddress = customerAddress;
         this.customerPhone = customerPhone;
-        this.createdDate = LocalDateTime.now();
-        this.lastUpdated = LocalDateTime.now();
-
     }
-
-    // Getters, setters, constructors
 }
+
