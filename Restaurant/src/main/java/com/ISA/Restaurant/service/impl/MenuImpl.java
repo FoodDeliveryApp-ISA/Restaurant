@@ -12,6 +12,9 @@ import com.ISA.Restaurant.repo.MenuRepository;
 import com.ISA.Restaurant.service.MenuService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +24,8 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class MenuImpl implements MenuService {
+
+    private static final String MENU_CACHE = "menus";
 
     private final MenuRepository menuRepository;
 
@@ -40,32 +45,6 @@ public class MenuImpl implements MenuService {
         return menu;
     }
 
-//    private Menu mapDtoToEntity(RequestMenuSaveDto dto) {
-//        Menu menu = new Menu();
-//        menu.setMenuName(dto.getMenuName());
-//        menu.setMenuDescription(dto.getMenuDescription());
-//        menu.setActive(dto.getActive());
-//        menu.setCoverImageUrl(dto.getCoverImageUrl());
-//
-////        if (dto.getItems() != null) {
-////            List<MenuItem> items = dto.getItems().stream()
-////                    .map(itemDto -> {
-////                        MenuItem menuItem = new MenuItem();
-////                        menuItem.setMenuItemId(itemDto.getMenuItemId());
-////                        menuItem.setMenuItemName(itemDto.getMenuItemName());
-////                        menuItem.setMenuItemDescription(itemDto.getMenuItemDescription());
-////                        menuItem.setMenuItemPrice(itemDto.getMenuItemPrice());
-////                        menuItem.setActive(itemDto.getActive());
-////                        menuItem.setMenu(menu); // Set the parent menu
-////                        return menuItem;
-////                    })
-////                    .collect(Collectors.toList());
-////            menu.setItems(items);
-////        }
-//
-//        return menu;
-//    }
-
 
     private MenuDto mapEntityToDto(Menu entity) {
         MenuDto menuDto = new MenuDto();
@@ -74,25 +53,12 @@ public class MenuImpl implements MenuService {
         menuDto.setMenuDescription(entity.getMenuDescription());
         menuDto.setActive(entity.getActive());
         menuDto.setCoverImageUrl(entity.getCoverImageUrl());
-
-//        if (entity.getItems() != null) {
-//            List<MenuItemDto> items = entity.getItems().stream()
-//                    .map(item -> new MenuItemDto(
-//                            item.getMenuItemId(),
-//                            item.getMenuItemName(),
-//                            item.getMenuItemDescription(),
-//                            item.getMenuItemPrice(),
-//                            item.getActive()
-//                    ))
-//                    .collect(Collectors.toList());
-//            menuDto.setItems(items);
-//        }
-
         return menuDto;
     }
 
 
     @Override
+    @CacheEvict(value = MENU_CACHE, allEntries = true)
     public MenuDto saveMenu(RequestMenuSaveDto menuDto, Restaurant restaurant) {
         Menu menu = new Menu();
         log.info("RequestMenuSaveDto: {}", menuDto);
@@ -109,6 +75,7 @@ public class MenuImpl implements MenuService {
     }
 
     @Override
+    @Cacheable(value = MENU_CACHE, key = "#menuId")
     public MenuDto getMenuById(long menuId) {
         return menuRepository.findById(menuId)
                 .map(this::mapEntityToDto)
@@ -116,6 +83,7 @@ public class MenuImpl implements MenuService {
     }
 
     @Override
+    @Cacheable(value = MENU_CACHE, key = "'all'")
     public List<MenuDto> getAllMenus() {
         return menuRepository.findAll().stream()
                 .map(this::mapEntityToDto)
@@ -123,6 +91,7 @@ public class MenuImpl implements MenuService {
     }
 
     @Override
+    @Cacheable(value = MENU_CACHE, key = "'restaurant_' + #authenticatedRestaurant.restaurantId")
     public List<MenuDto> getMenusByRestaurant(Restaurant authenticatedRestaurant) {
         if (authenticatedRestaurant == null) {
             throw new IllegalArgumentException("Authenticated restaurant cannot be null.");
@@ -143,8 +112,14 @@ public class MenuImpl implements MenuService {
                 .toList(); // Collect to a list
     }
 
+    @Override
+    @CacheEvict(value = MENU_CACHE, allEntries = true)
+    public void evictMenuCache() {
+        log.info("All menu caches evicted.");
+    }
 
     @Override
+    @CacheEvict(value = MENU_CACHE, allEntries = true)
     public MenuDto updateMenu(long menuId, RequestUpdatedMenuDto menuDto) {
         log.info("Menu updated");
 
@@ -178,8 +153,8 @@ public class MenuImpl implements MenuService {
         return null;
     }
 
-
     @Override
+    @CacheEvict(value = MENU_CACHE, allEntries = true)
     public boolean deleteMenu(long menuId) {
         if (menuRepository.existsById(menuId)) {
             menuRepository.deleteById(menuId);

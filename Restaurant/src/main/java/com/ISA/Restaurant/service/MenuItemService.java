@@ -23,4 +23,6 @@ public interface MenuItemService {
     void deleteMenuItem(Long menuId, Long menuItemId);
 
     List<MenuItemDto> getAllMenuItemsForMenu(Long menuId);
+
+    void evictMenuItemCache();
 }

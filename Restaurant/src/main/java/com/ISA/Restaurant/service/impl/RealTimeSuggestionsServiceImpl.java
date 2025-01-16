@@ -29,7 +29,7 @@ public class RealTimeSuggestionsServiceImpl extends RealTimeSuggestionsServiceGr
     }
 
     @Override
-    @Cacheable(value = "citySuggestionsCache", key = "#request.partialCity + ':' + #request.partialName + ':' + #request.partialMenuItem")
+//    @Cacheable(value = "citySuggestionsCache", key = "#request.partialCity + ':' + #request.partialName + ':' + #request.partialMenuItem")
     public void getCitySuggestions(RealTimeSuggestionsServiceOuterClass.CitySuggestionRequest request, StreamObserver<RealTimeSuggestionsServiceOuterClass.CitySuggestionResponse> responseObserver) {
         try {
             String partialCity = request.getPartialCity().trim().toLowerCase();
@@ -59,7 +59,7 @@ public class RealTimeSuggestionsServiceImpl extends RealTimeSuggestionsServiceGr
     }
 
     @Override
-    @Cacheable(value = "restaurantNameSuggestionsCache", key = "#request.partialCity + ':' + #request.partialName + ':' + #request.partialMenuItem")
+//    @Cacheable(value = "restaurantNameSuggestionsCache", key = "#request.partialCity + ':' + #request.partialName + ':' + #request.partialMenuItem")
     public void getRestaurantNameSuggestions(RealTimeSuggestionsServiceOuterClass.RestaurantNameSuggestionRequest request, StreamObserver<RealTimeSuggestionsServiceOuterClass.RestaurantNameSuggestionResponse> responseObserver) {
         try {
             String partialCity = request.getPartialCity().trim().toLowerCase();
@@ -89,7 +89,7 @@ public class RealTimeSuggestionsServiceImpl extends RealTimeSuggestionsServiceGr
     }
 
     @Override
-    @Cacheable(value = "menuItemSuggestionsCache", key = "#request.partialCity + ':' + #request.partialName + ':' + #request.partialMenuItem")
+//    @Cacheable(value = "menuItemSuggestionsCache", key = "#request.partialCity + ':' + #request.partialName + ':' + #request.partialMenuItem")
     public void getMenuItemSuggestions(RealTimeSuggestionsServiceOuterClass.MenuItemSuggestionRequest request, StreamObserver<RealTimeSuggestionsServiceOuterClass.MenuItemSuggestionResponse> responseObserver) {
         try {
             String partialCity = request.getPartialCity().trim().toLowerCase();

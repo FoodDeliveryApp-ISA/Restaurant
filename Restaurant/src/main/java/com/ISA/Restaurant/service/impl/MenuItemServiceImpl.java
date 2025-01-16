@@ -57,7 +57,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    @Cacheable(value = MENU_ITEM_CACHE, key = "#menuItemId")
+    @Cacheable(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId+#menuItemId")
     public MenuItemDto getMenuItemById(Long menuId, Long menuItemId) {
         log.info(menuItemId.toString(),menuId);
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuId,menuItemId);
@@ -70,7 +70,7 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = MENU_ITEM_CACHE, key = "#menuItemId"), // Evict individual menu item cache
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId+#menuItemId"), // Evict individual menu item cache
             @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId") // Evict menu-wide items cache
     })
     public MenuItemDto updateMenuItem(Long menuId, Long menuItemId, RequestUpdatedMenuItemDto updatedMenuItemDto) {
@@ -97,17 +97,22 @@ public class MenuItemServiceImpl implements MenuItemService {
         return mapEntityToDto(updatedMenuItem);
     }
 
+    @Override
     @Caching(evict = {
-            @CacheEvict(value = MENU_ITEM_CACHE, key = "#menuItemId"),
-            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId")
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId+#menuItemId"), // Clear cache for specific menu item
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId") // Clear cache for the menu
     })
     public void deleteMenuItem(Long menuId, Long menuItemId) {
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuItemId, menuId);
         if (menuItem == null) {
+            log.warn("Attempted to delete non-existent menu item with id {} in menu {}", menuItemId, menuId);
             throw new MenuItemNotFoundException("Menu item not found with id " + menuItemId + " in menu " + menuId);
         }
+
         menuItemRepository.delete(menuItem);
+        log.info("Menu item with id {} in menu {} deleted successfully, caches evicted.", menuItemId, menuId);
     }
+
 
     @Override
     @Cacheable(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId")
@@ -128,6 +133,13 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         return menuItemDtos;
     }
+
+    @Override
+    @CacheEvict(value = MENU_ITEM_CACHE, allEntries = true)
+    public void evictMenuItemCache() {
+        log.info("All menu item caches evicted.");
+    }
+
 
     private MenuItemDto mapEntityToDto(MenuItem menuItem) {
         MenuItemDto menuItemDto = new MenuItemDto();

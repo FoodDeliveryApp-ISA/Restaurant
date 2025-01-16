@@ -103,7 +103,7 @@ public class RestaurentImpl implements RestaurentService {
         @Caching(evict = {
                 @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantId"),
                 @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantDto.restaurantEmail", beforeInvocation = true),
-                @CacheEvict(value = RESTAURANT_CACHE, key = ALL_RESTAURANTS_KEY)
+                @CacheEvict(value = RESTAURANT_CACHE,  allEntries = true)
         })
         public RestaurantDto updateRestaurant(int restaurantId, RestaurantDto restaurantDto) {
             validateRestaurantDto(restaurantDto);
@@ -172,4 +172,10 @@ public class RestaurentImpl implements RestaurentService {
                 throw new IllegalArgumentException("Invalid email format.");
             }
         }
+
+    @CacheEvict(value = RESTAURANT_CACHE, allEntries = true)
+    public void evictCacheOnLogout() {
+        log.info("All restaurant-related caches evicted on logout.");
     }
+
+}

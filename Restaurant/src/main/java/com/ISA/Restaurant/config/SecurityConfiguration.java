@@ -53,6 +53,7 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Attach CORS configuration
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/cache/**").permitAll()
                         .requestMatchers("/restaurants/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/email/**").permitAll()

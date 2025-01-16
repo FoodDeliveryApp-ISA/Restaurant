@@ -2,6 +2,7 @@ package com.ISA.Restaurant.service;
 
 import com.ISA.Restaurant.Dto.Event.CustomerOrderDto;
 import com.ISA.Restaurant.Dto.Event.RiderRequestDto;
+import com.ISA.Restaurant.Dto.Response.OrderDto;
 import com.ISA.Restaurant.Dto.RestaurantDto;
 import com.ISA.Restaurant.Entity.Order;
 import com.ISA.Restaurant.Entity.Restaurant;
@@ -97,11 +98,15 @@ public class OrderService {
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
     }
 
-    public List<Order> getOrdersByRestaurantId(String restaurantId, String sortBy, boolean ascending, List<String> statusFilters, String timeRange) {
+    public List<OrderDto> getOrdersByRestaurantId(String restaurantId, String sortBy, boolean ascending, List<String> statusFilters, String timeRange) {
         logger.info("Fetching orders for restaurant ID: {}", restaurantId);
 
+        // Fetch orders from repository
         List<Order> orders = orderRepository.findByRestaurantId(restaurantId);
-        logger.info("********************************S {}", orders.toString());
+
+        logger.info(orders.toString());
+
+        // Apply filters
         if (statusFilters != null && !statusFilters.isEmpty()) {
             orders = filterOrdersByStatus(orders, statusFilters);
         }
@@ -110,11 +115,18 @@ public class OrderService {
             orders = filterOrdersByTime(orders, timeRange);
         }
 
+        // Sort orders
         sortOrders(orders, sortBy, ascending);
 
-        logger.info("Fetched {} orders for restaurant ID: {}", orders.size(), restaurantId);
-        return orders;
+        // Map orders to DTOs using OrderMapper
+        List<OrderDto> orderDtos = orders.stream()
+                .map(OrderMapper::mapToOrderDto)
+                .collect(Collectors.toList());
+
+        logger.info("Fetched {} orders for restaurant ID: {}", orderDtos.size(), restaurantId);
+        return orderDtos;
     }
+
 
     private List<Order> filterOrdersByTime(List<Order> orders, String timeRange) {
         LocalDateTime startTime = TimeUtility.calculateCutoffTime(timeRange);
@@ -261,4 +273,6 @@ public class OrderService {
         }
     }
 
+//    public void evictOrderCache() {
+//    }
 }

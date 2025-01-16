@@ -51,4 +51,6 @@ public interface MenuService {
     boolean deleteMenu(long menuId) ;
 
     List<MenuDto> getMenusByRestaurant(Restaurant authenticatedRestaurant);
+
+    void evictMenuCache();
 }

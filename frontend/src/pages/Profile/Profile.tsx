@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Spin, Alert } from "antd";
+import { Row, Col, Spin, Alert, Button, Modal } from "antd";
 import LeftSection from "./LeftSection";
 import RightSection from "./RightSection";
 import LocationSelector from "./LocationSelector";
@@ -9,6 +9,7 @@ const Profile = () => {
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
   // Fetch the authenticated restaurant data
   useEffect(() => {
@@ -34,6 +35,18 @@ const Profile = () => {
     fetchRestaurant(); // Call the fetch function on component mount
   }, []); // Empty dependency array ensures effect runs once on mount
 
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    setIsModalVisible(false);
+    console.log("Location selected!");
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
   if (loading) return <Spin size="large" />;
   if (error) return <Alert message={error} type="error" />;
 
@@ -52,13 +65,25 @@ const Profile = () => {
         </Col>
       </Row>
 
-      {/* Location Selector */}
-      {/* <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
+      {/* Location Selector Button */}
+      <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
         <Col xs={24}>
-          <h2>Select Location</h2>
-          <LocationSelector />
+          <Button type="primary" onClick={showModal}>
+            Select Location
+          </Button>
         </Col>
-      </Row> */}
+      </Row>
+
+      {/* Modal with Location Selector */}
+      <Modal
+        title="Select Location"
+        visible={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        width={800}
+      >
+        <LocationSelector />
+      </Modal>
     </div>
   );
 };

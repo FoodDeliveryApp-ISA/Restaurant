@@ -104,16 +104,39 @@ class AuthService {
     }
   }
 
-  /**
-   * Logs out the user by clearing the token and notifying them.
-   */
-  logout(): void {
-    TokenUtil.removeToken();
-    ToastNotification.info({
-      message: "Logged Out",
-      description: "You have successfully logged out.",
+ /**
+ * Logs out the user by clearing the token, notifying them,
+ * and triggering server-side cache clearing.
+ */
+async logout(): Promise<void> {
+  try {
+    // Call the cache clear endpoint
+    const response = await axios.post(`${BASE_API_URL}/cache/clear`, null, {
+      withCredentials: true,
     });
+
+    if (response.status === 204) {
+      console.info("Cache cleared successfully.");
+      ToastNotification.info({
+        message: "Logged Out",
+        description: "You have successfully logged out and caches have been cleared.",
+      });
+    } else {
+      console.warn("Cache clear endpoint responded with unexpected status:", response.status);
+    }
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || "Error clearing server caches.";
+    console.error("Error clearing server caches:", errorMessage);
+    ToastNotification.warning({
+      message: "Logged Out (Partial)",
+      description: "Logged out successfully, but cache clearing failed.",
+    });
+  } finally {
+    // Always remove the token
+    TokenUtil.removeToken();
   }
+}
+
 }
 
 export default new AuthService();

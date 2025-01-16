@@ -1,6 +1,7 @@
 package com.ISA.Restaurant.controller;
 
 import com.ISA.Restaurant.Dto.Event.CustomerOrderDto;
+import com.ISA.Restaurant.Dto.Response.OrderDto;
 import com.ISA.Restaurant.event.producer.CustomerOrderProducer;
 import com.ISA.Restaurant.service.OrderService;
 import com.ISA.Restaurant.Entity.Order;
@@ -61,7 +62,7 @@ public class OrderController {
     }
 
     @GetMapping("/restaurant/{restaurantId}")
-    public ResponseEntity<List<Order>> getOrdersByRestaurantId(
+    public ResponseEntity<List<OrderDto>> getOrdersByRestaurantId(
             @PathVariable String restaurantId,
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending,
@@ -70,7 +71,7 @@ public class OrderController {
         logger.info("Fetching orders for restaurant ID: {}, sortBy: {}, ascending: {}, statuses: {}, timeRange: {}",
                 restaurantId, sortBy, ascending, statuses, timeRange);
 
-        List<Order> orders = orderService.getOrdersByRestaurantId(restaurantId, sortBy, ascending, statuses, timeRange);
+        List<OrderDto> orders = orderService.getOrdersByRestaurantId(restaurantId, sortBy, ascending, statuses, timeRange);
 
         return ResponseEntity.ok(orders);
     }

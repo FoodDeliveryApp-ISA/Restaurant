@@ -16,4 +16,5 @@ public interface RestaurentService {
 
     Iterable<RestaurantDto> getAllRestaurants();
 
+    void evictCacheOnLogout();
 }

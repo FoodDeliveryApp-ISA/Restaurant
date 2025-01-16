@@ -1,12 +1,16 @@
 package com.ISA.Restaurant.Entity;
 
 import com.ISA.Restaurant.enums.OrderStatus;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -20,17 +24,16 @@ public class Order {
 
     private String restaurantId;
 
-    @ElementCollection
-    @CollectionTable(name = "restaurant_location", joinColumns = @JoinColumn(name = "order_id"))
-    @Column(name = "coordinate")
-    private List<Double> restaurantLocation;
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private RestaurantLocation restaurantLocation;
 
-    @ElementCollection
-    @CollectionTable(name = "customer_location", joinColumns = @JoinColumn(name = "order_id"))
-    @Column(name = "coordinate")
-    private List<Double> customerLocation;
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private CustomerLocation customerLocations;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+//    @JsonManagedReference // Prevent circular reference
     private List<OrderItem> orderItems;
 
     private String restaurantName;
@@ -48,16 +51,32 @@ public class Order {
     private LocalDateTime lastUpdated;
 
     public Order(String orderId,
-                 List<Double> customerLocation,
+                 CustomerLocation customerLocation,
                  String restaurantId,
                  String customerName,
                  String customerAddress,
                  String customerPhone) {
         this.orderId = orderId;
-        this.customerLocation = customerLocation;
+        this.customerLocations = customerLocation;
         this.customerName = customerName;
         this.customerAddress = customerAddress;
         this.customerPhone = customerPhone;
+        this.restaurantId = restaurantId;
+    }
+
+    public List<Double> getCustomerLocationsList()  {
+        if (this.customerLocations != null) {
+            return Arrays.asList(this.customerLocations.getLatitude(), this.customerLocations.getLongitude());
+        }
+        return Collections.emptyList(); // Return an empty list if customerLocations is null
+    }
+
+
+    public List<Double> getRestaurantLocationList() {
+        if (this.restaurantLocation != null) {
+            return Arrays.asList(this.restaurantLocation.getLatitude(), this.restaurantLocation.getLongitude());
+        }
+        return Collections.emptyList(); // Return an empty list if restaurantLocation is null
     }
 }
 

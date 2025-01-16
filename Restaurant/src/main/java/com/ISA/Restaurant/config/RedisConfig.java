@@ -15,6 +15,14 @@ public class RedisConfig {
     public RedisConnectionFactory redisConnectionFactory() {
         return new LettuceConnectionFactory();
     }
+//    @Bean
+//    public CaffeineCacheManager cacheManager() {
+//        CaffeineCacheManager cacheManager = new CaffeineCacheManager("menuItems", "restaurants", "orders", "menus");
+//        cacheManager.setCaffeine(Caffeine.newBuilder()
+//                .maximumSize(1000)
+//                .expireAfterWrite(10, TimeUnit.MINUTES));
+//        return cacheManager;
+//    }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {

@@ -128,5 +128,18 @@ public class RestaurantController {
                 ResponseEntity.noContent().build() :
                 ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
+    // Endpoint for clearing all restaurant-related cache entries (logout)
+    @PostMapping("/logout/evict-cache")
+    public ResponseEntity<Void> evictCacheOnLogout() {
+        try {
+            restaurantService.evictCacheOnLogout();
+            log.info("Cache cleared successfully on logout.");
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            log.error("Error clearing cache on logout.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 
 }

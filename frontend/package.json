@@ -28,7 +28,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
-    "react-leaflet": "^5.0.0",
+    "react-leaflet": "^4.2.1",
     "redis": "^4.7.0",
     "sockjs-client": "^1.6.1",
     "vite-plugin-node-polyfills": "^0.22.0",

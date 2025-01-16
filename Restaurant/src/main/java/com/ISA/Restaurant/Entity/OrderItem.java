@@ -1,9 +1,11 @@
 package com.ISA.Restaurant.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @Entity
@@ -20,5 +22,6 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @ToString.Exclude // Prevent circular reference
     private Order order;
 }
