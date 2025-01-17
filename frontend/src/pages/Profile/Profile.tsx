@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Row, Col, Spin, Alert, Button, Modal } from "antd";
 import LeftSection from "./LeftSection";
 import RightSection from "./RightSection";
-import LocationSelector from "./LocationSelector";
+import LocationSelector from "../../components/LocationSelector";
 import RestaurantService from "../../services/restaurant.service"; // Import the RestaurantService
 
 const Profile = () => {

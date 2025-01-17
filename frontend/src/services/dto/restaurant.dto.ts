@@ -13,12 +13,12 @@ export interface RestaurantResponseDto {
 }
 
 export interface RequestUpdatedRestaurantDto {
-  restaurantName: string;
-  restaurantEmail: string;
-  restaurantAddress: string;
-  restaurantPhone: string;
-  restaurantCity: string;
-  restaurantLocation: string;
-  active: boolean;
-  coverImageUrl: string;
+  restaurantName?: string;
+  restaurantEmail?: string;
+  restaurantAddress?: string;
+  restaurantPhone?: string;
+  restaurantCity?: string;
+  restaurantLocation?: string;
+  active?: boolean;
+  coverImageUrl?: string;
 }

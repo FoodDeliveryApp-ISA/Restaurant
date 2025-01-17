@@ -5,8 +5,7 @@ import {
   RequestUpdatedRestaurantDto,
 } from "./dto/restaurant.dto";
 import { BASE_API_URL } from "../config/apiConfig"; // Import API URL from config
-import { handleError} from "../utils/errorHandler"; // Assuming you have a custom error handler
-
+import { handleError } from "../utils/errorHandler"; // Assuming you have a custom error handler
 
 const API_URL = `${BASE_API_URL}/restaurants/`;
 
@@ -28,6 +27,31 @@ class RestaurantService {
     } catch (error) {
       this.handleError(error);
       console.error("Error fetching authenticated restaurant details:", error);
+      return null;
+    }
+  }
+
+  async updateRestaurantEmail(
+    newEmail: string
+  ): Promise<RestaurantResponseDto | null> {
+    try {
+      const dto: RequestUpdatedRestaurantDto = { restaurantEmail: newEmail };
+      return await this.updateAuthenticatedRestaurant(dto);
+    } catch (error) {
+      console.error("Error updating email:", error);
+      return null;
+    }
+  }
+  async updateRestaurantLocation(
+    newLocation: string
+  ): Promise<RestaurantResponseDto | null> {
+    try {
+      const dto: RequestUpdatedRestaurantDto = {
+        restaurantLocation: newLocation,
+      }; // Assuming `restaurantLocation` is the field for location
+      return await this.updateAuthenticatedRestaurant(dto);
+    } catch (error) {
+      console.error("Error updating restaurant location:", error);
       return null;
     }
   }

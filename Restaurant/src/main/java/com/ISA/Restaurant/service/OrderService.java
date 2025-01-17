@@ -7,8 +7,8 @@ import com.ISA.Restaurant.Dto.RestaurantDto;
 import com.ISA.Restaurant.Entity.Order;
 import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.enums.OrderStatus;
-import com.ISA.Restaurant.event.producer.OrderStatusProducer;
-import com.ISA.Restaurant.event.producer.RiderRequestProducer;
+//import com.ISA.Restaurant.event.producer.OrderStatusProducer;
+//import com.ISA.Restaurant.event.producer.RiderRequestProducer;
 import com.ISA.Restaurant.exception.InvalidOrderStateTransitionException;
 import com.ISA.Restaurant.exception.OrderNotFoundException;
 import com.ISA.Restaurant.exception.SameOrderStateException;
@@ -36,17 +36,19 @@ public class OrderService {
     private static final int ON_THE_WAY_DELAY_MINUTES = 60;
 
     private final OrderRepository orderRepository;
-    private final OrderStatusProducer orderStatusProducer;
-    private final RiderRequestProducer riderRequestProducer;
+//    private final OrderStatusProducer orderStatusProducer;
+//    private final RiderRequestProducer riderRequestProducer;
     private final RestaurentService restaurantService;
     private final NotificationService notificationService;
 
-    public OrderService(OrderRepository orderRepository, OrderStatusProducer orderStatusProducer,
-                        RiderRequestProducer riderRequestProducer, RestaurentService restaurantService,
+    public OrderService(OrderRepository orderRepository,
+//                        OrderStatusProducer orderStatusProducer,
+//                        RiderRequestProducer riderRequestProducer,
+                        RestaurentService restaurantService,
                         NotificationService notificationService) {
         this.orderRepository = orderRepository;
-        this.orderStatusProducer = orderStatusProducer;
-        this.riderRequestProducer = riderRequestProducer;
+//        this.orderStatusProducer = orderStatusProducer;
+//        this.riderRequestProducer = riderRequestProducer;
         this.restaurantService = restaurantService;
         this.notificationService = notificationService;
     }
@@ -59,7 +61,7 @@ public class OrderService {
             Order order = OrderMapper.createOrderEntity(orderDto, restaurantDetails);
 
             orderRepository.save(order);
-            orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ORDER_PLACED);
+//            orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ORDER_PLACED);
 
             sendNotifications(orderDto, order);
 
@@ -78,7 +80,7 @@ public class OrderService {
         Order order = getOrderById(orderId);
         transitionOrderStatus(order, OrderStatus.ASSIGNING_RIDER);
         RiderRequestDto riderRequest = OrderMapper.toRiderRequestDto(order);
-        riderRequestProducer.sendRiderRequest(riderRequest);
+//        riderRequestProducer.sendRiderRequest(riderRequest);
     }
 
     public void orderOnTheWay(String orderId) {
@@ -161,7 +163,7 @@ public class OrderService {
         order.setStatus(newStatus);
         order.setLastUpdated(LocalDateTime.now());
         orderRepository.save(order);
-        orderStatusProducer.sendOrderStatus(order.getOrderId(), newStatus);
+//        orderStatusProducer.sendOrderStatus(order.getOrderId(), newStatus);
         logger.info("Order ID {} status transitioned to {}", order.getOrderId(), newStatus);
     }
 

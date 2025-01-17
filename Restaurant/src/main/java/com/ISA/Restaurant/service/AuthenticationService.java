@@ -1,5 +1,7 @@
 package com.ISA.Restaurant.service;
 
+import com.ISA.Restaurant.Dto.Request.ChangePasswordRequest;
+import com.ISA.Restaurant.Dto.Request.ForgotPasswordRequest;
 import com.ISA.Restaurant.Dto.Request.RegisterRequest;
 import com.ISA.Restaurant.Dto.Request.LoginRequest;
 import com.ISA.Restaurant.Entity.Restaurant;
@@ -8,6 +10,7 @@ import com.ISA.Restaurant.repo.RestaurantRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -75,5 +78,30 @@ public class AuthenticationService {
 
         return restaurant;
     }
+
+    // Change Password Method
+    public void changePassword(Integer restaurantId, ChangePasswordRequest request) {
+        log.info("Changing password for restaurant with id {}", restaurantId);
+
+        Restaurant restaurant = restaurantRepository.findByRestaurantId(restaurantId)
+                .orElseThrow(() -> new UsernameNotFoundException("Restaurant not found"));
+
+        // Verify the old password
+        if (!passwordEncoder.matches(request.getOldPassword(), restaurant.getPassword())) {
+            throw new RuntimeException("Old password is incorrect");
+        }
+
+        // Update with the new password
+
+    }
+
+    // Forgot Password Method (for sending a reset token or process)
+//    public void forgotPassword(ForgotPasswordRequest request) {
+////        log.info("Handling forgot password for email {}", request.getEmail());
+//
+//        restaurant.setRestaurantPassword(passwordEncoder.encode(request.getPassword()));
+//        restaurantRepository.save(restaurant);
+//        log.info("Password updated successfully");
+//    }
 
 }

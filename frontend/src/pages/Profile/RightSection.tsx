@@ -20,7 +20,7 @@ import {
   VerifyEmailDto,
 } from "../../services/dto/emailVerification.dto";
 import EmailVerificationPopup from "../../components/EmailVerificationPopup";
-
+import ChangeDetails from "./ChangeDetails";
 const { Title } = Typography;
 
 interface RestaurantResponseDto {
@@ -105,64 +105,64 @@ const RightSection: React.FC<RightSectionProps> = ({ restaurant }) => {
 
   // Function to handle save button click
   // Function to handle save button click
-const handleSave = async () => {
-  setLoading(true);
-  try {
-    const values = form.getFieldsValue();
-    console.log("Values ", values);
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const values = form.getFieldsValue();
+      console.log("Values ", values);
 
-    // Call the update service
-    const updatedRestaurant =
-      await RestaurantService.updateAuthenticatedRestaurant(values);
+      // Call the update service
+      const updatedRestaurant =
+        await RestaurantService.updateAuthenticatedRestaurant(values);
 
-    // Show success toast notification
-    ToastNotification.success({
-      message: "Restaurant updated successfully!",
-      description: `The restaurant "${updatedRestaurant?.restaurantName}" has been updated.`,
-    });
+      // Show success toast notification
+      ToastNotification.success({
+        message: "Restaurant updated successfully!",
+        description: `The restaurant "${updatedRestaurant?.restaurantName}" has been updated.`,
+      });
 
-    // Disable editing after saving
-    setIsEditing(false);
-  } catch (error) {
-    // Show error toast notification
-    ToastNotification.error({
-      message: "Error updating restaurant",
-      description:
-        error?.response?.data?.message ||
-        "An unexpected error occurred. Please try again.",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+      // Disable editing after saving
+      setIsEditing(false);
+    } catch (error) {
+      // Show error toast notification
+      ToastNotification.error({
+        message: "Error updating restaurant",
+        description:
+          error?.response?.data?.message ||
+          "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSendCode = async () => {
     try {
       setLoading(true);
-  
+
       // Get the form values
       const values = form.getFieldsValue();
       console.log("values:", values);
-  
+
       // Ensure email is included in the DTO, even if it hasn't changed
       const email = values.restaurantEmail || restaurant?.restaurantEmail;
-  
+
       // If email is not provided, show a message and return early
       if (!email) {
         message.info("Email is required to send a verification code.");
         setLoading(false);
         return;
       }
-  
+
       // Create the request DTO
       const dto: RequestVerificationDto = {
         email,
       };
-  
+
       // Send verification code
       await emailVerificationService.requestVerificationCode(dto);
       message.success("Verification email sent. Please check your inbox.");
-  
+
       // Update visibility state
       setIsEmailVerificationVisible(true);
     } catch (error) {
@@ -171,7 +171,6 @@ const handleSave = async () => {
       setLoading(false);
     }
   };
-  
 
   // Function to toggle editing state
   const toggleEdit = () => {
@@ -270,6 +269,7 @@ const handleSave = async () => {
           </Form.Item>
         </Form>
       </Card>
+      <ChangeDetails restaurant={restaurant} />
       {isEmailVerificationVisible && (
         <EmailVerificationPopup
           visible={isEmailVerificationVisible}

@@ -2,7 +2,7 @@ package com.ISA.Restaurant.controller;
 
 import com.ISA.Restaurant.Dto.Event.CustomerOrderDto;
 import com.ISA.Restaurant.Dto.Response.OrderDto;
-import com.ISA.Restaurant.event.producer.CustomerOrderProducer;
+//import com.ISA.Restaurant.event.producer.CustomerOrderProducer;
 import com.ISA.Restaurant.service.OrderService;
 import com.ISA.Restaurant.Entity.Order;
 import org.slf4j.Logger;
@@ -17,17 +17,20 @@ import java.util.List;
 public class OrderController {
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
     private final OrderService orderService;
-    private final CustomerOrderProducer orderProducer;
+//    private final CustomerOrderProducer orderProducer;
 
-    public OrderController(OrderService orderService, CustomerOrderProducer orderProducer) {
+    public OrderController(
+            OrderService orderService
+//            CustomerOrderProducer orderProducer
+    ) {
         this.orderService = orderService;
-        this.orderProducer = orderProducer;
+//        this.orderProducer = orderProducer;
     }
 
     @PostMapping
     public ResponseEntity<String> createOrder(@RequestBody CustomerOrderDto orderDto) {
         logger.info("Received new customer order: {}", orderDto.toString());
-        orderProducer.sendCustomerOrder(orderDto);
+//        orderProducer.sendCustomerOrder(orderDto);
         return ResponseEntity.ok("Order submitted successfully!");
     }
 
