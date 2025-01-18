@@ -1,10 +1,17 @@
 package com.ISA.Restaurant.service;
 
+import com.ISA.Restaurant.Dto.Event.NotificationEvent;
 import com.ISA.Restaurant.Entity.Notification;
+import com.ISA.Restaurant.controller.NotificationController;
+import com.ISA.Restaurant.controller.NotificationSender;
 import com.ISA.Restaurant.repo.NotificationRepository;
+import com.ISA.Restaurant.repo.RestaurantRepository;
 import com.ISA.Restaurant.service.handler.NotificationWebSocketHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,29 +25,63 @@ public class NotificationService {
 
     private final NotificationWebSocketHandler notificationWebSocketHandler;
     private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Autowired
     public NotificationService(
             NotificationWebSocketHandler notificationWebSocketHandler,
-            NotificationRepository notificationRepository) {
+            NotificationRepository notificationRepository,
+            SimpMessagingTemplate messagingTemplate,
+            ApplicationEventPublisher eventPublisher,
+            SimpMessagingTemplate simpMessagingTemplate
+    ) {
         this.notificationWebSocketHandler = notificationWebSocketHandler;
         this.notificationRepository = notificationRepository;
+        this.messagingTemplate = messagingTemplate;
+        this.eventPublisher = eventPublisher;
+        this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
-    // Send notification via WebSocket and save to database
+//    public void sendNotification(String userId, String message) {
+//        String destination = "/topic/notifications/" + userId;
+//        Notification notification = new Notification();
+//        notification.setUserId(userId);
+//        notification.setMessage(message);
+//
+//        notificationRepository.save(notification);
+//        log.info("Notification sent to {}", userId);
+//        log.info("Notification sent to {}", message);
+//        log.info("Notification {}", notification.toString());
+//        messagingTemplate.convertAndSend(destination, message);
+//        System.out.println("Notification sent to userId " + userId + ": " + message);
+//    }
+
+    public void notifyUser(String userId, String message) {
+        try {
+            simpMessagingTemplate.convertAndSendToUser(userId, "/queue/notifications", message);
+            System.out.println("Notification sent to user " + userId + ": " + message);
+        } catch (Exception e) {
+            System.err.println("Failed to send notification to user " + userId + ": " + e.getMessage());
+        }
+    }
+
     public void sendNotificationToUser(String userId, String message) {
-        // Save the notification to the database
         Notification notification = new Notification();
         notification.setUserId(userId);
         notification.setMessage(message);
 
         notificationRepository.save(notification);
-        log.info("Notification sent to {}", userId);
-        log.info("Notification sent to {}", message);
-        log.info("Notification {}", notification.toString());
-        // Send the notification via WebSocket
+        log.info("Notification saved for user {}: {}", userId, message);
+
+        // Publish an event
+        eventPublisher.publishEvent(new NotificationEvent(userId, message));
+
+        // WebSocket notification
         notificationWebSocketHandler.sendNotification(userId, message);
     }
+
 
     // Retrieve all notifications for a specific user
     public List<Notification> getNotificationsForUser(String userId) {

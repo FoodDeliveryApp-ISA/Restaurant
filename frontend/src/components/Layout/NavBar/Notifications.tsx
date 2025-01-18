@@ -1,9 +1,10 @@
 import { FC, useState, useEffect } from "react";
 import { BellOutlined } from "@ant-design/icons";
 import { Badge, Popover, Tooltip, Spin, Drawer } from "antd";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import NotificationService from "../../../services/notification.service";
 import NotificationList from "./NotificationList";
+import CustomPopup from "./CustomPopup";
 
 interface Notice {
   id: number;
@@ -18,6 +19,7 @@ const HeaderNoticeComponent: FC = () => {
   const [visible, setVisible] = useState(false);
   const [noticeList, setNoticeList] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(false);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const isMobile = window.innerWidth <= 768;
 
   const useFetch = (fetchFunction: () => Promise<Notice[]>, dependencies: any[]) => {
@@ -64,6 +66,7 @@ const HeaderNoticeComponent: FC = () => {
       isRead: false,
     };
     setNoticeList((prev) => [newNotification, ...prev]);
+    setPopupMessage(message); // Show popup
   };
 
   const markAsRead = async (notificationId: number) => {
@@ -89,10 +92,10 @@ const HeaderNoticeComponent: FC = () => {
   };
 
   useEffect(() => {
-    NotificationService.connectWebSocket("user123", handleNewNotification);
+    NotificationService.connectStompWebSocket("353", handleNewNotification);
 
     return () => {
-      NotificationService.disconnectStompWebSocket();
+      NotificationService.disconnectWebSocket();
     };
   }, []);
 
@@ -164,6 +167,14 @@ const HeaderNoticeComponent: FC = () => {
           </Tooltip>
         </Popover>
       )}
+      <AnimatePresence>
+        {popupMessage && (
+          <CustomPopup
+            message={popupMessage}
+            onClose={() => setPopupMessage(null)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

@@ -3,6 +3,7 @@ package com.ISA.Restaurant.config;
 import com.ISA.Restaurant.service.CustomerLocationWebSocketHandler;
 
 import com.ISA.Restaurant.service.handler.NotificationWebSocketHandler;
+import com.ISA.Restaurant.utils.CustomHandshakeInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -13,37 +14,19 @@ import org.springframework.web.socket.config.annotation.*;
 public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic");
-        config.setApplicationDestinationPrefixes("/app");
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.enableSimpleBroker("/queue", "/topic");
+        registry.setUserDestinationPrefix("/user");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws/notification-stomp")
-                .setAllowedOrigins("*")
-                .withSockJS();
+                .setAllowedOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+                .withSockJS()
+                .setInterceptors(new CustomHandshakeInterceptor());
     }
 }
-
-@Configuration
-@EnableWebSocket
-public class RawWebSocketConfig implements WebSocketConfigurer {
-
-    private final NotificationWebSocketHandler notificationWebSocketHandler;
-
-    @Autowired
-    public RawWebSocketConfig(NotificationWebSocketHandler notificationWebSocketHandler) {
-        this.notificationWebSocketHandler = notificationWebSocketHandler;
-    }
-
-    @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(notificationWebSocketHandler, "/ws/notification-raw")
-                .setAllowedOrigins("*");
-    }
-}
-
 
 
 //@Configuration

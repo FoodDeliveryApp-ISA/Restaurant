@@ -1,4 +1,5 @@
 package com.ISA.Restaurant.controller;
 
-public class NotificationSender {
+public interface NotificationSender {
+    void sendOrderNotification(String userId, String message);
 }

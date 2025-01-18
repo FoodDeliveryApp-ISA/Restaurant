@@ -21,7 +21,7 @@ public class CacheController {
     private final RestaurentService restaurantService;
     private final MenuService menuService;
     private final MenuItemService menuItemService;
-    private final OrderService orderService;
+//    private final OrderService orderService;
 
     // Endpoint for clearing all caches
     @PostMapping("/clear")

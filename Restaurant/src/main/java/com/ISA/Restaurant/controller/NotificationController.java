@@ -7,6 +7,9 @@ import com.ISA.Restaurant.repo.RestaurantRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +22,37 @@ import java.util.Optional;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
+    private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
     private final RestaurantRepository restaurantRepository;
 
     @Autowired
-    public NotificationController(NotificationService notificationService, RestaurantRepository restaurantRepository) {
+    public NotificationController(
+            NotificationService notificationService,
+            RestaurantRepository restaurantRepository,
+            SimpMessagingTemplate messagingTemplate
+    ) {
         this.notificationService = notificationService;
         this.restaurantRepository = restaurantRepository;
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    @MessageMapping("/notify")
+    @SendTo("/topic/notifications")
+    public String sendNotification(String message) {
+        return "Notification: " + message;
+    }
+
+    public void sendOrderNotification(String userId, String orderId) {
+        String destination = "/topic/notifications/" + userId;
+        String message = "New order #" + orderId + " has been created.";
+        messagingTemplate.convertAndSend(destination, message);
+    }
+
+    @PostMapping("/test-message")
+    public ResponseEntity<?> sendTestMessage(@RequestParam String userId) {
+        messagingTemplate.convertAndSend("/topic/notifications/" + userId, "Test notification for user: " + userId);
+        return ResponseEntity.ok("Test message sent.");
     }
 
     private Restaurant getAuthenticatedRestaurant() {
@@ -33,7 +60,7 @@ public class NotificationController {
 
         if (authentication == null || !authentication.isAuthenticated()) {
             log.warn("Authentication is null or user is not authenticated.");
-            return null; // Not authenticated
+            return null;
         }
 
         Object principal = authentication.getPrincipal();
@@ -58,6 +85,12 @@ public class NotificationController {
         List<Notification> notifications = notificationService.getNotificationsForUser(restaurantId);
         return ResponseEntity.ok(notifications);
     }
+
+//    @GetMapping("/all")
+//    public ResponseEntity<List<Notification>> getAllNotifications() {
+//        List<Notification> notifications = notificationService.getAllNotifications();
+//        return ResponseEntity.ok(notifications);
+//    }
 
     @PostMapping("/send")
     public ResponseEntity<?> sendNotificationToUser(
@@ -85,7 +118,4 @@ public class NotificationController {
         return ResponseEntity.ok("All notifications marked as read.");
     }
 }
-
-
-
 

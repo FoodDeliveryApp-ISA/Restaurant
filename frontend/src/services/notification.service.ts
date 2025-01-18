@@ -1,155 +1,125 @@
 import { Client, Message } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import axios from "axios";
+import { EventEmitter } from "events";
 import authHeader from "./auth-header";
 import { BASE_API_URL } from "../config/apiConfig";
-import { BASE_WS_URL, STOMP_CONFIG, getWebSocketUrl } from "../config/websocket.config";
 import { handleError } from "../utils/errorHandler";
 
 const API_URL = `${BASE_API_URL}/api/notifications`;
 
 class NotificationService {
   private stompClient: Client | null = null;
-  private websocket: WebSocket | null = null;
-  private handleError: (error: unknown) => Promise<void>;
+  private rawSocket: WebSocket | null = null;
+  private eventEmitter = new EventEmitter();
 
-  constructor() {
-    this.handleError = handleError;
-  }
-
-  connectWebSocket(userId: string, onMessage: (message: string) => void): void {
+  // Connect to STOMP WebSocket
+  connectStompWebSocket(userId: string, onMessage: (message: string) => void): void {
     if (this.stompClient && this.stompClient.connected) {
       console.warn("STOMP WebSocket is already connected.");
       return;
     }
 
-    const socketUrl = getWebSocketUrl("notification");
+    const socketUrl = `${BASE_API_URL}/ws/notification-stomp?userId=${userId}`;
     const socket = new SockJS(socketUrl);
 
     this.stompClient = new Client({
-      ...STOMP_CONFIG,
       webSocketFactory: () => socket,
+      reconnectDelay: 5000,
     });
 
     this.stompClient.onConnect = () => {
-      console.log("STOMP WebSocket connected.");
-      this.stompClient?.subscribe(`/topic/notifications/${userId}`, (msg: Message) => {
-        console.log(`Message received on topic /topic/notifications/${userId}:`, msg.body);
-        onMessage(msg.body);
+      console.log("STOMP WebSocket connected successfully!");
+    
+      this.stompClient.subscribe(`/topic/notifications/${userId}`, (message: Message) => {
+        console.log("Message received on topic:", message.body); // Log the received message
+        onMessage(message.body);
       });
     };
+    
 
     this.stompClient.onStompError = (error) => {
-      console.error("STOMP WebSocket error:", error);
+      console.error("STOMP Error:", error);
     };
 
     this.stompClient.activate();
   }
 
-  connectNativeWebSocket(userId: string, onMessage: (message: string) => void): void {
-    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-      console.warn("Native WebSocket is already connected.");
+  // Connect to raw WebSocket
+  connectRawWebSocket(userId: string, onMessage: (message: string) => void): void {
+    if (this.rawSocket && this.rawSocket.readyState === WebSocket.OPEN) {
+      console.warn("Raw WebSocket is already connected.");
       return;
     }
 
-    const url = getWebSocketUrl("notification", { userId });
-    console.log(`Connecting to WebSocket at: ${url}`);
-    this.websocket = new WebSocket(url);
+    const socketUrl = `${BASE_API_URL}/ws/notification-raw?userId=${userId}`;
+    this.rawSocket = new WebSocket(socketUrl);
 
-    this.websocket.onopen = () => {
-      console.log("Native WebSocket connected.");
-    };
+    this.rawSocket.onopen = () => console.log("Raw WebSocket connected.");
 
-    this.websocket.onmessage = (event) => {
-      console.log("Message received via native WebSocket:", event.data);
+    this.rawSocket.onmessage = (event) => {
       onMessage(event.data);
+      this.eventEmitter.emit("notification", event.data);
     };
 
-    this.websocket.onclose = () => {
-      console.warn("Native WebSocket disconnected.");
-    };
-
-    this.websocket.onerror = (error) => {
-      console.error("Native WebSocket error:", error);
-    };
+    this.rawSocket.onerror = (error) => console.error("Raw WebSocket Error:", error);
+    this.rawSocket.onclose = () => console.log("Raw WebSocket disconnected.");
   }
 
-  disconnectStompWebSocket(): void {
-    if (this.stompClient && this.stompClient.connected) {
+  // Disconnect all WebSockets
+  disconnectWebSocket(): void {
+    if (this.stompClient?.connected) {
       this.stompClient.deactivate();
-      console.log("STOMP WebSocket disconnected.");
-    } else {
-      console.warn("STOMP WebSocket is not connected.");
+    }
+    if (this.rawSocket?.readyState === WebSocket.OPEN) {
+      this.rawSocket.close();
     }
   }
 
-  disconnectNativeWebSocket(): void {
-    if (this.websocket) {
-      this.websocket.close();
-      this.websocket = null;
-      console.log("Native WebSocket disconnected.");
-    } else {
-      console.warn("Native WebSocket is not connected.");
-    }
+  // Listen for notification events
+  onNotification(callback: (message: string) => void): void {
+    this.eventEmitter.on("notification", callback);
   }
 
-  sendStompMessage(destination: string, message: string): void {
-    if (this.stompClient && this.stompClient.connected) {
-      this.stompClient.publish({ destination, body: message });
-      console.log("Message sent via STOMP:", message);
-    } else {
-      console.warn("STOMP WebSocket is not connected.");
-    }
+  offNotification(callback: (message: string) => void): void {
+    this.eventEmitter.off("notification", callback);
   }
 
-  sendNativeMessage(message: string): void {
-    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-      this.websocket.send(message);
-      console.log("Message sent via native WebSocket:", message);
-    } else {
-      console.warn("Native WebSocket is not connected.");
-    }
-  }
-
-  async getAllNotifications(): Promise<string[]> {
+  // Fetch notifications
+  async getAllNotifications(): Promise<any[]> {
     try {
-      const response = await axios.get<string[]>(`${API_URL}/restaurant-notifications`, {
-        headers: authHeader(),
-      });
+      const response = await axios.get(`${API_URL}/restaurant-notifications`, { headers: authHeader() });
       return response.data;
     } catch (error) {
-      await this.handleError(error);
+      handleError(error);
       throw error;
     }
   }
 
-  async markNotificationAsRead(notificationId: number): Promise<void> {
+  // Mark notification as read
+  async markNotificationAsRead(notificationId: string): Promise<void> {
     try {
-      await axios.patch(`${API_URL}/mark-read/${notificationId}`, {}, { headers: authHeader() });
-      console.log(`Notification ${notificationId} marked as read.`);
+      await axios.put(`${API_URL}/${notificationId}/read`, {}, { headers: authHeader() });
     } catch (error) {
-      await this.handleError(error);
-      throw error;
+      handleError(error);
     }
   }
 
+  // Mark all as read
   async markAllAsRead(): Promise<void> {
     try {
-      await axios.post(`${API_URL}/mark-all-read`, {}, { headers: authHeader() });
-      console.log("All notifications marked as read.");
+      await axios.put(`${API_URL}/mark-all-read`, {}, { headers: authHeader() });
     } catch (error) {
-      await this.handleError(error);
-      throw error;
+      handleError(error);
     }
   }
 
-  async sendNotificationToUser(userId: string, message: string): Promise<void> {
+  // Send notification
+  async sendNotification(userId: string, message: string): Promise<void> {
     try {
       await axios.post(`${API_URL}/send`, { userId, message }, { headers: authHeader() });
-      console.log(`Notification sent to user ${userId}: ${message}`);
     } catch (error) {
-      await this.handleError(error);
-      throw error;
+      handleError(error);
     }
   }
 }

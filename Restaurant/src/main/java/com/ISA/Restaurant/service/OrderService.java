@@ -63,9 +63,10 @@ public class OrderService {
             Order order = OrderMapper.createOrderEntity(orderDto, restaurantDetails);
 
             orderRepository.save(order);
-//            orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.CREATED);
+            orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.PENDING);
 
             sendNotifications(orderDto, order);
+
 
             logger.info("Order created successfully. ID: {}, Status: {}", order.getOrderId(), OrderStatus.PENDING);
         } catch (Exception e) {
@@ -255,6 +256,7 @@ public class OrderService {
     private void sendNotifications(CustomerOrderDto orderDto, Order order) {
         String restaurantNotificationMessage = String.format("New order #%s has been placed at your restaurant.", order.getOrderId());
         notificationService.sendNotificationToUser(orderDto.getRestaurantId(), restaurantNotificationMessage);
+        notificationService.notifyUser(orderDto.getRestaurantId(), restaurantNotificationMessage);
     }
 
 

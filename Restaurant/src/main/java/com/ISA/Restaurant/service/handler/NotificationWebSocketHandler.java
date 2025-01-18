@@ -2,6 +2,7 @@ package com.ISA.Restaurant.service.handler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -15,7 +16,26 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NotificationWebSocketHandler extends TextWebSocketHandler {
 
     private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+//    private final ConcurrentHashMap<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
 
+//    @Override
+//    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+//        String userId = getUserIdFromSession(session);
+//        sessionMap.put(userId, session);
+//        System.out.println("WebSocket connection established for userId: " + userId);
+//    }
+//
+//    @Override
+//    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+//        String userId = getUserIdFromSession(session);
+//        sessionMap.remove(userId);
+//        System.out.println("WebSocket connection closed for userId: " + userId);
+//    }
+//
+//    private String getUserIdFromSession(WebSocketSession session) {
+//        // Extract userId from query parameters
+//        return session.getUri().getQuery().split("=")[1];
+//    }
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         URI uri = session.getUri();
@@ -48,11 +68,11 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
         // Handle received messages if needed (e.g., acknowledgement or additional requests)
     }
 
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception {
-        log.info("WebSocket connection closed: {}", session.getId());
-        sessions.values().remove(session);
-    }
+//    @Override
+//    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception {
+//        log.info("WebSocket connection closed: {}", session.getId());
+//        sessions.values().remove(session);
+//    }
 
     public void sendNotification(String userId, String message) {
         WebSocketSession session = sessions.get(userId);
