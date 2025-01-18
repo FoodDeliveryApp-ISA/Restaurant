@@ -20,6 +20,7 @@ import {
   VerifyEmailDto,
 } from "../../services/dto/emailVerification.dto";
 import EmailVerificationPopup from "../../components/EmailVerificationPopup";
+import ChangeDetails from "./ChangeDetails";
 
 const { Title } = Typography;
 
@@ -270,6 +271,7 @@ const handleSave = async () => {
           </Form.Item>
         </Form>
       </Card>
+      <ChangeDetails restaurant={restaurant} />
       {isEmailVerificationVisible && (
         <EmailVerificationPopup
           visible={isEmailVerificationVisible}

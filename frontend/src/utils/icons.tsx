@@ -1,25 +1,30 @@
 import {
-    CheckCircleOutlined,
-    FireOutlined,
-    SearchOutlined,
-    CarOutlined,
-    SmileOutlined,
-  } from "@ant-design/icons";
-  
-  export const getStepIcon = (iconName: string) => {
-    switch (iconName) {
-      case "check-circle":
-        return <CheckCircleOutlined />;
-      case "fire":
-        return <FireOutlined />;
-      case "search":
-        return <SearchOutlined />;
-      case "car":
-        return <CarOutlined />;
-      case "smile":
-        return <SmileOutlined />;
-      default:
-        return null;
-    }
-  };
-  
+  InboxOutlined,
+  FireOutlined,
+  BoxPlotOutlined,
+  UserOutlined,
+  CarOutlined,
+  CheckCircleOutlined,
+  DollarOutlined,
+} from "@ant-design/icons";
+
+export const getStepIcon = (iconName: string) => {
+  switch (iconName) {
+    case "InboxOutlined":
+      return <InboxOutlined />;
+    case "FireOutlined":
+      return <FireOutlined />;
+    case "BoxPlotOutlined":
+      return <BoxPlotOutlined />;
+    case "UserOutlined":
+      return <UserOutlined />;
+    case "CarOutlined":
+      return <CarOutlined />;
+    case "CheckCircleOutlined":
+      return <CheckCircleOutlined />;
+    case "DollarOutlined":
+      return <DollarOutlined />;
+    default:
+      return null;
+  }
+};

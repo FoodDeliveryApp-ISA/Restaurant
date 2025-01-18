@@ -6,25 +6,28 @@ import orderService from "../../services/order.service";
 
 export interface Order {
   orderId: string;
-  restaurantId: string; // Added restaurantId to track by restaurant
+  restaurantId: string;
   restaurantLocation: [number, number];
   customerLocation: [number, number];
   customerName: string;
   customerAddress: string;
   customerPhone: string;
-  status: string; // Ensure status is a string
+  status: string;
   createdDate?: string;
 }
 
 const { Option } = Select;
 
 const statusMapping: Record<number, string> = {
-  0: "ORDER_PLACED",
-  1: "PREPARING",
-  2: "ASSIGNING_RIDER",
-  3: "ON_THE_WAY",
-  4: "ORDER_DELIVERED",
-  5: "ORDER_CANCELLED",
+  0: "PENDING",
+  1: "PLACED",
+  2: "PREPARED",
+  3: "PREPARED",
+  4: "RIDER_ASSIGNED",
+  5: "RIDER_PICKED",
+  6: "DELIVERED",
+  7: "PAID",
+  8: "CANCELLED", // Added CREATED status mapping
 };
 
 const OrderStatusManager: React.FC = () => {
@@ -32,34 +35,33 @@ const OrderStatusManager: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isMultiStageModalVisible, setIsMultiStageModalVisible] =
     useState(false);
-  const [statuses, setStatuses] = useState<string[]>(["ORDER_PLACED", "PREPARING"]);
+  const [statuses, setStatuses] = useState<string[]>(["PENDING", "PLACED"]);
   const [sortBy, setSortBy] = useState<string>("createdDate");
   const [ascending, setAscending] = useState<boolean>(true);
-  const [timeRange, setTimeRange] = useState<string>("2h"); // Default time range
+  const [timeRange, setTimeRange] = useState<string>("2h");
 
   const addOrder = async () => {
     const restaurantIds = ["353"];
     const randomRestaurantId =
       restaurantIds[Math.floor(Math.random() * restaurantIds.length)];
-  
+
     const newOrder: Order = {
       orderId: `ORD${orders.length + 1}`,
       restaurantId: randomRestaurantId,
-      restaurantLocation: [40.7128, -74.0060], // Example restaurant location
-      customerLocation: [34.0522, -118.2437], // Example customer location
-      customerName: `Customer ${orders.length + 1}`, // Dynamic customer name
-      customerAddress: "789 Customer Ave, Client City, CC 67890", // Example customer address
-      customerPhone: "0771234567", // Example customer phone
-      status: "ORDER_PLACED", // Default status
-      createdDate: new Date().toISOString(), // Add creation date
+      restaurantLocation: [40.7128, -74.0060],
+      customerLocation: [34.0522, -118.2437],
+      customerName: `Customer ${orders.length + 1}`,
+      customerAddress: "789 Customer Ave, Client City, CC 67890",
+      customerPhone: "0771234567",
+      status: "CREATED", // Default status
+      createdDate: new Date().toISOString(),
     };
-  
-    // Generate dummy order items
+
     const orderItems = [
       { menuItemId: "40", quantity: 2 },
       { menuItemId: "39", quantity: 1 },
     ];
-  
+
     const customerOrderDto = {
       orderId: newOrder.orderId,
       restaurantId: randomRestaurantId,
@@ -70,12 +72,12 @@ const OrderStatusManager: React.FC = () => {
       orderItems: orderItems.map((item) => ({
         menuItemId: item.menuItemId,
         quantity: item.quantity,
-      })), // Ensure no nested `order` references
-      orderDate: new Date(), // Include order date
+      })),
+      orderDate: new Date(),
     };
-    
+
     setOrders([...orders, newOrder]);
-  
+
     try {
       await orderService.createOrder(customerOrderDto);
       console.log("Order successfully created:", customerOrderDto);
@@ -83,7 +85,6 @@ const OrderStatusManager: React.FC = () => {
       console.error("Failed to create order on the server:", error);
     }
   };
-  
 
   const fetchOrders = async () => {
     try {
@@ -93,7 +94,7 @@ const OrderStatusManager: React.FC = () => {
         sortBy,
         ascending,
         statuses,
-        timeRange // Include timeRange in the request
+        timeRange
       );
       setOrders(fetchedOrders);
     } catch (error) {
@@ -103,7 +104,7 @@ const OrderStatusManager: React.FC = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [statuses, sortBy, ascending, timeRange]); // Fetch orders when any filter changes
+  }, [statuses, sortBy, ascending, timeRange]);
 
   const openMultiStagePopup = (order: Order) => {
     setSelectedOrder(order);
@@ -113,7 +114,7 @@ const OrderStatusManager: React.FC = () => {
   const handleMultiStageModalClose = () => {
     setIsMultiStageModalVisible(false);
     setSelectedOrder(null);
-    fetchOrders(); // Refetch orders to ensure the latest data
+    fetchOrders();
   };
 
   return (
@@ -132,14 +133,16 @@ const OrderStatusManager: React.FC = () => {
               placeholder="Filter by Status"
               style={{ minWidth: 200 }}
               onChange={(value: string[]) => setStatuses(value)}
-              defaultValue={["ORDER_PLACED", "PREPARING"]} // Default selected filters
+              defaultValue={["PENDING", "PLACED"]}
             >
-              <Option value="ORDER_PLACED">Order Placed</Option>
-              <Option value="PREPARING">Preparing</Option>
-              <Option value="ASSIGNING_RIDER">Assigning Rider</Option> {/* New status */}
-              <Option value="ON_THE_WAY">On the Way</Option>
-              <Option value="ORDER_DELIVERED">Delivered</Option>
-              <Option value="ORDER_CANCELLED">Cancelled</Option>
+              <Option value="PENDING">Pending</Option>
+              <Option value="CANCELLED">Cancelled</Option>
+              <Option value="PLACED">Placed</Option>
+              <Option value="PREPARED">Prepared</Option>
+              <Option value="RIDER_ASSIGNED">Rider Assigned</Option>
+              <Option value="RIDER_PICKED">Rider Picked</Option>
+              <Option value="DELIVERED">Delivered</Option>
+              <Option value="PAID">Paid</Option>
             </Select>
             <Select
               placeholder="Sort By"
@@ -186,6 +189,7 @@ const OrderStatusManager: React.FC = () => {
       />
       <MultiStagePopup
         order={selectedOrder}
+        refetchOrders={fetchOrders}
         visible={isMultiStageModalVisible}
         onClose={handleMultiStageModalClose}
         updateStatus={(orderId, newStatus) => {

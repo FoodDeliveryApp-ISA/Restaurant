@@ -82,7 +82,7 @@ public class OrderMapper {
         order.setRestaurantAddress(restaurantDetails.getRestaurantAddress());
         order.setRestaurantPhone(restaurantDetails.getRestaurantPhone());
         order.setRestaurantLocation(toRestaurantLocation(restaurantDetails.getRestaurantLocation(), order));
-        order.setStatus(OrderStatus.ORDER_PLACED);
+        order.setStatus(OrderStatus.CREATED);
         order.setCreatedDate(LocalDateTime.now());
         order.setLastUpdated(LocalDateTime.now());
         return order;

@@ -7,6 +7,8 @@ import com.ISA.Restaurant.Dto.RestaurantDto;
 import com.ISA.Restaurant.Entity.Order;
 import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.enums.OrderStatus;
+//import com.ISA.Restaurant.event.producer.OrderStatusProducer;
+//import com.ISA.Restaurant.event.producer.RiderRequestProducer;
 import com.ISA.Restaurant.event.producer.OrderStatusProducer;
 import com.ISA.Restaurant.event.producer.RiderRequestProducer;
 import com.ISA.Restaurant.exception.InvalidOrderStateTransitionException;
@@ -41,8 +43,10 @@ public class OrderService {
     private final RestaurentService restaurantService;
     private final NotificationService notificationService;
 
-    public OrderService(OrderRepository orderRepository, OrderStatusProducer orderStatusProducer,
-                        RiderRequestProducer riderRequestProducer, RestaurentService restaurantService,
+    public OrderService(OrderRepository orderRepository,
+                        OrderStatusProducer orderStatusProducer,
+                        RiderRequestProducer riderRequestProducer,
+                        RestaurentService restaurantService,
                         NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.orderStatusProducer = orderStatusProducer;
@@ -59,11 +63,11 @@ public class OrderService {
             Order order = OrderMapper.createOrderEntity(orderDto, restaurantDetails);
 
             orderRepository.save(order);
-            orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.ORDER_PLACED);
+//            orderStatusProducer.sendOrderStatus(order.getOrderId(), OrderStatus.CREATED);
 
             sendNotifications(orderDto, order);
 
-            logger.info("Order created successfully. ID: {}, Status: {}", order.getOrderId(), OrderStatus.ORDER_PLACED);
+            logger.info("Order created successfully. ID: {}, Status: {}", order.getOrderId(), OrderStatus.PENDING);
         } catch (Exception e) {
             logger.error("Error while handling new order: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to handle new order", e);
@@ -71,28 +75,40 @@ public class OrderService {
     }
 
     public void acceptOrder(String orderId) {
-        transitionOrderStatus(orderId, OrderStatus.PREPARING);
+        transitionOrderStatus(orderId, OrderStatus.PLACED);
     }
 
     public void requestRider(String orderId) {
         Order order = getOrderById(orderId);
-        transitionOrderStatus(order, OrderStatus.ASSIGNING_RIDER);
+        transitionOrderStatus(order, OrderStatus.PREPARED);
         RiderRequestDto riderRequest = OrderMapper.toRiderRequestDto(order);
         riderRequestProducer.sendRiderRequest(riderRequest);
+        orderStatusProducer.sendOrderStatus(orderId,OrderStatus.PREPARED);
+    }
+
+    public void riderAssigned(String orderId) {
+        transitionOrderStatus(orderId,OrderStatus.RIDER_ASSIGNED);
+        orderStatusProducer.sendOrderStatus(orderId,OrderStatus.RIDER_ASSIGNED);
     }
 
     public void orderOnTheWay(String orderId) {
-        transitionOrderStatus(orderId, OrderStatus.ON_THE_WAY);
+        transitionOrderStatus(orderId, OrderStatus.RIDER_PICKED);
+        orderStatusProducer.sendOrderStatus(orderId,OrderStatus.RIDER_PICKED);
     }
 
     public void markOrderDelivered(String orderId) {
-        transitionOrderStatus(orderId, OrderStatus.ORDER_DELIVERED);
+        transitionOrderStatus(orderId, OrderStatus.DELIVERED);
+        orderStatusProducer.sendOrderStatus(orderId,OrderStatus.DELIVERED);
     }
 
     public void cancelOrder(String orderId) {
-        transitionOrderStatus(orderId, OrderStatus.ORDER_CANCELLED);
+        transitionOrderStatus(orderId, OrderStatus.CANCELLED);
+        orderStatusProducer.sendOrderStatus(orderId,OrderStatus.CANCELLED);
     }
-
+    public void markOrderPaid(String orderId) {
+        transitionOrderStatus(orderId, OrderStatus.PAID);
+        orderStatusProducer.sendOrderStatus(orderId,OrderStatus.PAID);
+    }
     private Order getOrderById(String orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
@@ -145,7 +161,7 @@ public class OrderService {
     @Scheduled(fixedRate = 300000)
     public void scheduleOrderStatusUpdate() {
         List<Order> activeOrders = orderRepository.findByStatusNotIn(
-                List.of(OrderStatus.ORDER_DELIVERED, OrderStatus.ORDER_CANCELLED));
+                List.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED));
         LocalDateTime now = LocalDateTime.now();
 
         activeOrders.forEach(order -> handleScheduledUpdate(order, now));
@@ -161,7 +177,7 @@ public class OrderService {
         order.setStatus(newStatus);
         order.setLastUpdated(LocalDateTime.now());
         orderRepository.save(order);
-        orderStatusProducer.sendOrderStatus(order.getOrderId(), newStatus);
+//        orderStatusProducer.sendOrderStatus(order.getOrderId(), newStatus);
         logger.info("Order ID {} status transitioned to {}", order.getOrderId(), newStatus);
     }
 
@@ -209,21 +225,21 @@ public class OrderService {
         long minutesSinceUpdate = java.time.Duration.between(lastUpdated, now).toMinutes();
 
         switch (order.getStatus()) {
-            case ORDER_PLACED:
+            case PENDING:
                 if (minutesSinceUpdate > ORDER_PLACED_DELAY_MINUTES) {
-                    transitionOrderStatus(order, OrderStatus.ORDER_CANCELLED);
+                    transitionOrderStatus(order, OrderStatus.CANCELLED);
                 }
                 break;
-            case PREPARING:
-                if (minutesSinceUpdate > PREPARING_DELAY_MINUTES) {
-                    transitionOrderStatus(order, OrderStatus.ORDER_CANCELLED);
-                }
-                break;
-            case ON_THE_WAY:
-                if (minutesSinceUpdate > ON_THE_WAY_DELAY_MINUTES) {
-                    transitionOrderStatus(order, OrderStatus.ORDER_CANCELLED);
-                }
-                break;
+//            case PLACED:
+//                if (minutesSinceUpdate > PREPARING_DELAY_MINUTES) {
+//                    transitionOrderStatus(order, OrderStatus.CANCELLED);
+//                }
+//                break;
+//            case PREPARED:
+//                if (minutesSinceUpdate > ON_THE_WAY_DELAY_MINUTES) {
+//                    transitionOrderStatus(order, OrderStatus.CANCELLED);
+//                }
+//                break;
             default:
                 logger.info("Order {} in status {} needs no update.", order.getOrderId(), order.getStatus());
         }
@@ -276,3 +292,4 @@ public class OrderService {
 //    public void evictOrderCache() {
 //    }
 }
+

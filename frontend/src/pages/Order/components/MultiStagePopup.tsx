@@ -13,9 +13,9 @@ const { Text } = Typography;
 interface MultiStagePopupProps {
   order: Order | null;
   visible: boolean;
-  onClose: () => void; // Callback to trigger after modal close
+  onClose: () => void;
   updateStatus: (orderId: string, newStatus: number) => void;
-  refetchOrders: () => void; // New prop to trigger data refresh
+  refetchOrders: () => void;
 }
 
 const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
@@ -31,38 +31,75 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
 
   useEffect(() => {
     if (order && visible) {
-      console.log(order.status);
-      // console.log();
-      const stepIndex = statusFlow.find((step) => step.name === order.status)?.state || 1;
+      const stepIndex =
+        statusFlow.find((step) => step.name === order.status)?.state || 1;
       setCurrentStep(stepIndex);
       setSelectedStatus(stepIndex);
-      console.log(currentStep);
-      console.log(selectedStatus);
       setIsCancelled(order.status === "ORDER_CANCELLED");
     }
   }, [order, visible]);
 
   const handleCancel = async () => {
     if (order) {
-      setIsCancelled(true);
-      updateStatus(order.orderId, 6); // ORDER_CANCELLED
-      await orderService.cancelOrder(order.orderId);
-      await message.error("The order has been cancelled.");
-      refetchOrders();
-      onClose();
+      try {
+        setIsCancelled(true);
+        await orderService.cancelOrder(order.orderId);
+        message.error("The order has been cancelled.");
+        refetchOrders();
+        onClose();
+      } catch {
+        message.error("Failed to cancel the order. Please try again.");
+      }
     }
   };
 
   const handleUpdate = async () => {
-    if (order) {
-      updateStatus(order.orderId, selectedStatus);
-      await message.success(
+    if (!order) {
+      message.error("No order found. Cannot update status.");
+      console.error("Debug: Order object is undefined.");
+      return;
+    }
+  
+    if (!statusFlow[selectedStatus - 1]) {
+      message.error("Invalid status selected. Please try again.");
+      console.error(
+        `Debug: Selected status (${selectedStatus}) does not map to a valid status in statusFlow.`
+      );
+      return;
+    }
+  
+    console.log("Debug: Starting status update process...");
+    console.log("Debug: Order ID:", order.orderId);
+    console.log("Debug: Selected Status:", selectedStatus);
+    console.log(
+      "Debug: Status Title:",
+      statusFlow[selectedStatus - 1]?.title
+    );
+  
+    try {
+      const response = await updateStatus(order.orderId, selectedStatus);
+      console.log("Debug: Update status response:", response);
+  
+      message.success(
         `Order status updated to "${statusFlow[selectedStatus - 1]?.title}"`
       );
-      refetchOrders();
+  
+      console.log("Debug: Refetching orders...");
+      await refetchOrders();
+      console.log("Debug: Orders refetched successfully.");
+    } catch (error) {
+      console.error("Debug: Error during status update:", error);
+      message.error(
+        error?.response?.data?.message ||
+          "Failed to update the order status. Please try again."
+      );
+    } finally {
+      console.log("Debug: Closing the modal...");
+      onClose();
     }
-    onClose();
   };
+  
+  
 
   const handleNext = () => {
     const nextStep = Math.min(currentStep + 1, statusFlow.length);
@@ -89,7 +126,11 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
               </Button>,
             ]
           : [
-              <Button key="prev" onClick={handlePrevious} disabled={currentStep === 1}>
+              <Button
+                key="prev"
+                onClick={handlePrevious}
+                disabled={currentStep === 1}
+              >
                 Previous
               </Button>,
               <Button
@@ -129,13 +170,17 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
               currentStep={currentStep - 1}
               handleAcceptOrder={async () => {
                 try {
-                  await orderService.acceptOrder(order.orderId);
+                  console.log("Calling orderService.acceptOrder with:", order.orderId);
+                  const response = await orderService.acceptOrder(order.orderId);
+                  console.log("Response from acceptOrder:", response);
                   handleNext();
                   refetchOrders();
                   message.success("Order has been accepted.");
-                } catch {
+                } catch (error) {
+                  console.error("Error in handleAcceptOrder:", error);
                   message.error("Failed to accept the order. Please try again.");
                 }
+                
               }}
               handleRejectOrder={handleCancel}
               handleRequestRider={async () => {
@@ -146,6 +191,16 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
                   message.success("Rider requested successfully.");
                 } catch {
                   message.error("Failed to request a rider. Please try again.");
+                }
+              }}
+              handleMarkRiderAssigned={async () => {
+                try {
+                  await orderService.markRiderAssigned(order.orderId);
+                  handleNext();
+                  refetchOrders();
+                  message.success("Rider assigned successfully.");
+                } catch {
+                  message.error("Failed to assign a rider. Please try again.");
                 }
               }}
               handleMarkOnTheWay={async () => {
@@ -166,6 +221,16 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
                   message.success("Order marked as 'Delivered'.");
                 } catch {
                   message.error("Failed to mark the order as 'Delivered'. Please try again.");
+                }
+              }}
+              handleMarkPaid={async () => {
+                try {
+                  await orderService.markOrderPaid(order.orderId);
+                  handleNext();
+                  refetchOrders();
+                  message.success("Order marked as 'Paid'.");
+                } catch {
+                  message.error("Failed to mark the order as 'Paid'. Please try again.");
                 }
               }}
             />

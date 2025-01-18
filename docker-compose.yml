@@ -1,5 +1,4 @@
 services:
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     environment:
@@ -11,7 +10,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.20.11.29:9092,DOCKER://kafka:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.60:9092,DOCKER://kafka:9093
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,DOCKER://0.0.0.0:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,DOCKER:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -45,44 +44,35 @@ services:
     depends_on:
       - redis
 
+  # backend:
+  #   build:
+  #     context: ./Restaurant
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8081:8081" # HTTP Port
+  #     - "9191:9191" # gRPC Port
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - db
+  #     - kafka
 
+  # db:
+  #   image: postgres:13
+  #   environment:
+  #     POSTGRES_DB: test1
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: admin
+  #   ports:
+  #     - "5433:5433"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
 
-  #   # Spring Boot Backend
-  #   backend:
-  #     build:
-  #       context: ./Restaurant
-  #       dockerfile: Dockerfile  # Fixed path to Dockerfile
-  #     ports:
-  #       - "8081:8081" # HTTP Port
-  #       - "9191:9191" # gRPC Port
-  #     environment:
-  #       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/test1
-  #       - SPRING_DATASOURCE_USERNAME=admin
-  #       - SPRING_DATASOURCE_PASSWORD=admin
-  #     depends_on:
-  #       - db
-  #       - kafka
+  # adminer:
+  #   image: adminer
+  #   ports:
+  #     - "8082:8080"
 
-  #   # PostgreSQL Database
-  #   db:
-  #     image: postgres:13
-  #     environment:
-  #       POSTGRES_DB: test1
-  #       POSTGRES_USER: admin
-  #       POSTGRES_PASSWORD: admin
-  #     ports:
-  #       - "5433:5433"
-  #     volumes:
-  #       - postgres_data:/var/lib/postgresql/data # Volume for data persistence
-
-  #   # PostgreSQL Adminer for DB management
-  #   adminer:
-  #     image: adminer
-  #     ports:
-  #       - "8082:8080"  # Changed port to avoid conflict with backend
-
-
-  # Portainer for Docker Management
   portainer:
     image: portainer/portainer-ce:latest
     ports:
@@ -92,9 +82,6 @@ services:
       - portainer_data:/data
     restart: always
 
-# Volumes to persist PostgreSQL and Portainer data
 volumes:
-  # postgres_data:
+  postgres_data:
   portainer_data:
-
-

@@ -6,14 +6,18 @@ import {
   SearchOutlined,
   CarOutlined,
   SmileOutlined,
+  UserSwitchOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 
 interface OrderActionsProps {
   handleAcceptOrder: () => void;
   handleRejectOrder: () => void;
   handleRequestRider: () => void;
+  handleMarkRiderAssigned: () => void;
   handleMarkOnTheWay: () => void;
   handleMarkDelivered: () => void;
+  handleMarkPaid: () => void;
   currentStep: number;
 }
 
@@ -21,8 +25,10 @@ const OrderActions: React.FC<OrderActionsProps> = ({
   handleAcceptOrder,
   handleRejectOrder,
   handleRequestRider,
+  handleMarkRiderAssigned,
   handleMarkOnTheWay,
   handleMarkDelivered,
+  handleMarkPaid,
   currentStep,
 }) => {
   return (
@@ -91,6 +97,21 @@ const OrderActions: React.FC<OrderActionsProps> = ({
           </Tooltip>
         )}
         {currentStep === 2 && (
+          <Tooltip title="Assign a rider to the order">
+            <Button
+              type="primary"
+              size="large"
+              onClick={handleMarkRiderAssigned}
+              icon={<UserSwitchOutlined />}
+              style={{
+                minWidth: "200px",
+              }}
+            >
+              Assign Rider
+            </Button>
+          </Tooltip>
+        )}
+        {currentStep === 3 && (
           <Tooltip title="Mark order as On the Way">
             <Button
               type="primary"
@@ -105,7 +126,7 @@ const OrderActions: React.FC<OrderActionsProps> = ({
             </Button>
           </Tooltip>
         )}
-        {currentStep === 3 && (
+        {currentStep === 4 && (
           <Tooltip title="Mark order as Delivered">
             <Button
               type="primary"
@@ -117,6 +138,21 @@ const OrderActions: React.FC<OrderActionsProps> = ({
               }}
             >
               Mark Delivered
+            </Button>
+          </Tooltip>
+        )}
+        {currentStep === 5 && (
+          <Tooltip title="Mark order as Paid">
+            <Button
+              type="primary"
+              size="large"
+              onClick={handleMarkPaid}
+              icon={<DollarOutlined />}
+              style={{
+                minWidth: "200px",
+              }}
+            >
+              Mark Paid
             </Button>
           </Tooltip>
         )}

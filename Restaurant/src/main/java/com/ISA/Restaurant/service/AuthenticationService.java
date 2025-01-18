@@ -1,13 +1,18 @@
 package com.ISA.Restaurant.service;
 
+import com.ISA.Restaurant.Dto.Request.ForgetPasswordDto;
 import com.ISA.Restaurant.Dto.Request.RegisterRequest;
 import com.ISA.Restaurant.Dto.Request.LoginRequest;
 import com.ISA.Restaurant.Entity.Restaurant;
 import com.ISA.Restaurant.exception.EmailAlreadyExistsException;
+import com.ISA.Restaurant.exception.RestaurantNotFoundException;
 import com.ISA.Restaurant.repo.RestaurantRepository;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,18 +20,23 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthenticationService {
 
+
+
     private final RestaurantRepository restaurantRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+
 
     public AuthenticationService(
             RestaurantRepository restaurantRepository,
             AuthenticationManager authenticationManager,
             PasswordEncoder passwordEncoder
+
     ) {
         this.authenticationManager = authenticationManager;
         this.restaurantRepository = restaurantRepository;
         this.passwordEncoder = passwordEncoder;
+
     }
 
     public Restaurant signup(RegisterRequest input) {
@@ -74,6 +84,25 @@ public class AuthenticationService {
         );
 
         return restaurant;
+    }
+
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        log.info("Changing password for email: {}", email);
+
+        // Find the restaurant by email
+        Restaurant restaurant = restaurantRepository.findByRestaurantEmail(email)
+                .orElseThrow(() -> new RestaurantNotFoundException("No restaurant found with email: " + email));
+
+        // Authenticate the old password
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, oldPassword)
+        );
+
+        // Set and encode the new password
+        restaurant.setRestaurantPassword(passwordEncoder.encode(newPassword));
+        restaurantRepository.save(restaurant);
+
+        log.info("Password updated successfully for email: {}", email);
     }
 
 }

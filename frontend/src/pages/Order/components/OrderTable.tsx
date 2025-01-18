@@ -1,6 +1,15 @@
 import React from "react";
 import { Table, Button, Tag, Tooltip, message } from "antd";
-import { CheckCircleOutlined, SyncOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { 
+  CheckCircleOutlined, 
+  SyncOutlined, 
+  CloseCircleOutlined, 
+  ClockCircleOutlined, 
+  CarOutlined, 
+  SmileOutlined, 
+  DollarOutlined,
+  FileAddOutlined // New icon for "CREATED"
+} from "@ant-design/icons";
 
 interface Order {
   orderId: string;
@@ -14,6 +23,18 @@ interface OrderTableProps {
 }
 
 const OrderTable: React.FC<OrderTableProps> = ({ orders, updateOrderStatus }) => {
+  const statusInfo: Record<string, { color: string; icon: React.ReactNode }> = {
+    // CREATED: { color: "gray", icon: <FileAddOutlined /> }, // New "CREATED" statu
+    PENDING: { color: "orange", icon: <ClockCircleOutlined /> },
+    CANCELLED: { color: "red", icon: <CloseCircleOutlined /> },
+    PLACED: { color: "blue", icon: <SyncOutlined spin /> },
+    PREPARED: { color: "purple", icon: <CheckCircleOutlined /> },
+    RIDER_ASSIGNED: { color: "cyan", icon: <CarOutlined /> },
+    RIDER_PICKED: { color: "gold", icon: <CarOutlined /> },
+    DELIVERED: { color: "green", icon: <SmileOutlined /> },
+    PAID: { color: "lime", icon: <DollarOutlined /> },
+  };
+
   const columns = [
     {
       title: "Order ID",
@@ -33,18 +54,6 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, updateOrderStatus }) =>
       dataIndex: "status",
       key: "status",
       render: (status: string) => {
-        const statusInfo: Record<string, { color: string; icon: React.ReactNode }> = {
-          ORDER_PLACED: { color: "orange", icon: <SyncOutlined spin /> },
-          PREPARING: { color: "blue", icon: <CheckCircleOutlined /> },
-          ASSIGNING_RIDER: { color: "cyan", icon: <SyncOutlined /> },
-          ON_THE_WAY: { color: "green", icon: <CheckCircleOutlined /> },
-          ORDER_DELIVERED: { color: "green", icon: <CheckCircleOutlined /> },
-          ORDER_CANCELLED: { color: "red", icon: <CloseCircleOutlined /> },
-        };
-             
-
-        console.log("Status:", status, "Info:", statusInfo[status]);
-
         const { color, icon } = statusInfo[status] || { color: "gray", icon: null };
 
         return (
@@ -55,13 +64,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, updateOrderStatus }) =>
           </Tooltip>
         );
       },
-      filters: [
-        { text: "Order Created", value: "Order Created" },
-        { text: "Rider Selected", value: "Rider Selected" },
-        { text: "Out for Delivery", value: "Out for Delivery" },
-        { text: "Delivered", value: "Delivered" },
-        { text: "Cancelled", value: "Cancelled" },
-      ],
+      filters: Object.keys(statusInfo).map((key) => ({ text: key, value: key })),
       onFilter: (value: string, record: Order) => record.status === value,
     },
     {

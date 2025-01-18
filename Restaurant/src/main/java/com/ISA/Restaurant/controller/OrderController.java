@@ -43,6 +43,12 @@ public class OrderController {
         return ResponseEntity.ok("Rider request initiated.");
     }
 
+    @PostMapping("/assign-rider/{orderId}")
+    public ResponseEntity<String> riderAssigned(@PathVariable String orderId) {
+        orderService.riderAssigned(orderId);
+        return ResponseEntity.ok("Order status updated to 'RIDER_ASSIGNED'.");
+    }
+
     @PostMapping("/on-the-way/{orderId}")
     public ResponseEntity<String> orderOnTheWay(@PathVariable String orderId) {
         orderService.orderOnTheWay(orderId);
@@ -55,12 +61,17 @@ public class OrderController {
         return ResponseEntity.ok("Order marked as 'ORDER_DELIVERED'.");
     }
 
+    @PostMapping("/paid/{orderId}")
+    public ResponseEntity<String> markOrderPaid(@PathVariable String orderId) {
+        orderService.markOrderPaid(orderId);
+        return ResponseEntity.ok("Order marked as 'ORDER_PAID'.");
+    }
+
     @PostMapping("/cancel/{orderId}")
     public ResponseEntity<String> cancelOrder(@PathVariable String orderId) {
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok("Order cancelled successfully.");
     }
-
     @GetMapping("/restaurant/{restaurantId}")
     public ResponseEntity<List<OrderDto>> getOrdersByRestaurantId(
             @PathVariable String restaurantId,

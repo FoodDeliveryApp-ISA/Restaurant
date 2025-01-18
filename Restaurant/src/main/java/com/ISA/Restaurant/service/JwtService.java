@@ -24,26 +24,17 @@ public class JwtService {
     @Value("${security.jwt.expiration-time}0")
     private long jwtExpiration;
 
+    @Value("${security.jwt.reset-token-expiration-time}")
+    private long resetTokenExpiration;
+
     public long getExpirationTime() {
         return jwtExpiration;
     }// Token expiration time in milliseconds
 
-    /**
-     * Extracts the username (subject) from the JWT token.
-     * @param token the JWT token
-     * @return the username
-     */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    /**
-     * Extracts a specific claim from the token.
-     * @param token the JWT token
-     * @param claimsResolver a function to resolve the claim
-     * @param <T> the type of the claim
-     * @return the resolved claim
-     */
     public <T> T extractClaim(
             String token,
             Function<Claims, T> claimsResolver)
@@ -53,33 +44,15 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    /**
-     * Generates a token for the provided UserDetails without extra claims.
-     * @param userDetails the user details
-     * @return the generated token
-     */
     public String generateToken(UserDetails userDetails) {
 
         return generateToken(new HashMap<>(), userDetails);
     }
 
-    /**
-     * Generates a token for the provided UserDetails with additional claims.
-     * @param extraClaims extra claims to include in the token
-     * @param userDetails the user details
-     * @return the generated token
-     */
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 
-    /**
-     * Builds the token with claims, expiration, and signature.
-     * @param extraClaims extra claims
-     * @param userDetails the user details
-     * @param expiration expiration time in milliseconds
-     * @return the built token
-     */
     private String buildToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails,
@@ -95,42 +68,21 @@ public class JwtService {
                 .compact();
     }
 
-    /**
-     * Checks if the token is valid for the given UserDetails.
-     * @param token the JWT token
-     * @param userDetails the user details
-     * @return true if valid, false otherwise
-     */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
-    /**
-     * Checks if the token has expired.
-     * @param token the JWT token
-     * @return true if expired, false otherwise
-     */
     private boolean isTokenExpired(String token) {
 
         return extractExpiration(token).before(new Date());
     }
 
-    /**
-     * Extracts the expiration date from the token.
-     * @param token the JWT token
-     * @return the expiration date
-     */
     private Date extractExpiration(String token) {
 
         return extractClaim(token, Claims::getExpiration);
     }
 
-    /**
-     * Extracts all claims from the token.
-     * @param token the JWT token
-     * @return the claims
-     */
     private Claims extractAllClaims(String token) {
         try {
             log.info("Token: {}", token);
@@ -160,13 +112,39 @@ public class JwtService {
         }
     }
 
-
-    /**
-     * Retrieves the signing key based on the secret key.
-     * @return the signing key
-     */
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+    public String generateResetToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "RESET");
+        return buildToken(claims, email, resetTokenExpiration);
+    }
+    public String validateResetToken(String token) {
+        try {
+            String email = extractUsername(token);
+            Map<String, Object> claims = extractAllClaims(token);
+            if (!"RESET".equals(claims.get("type"))) {
+                throw new RuntimeException("Invalid token type");
+            }
+            return email;
+        } catch (RuntimeException e) {
+            log.error("Invalid reset token: {}", e.getMessage());
+            throw new RuntimeException("Reset token is invalid or expired");
+        }
+    }
+    private String buildToken(
+            Map<String, Object> extraClaims,
+            String subject,
+            long expiration
+    ) {
+        return Jwts.builder()
+                .setClaims(extraClaims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 }

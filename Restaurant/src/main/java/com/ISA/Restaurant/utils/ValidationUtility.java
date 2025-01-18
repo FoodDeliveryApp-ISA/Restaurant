@@ -11,9 +11,9 @@ public class ValidationUtility {
         if (currentStatus == null || currentStatus.equals(newStatus)) {
             throw new SameOrderStateException("Order already in the same state.");
         }
-        if (!currentStatus.canTransitionTo(newStatus)) {
-            throw new InvalidOrderStateTransitionException(
-                    String.format("Invalid transition from %s to %s", currentStatus, newStatus));
-        }
+//        if (!currentStatus.canTransitionTo(newStatus)) {
+//            throw new InvalidOrderStateTransitionException(
+//                    String.format("Invalid transition from %s to %s", currentStatus, newStatus));
+//        }
     }
 }
