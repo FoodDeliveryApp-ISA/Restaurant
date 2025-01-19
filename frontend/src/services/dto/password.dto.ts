@@ -17,7 +17,7 @@ export interface ResetPasswordDto {
  * Data Transfer Object for changing a password.
  */
 export interface ChangePasswordDto {
-  email: string; // The email address of the authenticated user
+  // email: string; // The email address of the authenticated user
   oldPassword: string; // The user's current password
   newPassword: string; // The new password to be set
 }

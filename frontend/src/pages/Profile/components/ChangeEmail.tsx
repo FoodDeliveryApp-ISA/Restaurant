@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Modal, Button, message } from "antd";
-import { EnvironmentOutlined, MailOutlined } from "@ant-design/icons";
+import { Modal, Form, Button, Input, message } from "antd";
+import { MailOutlined, EditOutlined } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
-import LocationSelector from "../../../components/LocationSelector";
 import EmailVerificationPopup from "../../../components/EmailVerificationPopup";
 import restaurantService from "../../../services/restaurant.service";
 import emailVerificationService from "../../../services/emailVerification.service";
+import {
+  RequestVerificationDto,
+  VerifyEmailDto,
+} from "../../../services/dto/emailVerification.dto";
 
 interface RestaurantResponseDto {
   restaurantId: number;
@@ -19,66 +22,51 @@ interface RestaurantResponseDto {
   coverImageUrl: string;
 }
 
-interface VerifyEmailDto {
-  email: string;
-  verificationCode: string;
-}
-
-interface ChangeLocationProps {
+interface ChangeEmailProps {
   restaurant: RestaurantResponseDto | null;
 }
 
-const ChangeLocation: React.FC<ChangeLocationProps> = ({ restaurant }) => {
+const ChangeEmail: React.FC<ChangeEmailProps> = ({ restaurant }) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isEmailVerificationVisible, setIsEmailVerificationVisible] =
     useState(false);
-  const [newLocation, setNewLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [newEmail, setNewEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSave = async () => {
-    if (!restaurant || !newLocation) {
-      message.error("No restaurant information or location available.");
+  const handleVerificationSuccess = async () => {
+    if (!restaurant || !newEmail) {
+      message.error("No restaurant information or new email provided.");
       return;
     }
 
     try {
-      const locationString = `${newLocation.lat},${newLocation.lng}`;
       const updatedRestaurant = await restaurantService.updateAuthenticatedRestaurant({
         ...restaurant,
-        restaurantLocation: locationString,
+        restaurantEmail: newEmail,
       });
 
       if (updatedRestaurant) {
-        message.success("Location updated successfully!");
+        message.success("Email updated successfully!");
         setModalVisible(false);
+        setIsEmailVerificationVisible(false);
       } else {
-        message.error("Failed to update location. Please try again.");
+        message.error("Failed to update email. Please try again.");
       }
     } catch (error) {
-      console.error("Error updating location:", error);
-      message.error("An error occurred while updating the location.");
-    }
-  };
-
-  const handleVerificationSuccess = async () => {
-    try {
-      await handleSave();
-      setIsEmailVerificationVisible(false);
-    } catch (error) {
-      message.error("Failed to save changes after verification.");
+      message.error("An error occurred while updating the email.");
     }
   };
 
   const handleSendCode = async () => {
-    const email = restaurant?.restaurantEmail;
-    if (!email) {
-      message.error("Email is required to send a verification code.");
+    if (!newEmail) {
+      message.error("Please enter a valid email address.");
       return;
     }
 
     try {
       setLoading(true);
-      await emailVerificationService.requestVerificationCode({ email });
+      const dto: RequestVerificationDto = { email: newEmail };
+      await emailVerificationService.requestVerificationCode(dto);
       message.success("Verification email sent. Please check your inbox.");
       setIsEmailVerificationVisible(true);
     } catch (error) {
@@ -89,14 +77,13 @@ const ChangeLocation: React.FC<ChangeLocationProps> = ({ restaurant }) => {
   };
 
   const handleResend = async () => {
-    const email = restaurant?.restaurantEmail;
-    if (!email) {
-      message.error("Email is required to resend the verification code.");
+    if (!newEmail) {
+      message.error("Please enter a valid email address.");
       return;
     }
 
     try {
-      await emailVerificationService.resendVerificationCode({ email });
+      await emailVerificationService.resendVerificationCode({ email: newEmail });
       message.success("Verification email resent. Please check your inbox.");
     } catch (error) {
       message.error("Failed to resend the verification email.");
@@ -112,7 +99,7 @@ const ChangeLocation: React.FC<ChangeLocationProps> = ({ restaurant }) => {
 
     try {
       const dto: VerifyEmailDto = {
-        email: restaurant?.restaurantEmail || "",
+        email: newEmail || "",
         verificationCode,
       };
       await emailVerificationService.verifyUser(dto);
@@ -132,8 +119,8 @@ const ChangeLocation: React.FC<ChangeLocationProps> = ({ restaurant }) => {
           onClick={() => setModalVisible(true)}
           className="mb-4 flex items-center gap-2"
         >
-          <EnvironmentOutlined />
-          Change Location
+          <EditOutlined />
+          Change Email
         </Button>
       </motion.div>
 
@@ -148,8 +135,8 @@ const ChangeLocation: React.FC<ChangeLocationProps> = ({ restaurant }) => {
             <Modal
               title={
                 <span className="flex items-center gap-2">
-                  <EnvironmentOutlined />
-                  Change Location
+                  <MailOutlined />
+                  Change Email
                 </span>
               }
               open={isModalVisible}
@@ -157,22 +144,27 @@ const ChangeLocation: React.FC<ChangeLocationProps> = ({ restaurant }) => {
               onCancel={() => setModalVisible(false)}
               bodyStyle={{ padding: "2rem" }}
             >
-              <LocationSelector
-                restaurantLocation={restaurant?.restaurantLocation}
-                onLocationChange={setNewLocation}
-              />
-              <motion.div whileHover={{ scale: 1.05 }}>
-                <Button
-                  type="primary"
-                  onClick={handleSendCode}
-                  className="w-full mt-4"
-                  disabled={!newLocation}
-                  loading={loading}
-                >
-                  <MailOutlined />
-                  Verify and Save Location
-                </Button>
-              </motion.div>
+              <Form layout="vertical">
+                <Form.Item label="New Email">
+                  <Input
+                    type="email"
+                    placeholder="Enter new email"
+                    prefix={<MailOutlined />}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                  />
+                </Form.Item>
+                <motion.div whileHover={{ scale: 1.05 }}>
+                  <Button
+                    type="primary"
+                    onClick={handleSendCode}
+                    disabled={!newEmail}
+                    loading={loading}
+                    className="w-full"
+                  >
+                    Verify and Change Email
+                  </Button>
+                </motion.div>
+              </Form>
             </Modal>
           </motion.div>
         )}
@@ -181,8 +173,8 @@ const ChangeLocation: React.FC<ChangeLocationProps> = ({ restaurant }) => {
       {isEmailVerificationVisible && (
         <EmailVerificationPopup
           visible={isEmailVerificationVisible}
-          onSend={handleSendCode}
           onClose={() => setIsEmailVerificationVisible(false)}
+          onSend={handleSendCode}
           onResend={handleResend}
           onCheck={handleCheckCode}
           title={
@@ -191,11 +183,11 @@ const ChangeLocation: React.FC<ChangeLocationProps> = ({ restaurant }) => {
               Verify Your Email
             </span>
           }
-          description="Enter the verification code sent to your email to confirm the changes."
+          description="Enter the verification code sent to your new email address to confirm the change."
         />
       )}
     </>
   );
 };
 
-export default ChangeLocation;
+export default ChangeEmail;

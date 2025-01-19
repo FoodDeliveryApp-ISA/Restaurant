@@ -202,7 +202,7 @@ const handleSave = async () => {
           >
             <Input disabled={!isEditing} />
           </Form.Item>
-          <Divider />
+          {/* <Divider />
           <Form.Item
             name="restaurantEmail"
             label="Email"
@@ -212,7 +212,7 @@ const handleSave = async () => {
             ]}
           >
             <Input disabled={!isEditing} />
-          </Form.Item>
+          </Form.Item> */}
           <Divider />
           <Form.Item
             name="restaurantAddress"
@@ -270,8 +270,10 @@ const handleSave = async () => {
             )}
           </Form.Item>
         </Form>
+        <Divider />
+        <ChangeDetails restaurant={restaurant} />
       </Card>
-      <ChangeDetails restaurant={restaurant} />
+      
       {isEmailVerificationVisible && (
         <EmailVerificationPopup
           visible={isEmailVerificationVisible}

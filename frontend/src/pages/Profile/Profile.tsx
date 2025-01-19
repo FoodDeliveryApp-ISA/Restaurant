@@ -65,25 +65,9 @@ const Profile = () => {
         </Col>
       </Row>
 
-      {/* Location Selector Button */}
-      <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
-        <Col xs={24}>
-          <Button type="primary" onClick={showModal}>
-            Select Location
-          </Button>
-        </Col>
-      </Row>
 
-      {/* Modal with Location Selector */}
-      <Modal
-        title="Select Location"
-        visible={isModalVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        width={800}
-      >
-        <LocationSelector />
-      </Modal>
+
+
     </div>
   );
 };

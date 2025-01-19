@@ -44,6 +44,14 @@ class TokenUtil {
     const decodedToken = this.decodeToken(token);
     return decodedToken?.restaurantId ?? null;
   }
+  // Get the email (sub) from the token
+  static getEmail(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    const decodedToken = this.decodeToken(token);
+    return decodedToken?.sub ?? null;
+  }
 
   // Remove the token
   static removeToken(): void {

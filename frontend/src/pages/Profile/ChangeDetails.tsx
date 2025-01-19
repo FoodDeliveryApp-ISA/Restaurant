@@ -1,8 +1,10 @@
 import React from "react";
-// import { Button } from "antd";
-import ChangeEmail from "./components/ChangeEmail:";
+import { Card } from "antd";
+import { motion } from "framer-motion";
+import ChangeEmail from "./components/ChangeEmail";
 import ChangeLocation from "./components/ChangeLocation";
-// import ChangePassword from "./components/ChangePassword";
+import ChangePassword from "./components/ChangePassword";
+import "tailwindcss/tailwind.css";
 
 interface RestaurantResponseDto {
   restaurantId: number;
@@ -22,13 +24,33 @@ interface RestaurantProps {
 
 const ChangeDetails: React.FC<RestaurantProps> = ({ restaurant }) => {
   return (
-    <div>
-      <h2>Manage Details for {restaurant?.restaurantName}</h2>
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-        <ChangeLocation restaurant={restaurant} />
-        <ChangeEmail restaurant={restaurant} />
-        {/* <ChangePassword restaurant={restaurant} /> */}
-      </div>
+    <div
+    >
+      <motion.div
+        className="flex flex-wrap justify-evenly items-center gap-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          className="transition-transform duration-300"
+        >
+          <ChangeLocation restaurant={restaurant} />
+        </motion.div>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          className="transition-transform duration-300"
+        >
+          <ChangeEmail restaurant={restaurant} />
+        </motion.div>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          className="transition-transform duration-300"
+        >
+          <ChangePassword />
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
