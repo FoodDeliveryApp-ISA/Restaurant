@@ -44,12 +44,13 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails,Integer restaurantId) {
 
-        return generateToken(new HashMap<>(), userDetails);
+        return generateToken(new HashMap<>(), userDetails, restaurantId);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails,Integer restaurantId) {
+        extraClaims.put("restaurantId", restaurantId);
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 

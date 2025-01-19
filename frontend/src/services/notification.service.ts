@@ -97,9 +97,9 @@ class NotificationService {
   }
 
   // Mark notification as read
-  async markNotificationAsRead(notificationId: string): Promise<void> {
+  async markNotificationAsRead(notificationId: number): Promise<void> {
     try {
-      await axios.put(`${API_URL}/${notificationId}/read`, {}, { headers: authHeader() });
+      await axios.patch(`${API_URL}/mark-read/${notificationId}`, {}, { headers: authHeader() });
     } catch (error) {
       handleError(error);
     }
@@ -108,11 +108,21 @@ class NotificationService {
   // Mark all as read
   async markAllAsRead(): Promise<void> {
     try {
-      await axios.put(`${API_URL}/mark-all-read`, {}, { headers: authHeader() });
+      await axios.post(`${API_URL}/mark-all-read`, {}, { headers: authHeader() });
     } catch (error) {
       handleError(error);
     }
   }
+
+    // Clear all notifications
+    async clearAllNotifications(): Promise<void> {
+      try {
+        await axios.delete(`${API_URL}/clear-all`, { headers: authHeader() });
+        console.log("All notifications cleared.");
+      } catch (error) {
+        handleError(error);
+      }
+    }
 
   // Send notification
   async sendNotification(userId: string, message: string): Promise<void> {

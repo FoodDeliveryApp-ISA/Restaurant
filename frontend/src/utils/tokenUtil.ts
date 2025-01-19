@@ -1,17 +1,20 @@
 import CryptoJS from "crypto-js";
+import {jwtDecode} from "jwt-decode";
 
 const SECRET_KEY = "your_secret_key"; // Use environment variables for this key
 
 class TokenUtil {
+  private static STORAGE_KEY = "authToken";
+
   // Encrypt and store the token
   static storeToken(token: string): void {
     const encryptedToken = CryptoJS.AES.encrypt(token, SECRET_KEY).toString();
-    localStorage.setItem("authToken", encryptedToken);
+    localStorage.setItem(this.STORAGE_KEY, encryptedToken);
   }
 
   // Retrieve and decrypt the token
   static getToken(): string | null {
-    const encryptedToken = localStorage.getItem("authToken");
+    const encryptedToken = localStorage.getItem(this.STORAGE_KEY);
     if (!encryptedToken) return null;
 
     try {
@@ -23,14 +26,33 @@ class TokenUtil {
     }
   }
 
+  // Decode the JWT and extract claims
+  static decodeToken(token: string): { [key: string]: any } | null {
+    try {
+      return jwtDecode<{ [key: string]: any }>(token);
+    } catch (error) {
+      console.error("Failed to decode token:", error);
+      return null;
+    }
+  }
+
+  // Get the restaurantId from the token
+  static getRestaurantId(): string | number | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    const decodedToken = this.decodeToken(token);
+    return decodedToken?.restaurantId ?? null;
+  }
+
   // Remove the token
   static removeToken(): void {
-    localStorage.removeItem("authToken");
+    localStorage.removeItem(this.STORAGE_KEY);
   }
 
   // Check if a token exists
   static isTokenAvailable(): boolean {
-    return !!localStorage.getItem("authToken");
+    return !!localStorage.getItem(this.STORAGE_KEY);
   }
 }
 

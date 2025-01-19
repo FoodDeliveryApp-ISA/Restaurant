@@ -1,38 +1,33 @@
 // import React, { useState } from "react";
 // import { Modal, Form, Input, Button, message } from "antd";
 // import EmailVerificationPopup from "../../../components/EmailVerificationPopup"; // Update this path as necessary
-// import emailVerificationService from "../../../services/emailVerification.service"; // Update this path as necessary
-
-// interface RestaurantResponseDto {
-//   restaurantId: number;
-//   restaurantName: string;
-//   restaurantEmail: string;
-//   restaurantAddress: string;
-//   restaurantPhone: string;
-//   restaurantCity: string;
-//   restaurantLocation: string;
-//   active: boolean;
-//   coverImageUrl: string;
-// }
+// import passwordService from "../../../services/password.service"; // Ensure this path matches your project structure
 
 // const ChangePassword: React.FC = () => {
 //   const [isModalVisible, setModalVisible] = useState(false);
-//   const [isEmailVerificationVisible, setEmailVerificationVisible] =
-//     useState(false);
-//   const userEmail = "user@example.com"; // Replace with dynamic user email from your authentication context or props
+//   const [isEmailVerificationVisible, setEmailVerificationVisible] = useState(false);
+//   const userEmail = "user@example.com"; // Replace with dynamic user email from authentication context or props
 
 //   const handlePasswordChange = async (values: any) => {
-//     console.log("Password Change Data:", values);
-//     setModalVisible(false); // Close modal after submitting
-//     setEmailVerificationVisible(true); // Show email verification popup
+//     try {
+//       // Call the password service method
+//       await passwordService.changePassword({
+//         oldPassword: values.oldPassword,
+//         newPassword: values.newPassword,
+//       });
+//       message.success("Password changed successfully!");
+//       setModalVisible(false); // Close modal
+//       setEmailVerificationVisible(true); // Show email verification popup
+//     } catch (error: any) {
+//       message.error(error.response?.data?.message || "Password change failed.");
+//     }
 //   };
 
 //   const handleResend = async () => {
 //     try {
-//       const dto = { email: userEmail };
-//       await emailVerificationService.resendVerificationCode(dto);
+//       await passwordService.resendVerificationEmail(userEmail);
 //       message.success("Verification email resent. Please check your inbox.");
-//     } catch (error) {
+//     } catch (error: any) {
 //       message.error("Failed to resend the verification email.");
 //     }
 //   };
@@ -45,12 +40,11 @@
 //       .slice(-6);
 
 //     try {
-//       const dto = { email: userEmail, verificationCode };
-//       await emailVerificationService.verifyUser(dto);
+//       await passwordService.verifyEmail(verificationCode);
 //       message.success("Email verified successfully!");
 //       setEmailVerificationVisible(false); // Close verification popup
 //       return true;
-//     } catch (error) {
+//     } catch (error: any) {
 //       message.error("Invalid or expired verification code.");
 //       return false;
 //     }

@@ -3,6 +3,7 @@ import { Button, Select, Row, Col, Space } from "antd";
 import OrderTable from "./components/OrderTable";
 import MultiStagePopup from "./components/MultiStagePopup";
 import orderService from "../../services/order.service";
+import TokenUtil from "../../utils/tokenUtil";
 
 export interface Order {
   orderId: string;
@@ -41,19 +42,23 @@ const OrderStatusManager: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>("2h");
 
   const addOrder = async () => {
-    const restaurantIds = ["353"];
-    const randomRestaurantId =
-      restaurantIds[Math.floor(Math.random() * restaurantIds.length)];
+    // Retrieve restaurantId from TokenUtil
+    const restaurantId = TokenUtil.getRestaurantId();
+
+    if (!restaurantId) {
+      console.error("Restaurant ID not found in token");
+      return;
+    }
 
     const newOrder: Order = {
       orderId: `ORD${orders.length + 1}`,
-      restaurantId: randomRestaurantId,
-      restaurantLocation: [40.7128, -74.0060],
-      customerLocation: [34.0522, -118.2437],
+      restaurantId: String(restaurantId),
+      restaurantLocation: [40.7128, -74.0060], // Example location
+      customerLocation: [34.0522, -118.2437], // Example location
       customerName: `Customer ${orders.length + 1}`,
       customerAddress: "789 Customer Ave, Client City, CC 67890",
       customerPhone: "0771234567",
-      status: "CREATED", // Default status
+      status: "PENDING", // Default status
       createdDate: new Date().toISOString(),
     };
 
@@ -64,7 +69,7 @@ const OrderStatusManager: React.FC = () => {
 
     const customerOrderDto = {
       orderId: newOrder.orderId,
-      restaurantId: randomRestaurantId,
+      restaurantId: restaurantId,
       customerLocation: newOrder.customerLocation,
       customerName: newOrder.customerName,
       customerAddress: newOrder.customerAddress,

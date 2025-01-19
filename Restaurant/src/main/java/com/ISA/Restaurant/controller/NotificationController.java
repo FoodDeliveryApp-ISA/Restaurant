@@ -117,5 +117,17 @@ public class NotificationController {
         notificationService.markAllAsRead(restaurantId);
         return ResponseEntity.ok("All notifications marked as read.");
     }
+
+    @DeleteMapping("/clear-all")
+    public ResponseEntity<?> clearAllNotifications() {
+        Restaurant authenticatedRestaurant = getAuthenticatedRestaurant();
+        if (authenticatedRestaurant == null) {
+            return ResponseEntity.status(401).build(); // Unauthorized
+        }
+
+        String restaurantId = String.valueOf(authenticatedRestaurant.getRestaurantId());
+        notificationService.clearAllNotifications(restaurantId);
+        return ResponseEntity.ok("All notifications cleared.");
+    }
 }
 

@@ -112,6 +112,16 @@ public class NotificationService {
         log.info("All notifications for user {} marked as read.", userId);
     }
 
+    public void clearAllNotifications(String userId) {
+        List<Notification> notifications = notificationRepository.findByUserId(userId);
+        if (!notifications.isEmpty()) {
+            notificationRepository.deleteAll(notifications);
+            log.info("All notifications for user {} cleared.", userId);
+        } else {
+            log.info("No notifications found for user {} to clear.", userId);
+        }
+    }
+
     @Scheduled(fixedRate = 1800000) // Runs every 30 minutes (1800000 ms)
     public void deleteNotificationsOlderThanTwoHours() {
         LocalDateTime twoHoursAgo = LocalDateTime.now().minusHours(2);

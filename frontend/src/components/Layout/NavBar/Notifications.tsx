@@ -1,10 +1,11 @@
 import { FC, useState, useEffect } from "react";
 import { BellOutlined } from "@ant-design/icons";
-import { Badge, Popover, Tooltip, Spin, Drawer } from "antd";
+import { Badge, Popover, Tooltip, Spin, Drawer, Button } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import NotificationService from "../../../services/notification.service";
 import NotificationList from "./NotificationList";
 import CustomPopup from "./CustomPopup";
+import TokenUtil from "../../../utils/tokenUtil";
 
 interface Notice {
   id: number;
@@ -84,15 +85,31 @@ const HeaderNoticeComponent: FC = () => {
 
   const clearAllNotifications = async () => {
     try {
-      await NotificationService.markAllAsRead();
-      setNoticeList((prev) => prev.map((notice) => ({ ...notice, isRead: true })));
+      await NotificationService.clearAllNotifications();
+      setNoticeList([]);
     } catch (error) {
       console.error("Failed to clear notifications:", error);
     }
   };
 
+  const markAllAsRead = async () => {
+    try {
+      await NotificationService.markAllAsRead();
+      setNoticeList((prev) => prev.map((notice) => ({ ...notice, isRead: true })));
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
+  };
+
   useEffect(() => {
-    NotificationService.connectStompWebSocket("353", handleNewNotification);
+    // Retrieve restaurantId from TokenUtil
+    const restaurantId = TokenUtil.getRestaurantId();
+
+    if (restaurantId) {
+      NotificationService.connectStompWebSocket(String(restaurantId), handleNewNotification);
+    } else {
+      console.error("Restaurant ID not found in token");
+    }
 
     return () => {
       NotificationService.disconnectWebSocket();
@@ -105,7 +122,14 @@ const HeaderNoticeComponent: FC = () => {
         <Drawer
           visible={visible}
           onClose={() => setVisible(false)}
-          title="Notifications"
+          title={
+            <div className="flex justify-between items-center">
+              <span>Notifications</span>
+              <Button type="link" onClick={markAllAsRead} disabled={noticeList.every((n) => n.isRead)}>
+                Mark All as Read
+              </Button>
+            </div>
+          }
           placement="right"
           closable
         >
@@ -131,6 +155,12 @@ const HeaderNoticeComponent: FC = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
+              <div className="flex justify-between items-center mb-2">
+                <span>Notifications</span>
+                <Button type="link" onClick={markAllAsRead} disabled={noticeList.every((n) => n.isRead)}>
+                  Mark All as Read
+                </Button>
+              </div>
               {loading ? (
                 <div className="flex justify-center items-center p-6">
                   <Spin size="large" />
