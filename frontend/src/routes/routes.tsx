@@ -22,6 +22,7 @@ const Forbidden = lazy(() => import("../pages/error/Forbidden"));
 const NotFound = lazy(() => import("../pages/error/NotFound"));
 const ServerError = lazy(() => import("../pages/error/ServerError"));
 const Orders = lazy(() => import("../pages/Order/OrdersPage"));
+const ForgotPassword = lazy(() => import("../pages/ForgetPassword/ForgetPassword"));
 
 interface RouteConfig {
   path: string;
@@ -45,6 +46,10 @@ const publicRoutes: RouteConfig[] = [
     ) : (
       withSuspense(<LoginRegister />)
     ),
+  },
+  {
+    path: "/forgetpassword",
+    element: withSuspense(<ForgotPassword />),
   },
   {
     path: "/401",

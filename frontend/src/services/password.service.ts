@@ -51,6 +51,7 @@ class PasswordService {
    */
   async validateResetToken(token: string): Promise<string> {
     try {
+    console.log(token);
       const response: AxiosResponse<string> = await axios.get(
         `${API_URL}validate`,
         { params: { token } }

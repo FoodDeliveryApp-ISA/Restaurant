@@ -87,7 +87,7 @@ public class PasswordResetService {
      */
     private void sendResetPasswordEmail(String email, String resetToken) {
         String subject = "Password Reset Request";
-        String resetLink = baseUrl + "/forgetpassword?token=" + resetToken;
+        String resetLink = baseUrl + ":5173/forgetpassword?token=" + resetToken;
 
         String htmlMessage = "<html>"
                 + "<body style=\"font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0;\">"

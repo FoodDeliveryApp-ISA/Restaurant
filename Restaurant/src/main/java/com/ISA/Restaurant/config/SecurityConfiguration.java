@@ -54,6 +54,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/password-reset/**").permitAll()
+                        .requestMatchers("/password-reset/**").permitAll()
                         .requestMatchers("/cache/**").permitAll()
                         .requestMatchers("/restaurants/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()

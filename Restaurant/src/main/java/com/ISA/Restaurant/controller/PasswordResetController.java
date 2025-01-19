@@ -27,6 +27,10 @@ public class PasswordResetController {
 
     @GetMapping("/validate")
     public ResponseEntity<String> validateResetToken(@RequestParam("token") String token) {
+        if (token == null || token.isEmpty()) {
+            log.error("Token is missing in the request.");
+            return ResponseEntity.badRequest().body("Token is required");
+        }
         try {
             String email = passwordResetService.validateResetToken(token);
             log.info("Token validated successfully for email: {}", email);
