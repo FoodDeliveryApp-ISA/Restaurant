@@ -93,7 +93,7 @@ const OrderStatusManager: React.FC = () => {
 
   const fetchOrders = async () => {
     try {
-      const restaurantId = "353";
+      const restaurantId = TokenUtil.getRestaurantId();
       const fetchedOrders = await orderService.getOrdersByRestaurantId(
         restaurantId,
         sortBy,

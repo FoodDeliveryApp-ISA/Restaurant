@@ -22,7 +22,7 @@ const MenusPage: React.FC = () => {
     const fetchMenus = async () => {
       try {
         const fetchedMenus = await MenuService.getAllMenus();
-        setMenus(fetchedMenus || []); // Ensure menus is always an array
+        setMenus(Array.isArray(fetchedMenus) ? fetchedMenus : []); // Ensure menus is always an array
       } catch (error) {
         message.error("Failed to fetch menus!");
         console.error(error);

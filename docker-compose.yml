@@ -10,9 +10,9 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.195.190:9092,DOCKER://kafka:9093
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,DOCKER://0.0.0.0:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.195.190:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
@@ -24,6 +24,8 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
     ports:
       - "8085:8080"
 
@@ -44,34 +46,41 @@ services:
     depends_on:
       - redis
 
-  # backend:
-  #   build:
-  #     context: ./Restaurant
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8081:8081" # HTTP Port
-  #     - "9191:9191" # gRPC Port
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - db
-  #     - kafka
+  backend:
+    build:
+      context: ./Restaurant
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081" # HTTP Port
+      - "9191:9191" # gRPC Port
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - kafka
+      - redis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        # log-level: "error"
 
-  # db:
-  #   image: postgres:13
-  #   environment:
-  #     POSTGRES_DB: test1
-  #     POSTGRES_USER: admin
-  #     POSTGRES_PASSWORD: admin
-  #   ports:
-  #     - "5433:5433"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: restaurant
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-  # adminer:
-  #   image: adminer
-  #   ports:
-  #     - "8082:8080"
+  adminer:
+    image: adminer
+    ports:
+      - "8082:8080"
 
   portainer:
     image: portainer/portainer-ce:latest

@@ -130,26 +130,26 @@ const steps = (form: any, setRestaurantDetails: React.Dispatch<React.SetStateAct
           />
         </Form.Item>
         <Form.Item
-          label="Location"
-          name="restaurantLocation"
-          rules={locationRule}
-        >
-          <SelectLocation
-            onLocationSelected={(location) => {
-              const locationString = `${location.lat}, ${location.lng}`;
-              console.log("Selected Location:", locationString, location);
+  name="restaurantLocation"
+  rules={locationRule}
+  style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '20px' }}
+>
+  <SelectLocation
+    onLocationSelected={(location) => {
+      const locationString = `${location.lat}, ${location.lng}`;
+      console.log("Selected Location:", locationString, location);
 
-              // Update the form state
-              form.setFieldsValue({ restaurantLocation: locationString });
+      // Update the form state
+      form.setFieldsValue({ restaurantLocation: locationString });
 
-              // Update the custom state
-              setRestaurantDetails((prev) => ({
-                ...prev,
-                restaurantLocation: locationString,
-              }));
-            }}
-          />
-        </Form.Item>
+      // Update the custom state
+      setRestaurantDetails((prev) => ({
+        ...prev,
+        restaurantLocation: locationString,
+      }));
+    }}
+  />
+</Form.Item>
       </>
     ),
   },

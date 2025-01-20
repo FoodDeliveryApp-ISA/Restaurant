@@ -6,6 +6,7 @@ import NotificationService from "../../../services/notification.service";
 import NotificationList from "./NotificationList";
 import CustomPopup from "./CustomPopup";
 import TokenUtil from "../../../utils/tokenUtil";
+import orderService from "../../../services/order.service";
 
 interface Notice {
   id: number;
@@ -22,6 +23,35 @@ const HeaderNoticeComponent: FC = () => {
   const [loading, setLoading] = useState(false);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const isMobile = window.innerWidth <= 768;
+
+
+
+  const handleAcceptOrder = async (orderId: string) => {
+    try {
+      console.log("Calling orderService.acceptOrder with:", orderId);
+      const response = await orderService.acceptOrder(orderId); // Replace with your actual service
+      console.log("Response from acceptOrder:", response);
+      // message.success("Order has been accepted.");
+      // setNotificationVisible(false); // Hide notification
+    } catch (error) {
+      console.error("Error in handleAcceptOrder:", error);
+      // message.error("Failed to accept the order. Please try again.");
+    }
+  };
+
+  // Handle Cancel Order
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      console.log("Calling orderService.cancelOrder with:", orderId);
+      const response = await orderService.cancelOrder(orderId); // Replace with your actual service
+      console.log("Response from cancelOrder:", response);
+      // message.error("The order has been cancelled.");
+      // setNotificationVisible(false); // Hide notification
+    } catch (error) {
+      console.error("Error in handleCancelOrder:", error);
+      // message.error("Failed to cancel the order. Please try again.");
+    }
+  };
 
   const useFetch = (fetchFunction: () => Promise<Notice[]>, dependencies: any[]) => {
     useEffect(() => {
@@ -102,7 +132,6 @@ const HeaderNoticeComponent: FC = () => {
   };
 
   useEffect(() => {
-    // Retrieve restaurantId from TokenUtil
     const restaurantId = TokenUtil.getRestaurantId();
 
     if (restaurantId) {
@@ -198,13 +227,17 @@ const HeaderNoticeComponent: FC = () => {
         </Popover>
       )}
       <AnimatePresence>
-        {popupMessage && (
-          <CustomPopup
-            message={popupMessage}
-            onClose={() => setPopupMessage(null)}
-          />
-        )}
-      </AnimatePresence>
+  {popupMessage && (
+    <CustomPopup
+      message={popupMessage}
+      onClose={() => setPopupMessage(null)}
+      onAccept={(orderId) => handleAcceptOrder(orderId)}
+          onReject={(orderId) => handleCancelOrder(orderId)}
+      index={noticeList.length} // Pass the index based on the notice list length
+    />
+  )}
+</AnimatePresence>
+
     </>
   );
 };
