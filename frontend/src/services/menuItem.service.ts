@@ -94,7 +94,7 @@ class MenuItemService {
     updatedMenuItemData: RequestUpdatedMenuItemDto
   ): Promise<MenuItemDto> {
     try {
-      console.log(updatedMenuItemData);
+      console.log(updatedMenuItemData); // Replace 'data' with your actual object name
       const response = await axios.put<MenuItemDto>(
         `${API_URL}/${menuId}/menuitems/${menuItemId}`,
         updatedMenuItemData,

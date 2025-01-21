@@ -57,15 +57,16 @@ class AuthService {
    * @returns Promise resolving to LoginResponse.
    */
   async register(data: RegisterRequest): Promise<LoginResponse> {
+    console.log("try register");
     try {
       const response: AxiosResponse<Restaurant> = await axios.post(
         `${API_URL}signup`,
         data
       );
-      ToastNotification.success({
-        message: "Registration Successful",
-        description: "Welcome! Your account has been created.",
-      });
+      // ToastNotification.success({
+      //   message: "Registration Successful",
+      //   description: "Welcome! Your account has been created.",
+      // });
 
       // Auto-login using registration credentials
       const loginData: LoginRequest = {

@@ -1,15 +1,8 @@
-import { ReactElement, Suspense , lazy} from "react";
+import { ReactElement, Suspense, lazy, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
 
 import useAuth from "../hooks/useAuth";
-
-// import LoginRegister from "../pages/LoginRegister/LoginRegister";
-// import Menu from "../pages/Menu/Menu";
-// import MenuDetailsPage from "../pages/MenuDetailsPage/MenuDetailsPage";
-// import MenuItemDetailPage from "../pages/MenuItemDetailsPage/MenuItemDetailsPage";
-// import Profile from "../pages/Profile/Profile";
-// import { Unauthorized, Forbidden, NotFound, ServerError } from "../pages/error"; // Importing new error pages
 
 // Lazy-loaded pages for better performance
 const LoginRegister = lazy(() => import("../pages/LoginRegister/LoginRegister"));
@@ -30,21 +23,45 @@ interface RouteConfig {
   isPrivate?: boolean;
 }
 
-const isAuthenticated = useAuth(); // Check authentication status
+const useDelayedAuth = (): boolean | undefined => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(undefined);
+
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      // Simulate 1-second delay
+      const authStatus = await new Promise<boolean>((resolve) => {
+        setTimeout(() => resolve(useAuth()), 1000);
+      });
+      setIsAuthenticated(authStatus);
+    };
+    checkAuthentication();
+  }, []);
+
+  return isAuthenticated;
+};
+// Component to handle authentication check
+const AuthRoute = () => {
+  const isAuthenticated = useDelayedAuth();
+
+  if (isAuthenticated === undefined) {
+    // Still loading
+    return <Spinner />;
+  }
+
+  return isAuthenticated ? <Navigate to="/profile" replace /> : <LoginRegister />;
+};
 
 // Reusable Suspense wrapper with Spinner
 const withSuspense = (Component: ReactElement) => (
-  <Suspense fallback={<Spinner fullscreen={false} tip="Loading..." />}>{Component}</Suspense>
+  <Suspense fallback={<Spinner />}>{Component}</Suspense>
 );
 
 // Public routes
 const publicRoutes: RouteConfig[] = [
   {
     path: "/",
-    element: isAuthenticated ? (
-      <Navigate to="/profile" replace />
-    ) : (
-      withSuspense(<LoginRegister />)
+    element: (
+      <AuthRoute />
     ),
   },
   {
@@ -84,13 +101,14 @@ const privateRoutes: RouteConfig[] = [
     element: withSuspense(<Profile />),
   },
   {
-   path: "/orders",
-   element: withSuspense(<Orders/>), 
+    path: "/orders",
+    element: withSuspense(<Orders />),
   },
   {
     path: "*",
     element: withSuspense(<NotFound />),
   },
 ];
+
 
 export { publicRoutes, privateRoutes };

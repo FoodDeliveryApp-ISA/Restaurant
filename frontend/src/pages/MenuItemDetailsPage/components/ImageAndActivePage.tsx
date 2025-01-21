@@ -33,13 +33,15 @@ const ImageAndActivePage: React.FC<ImageAndActivePageProps> = ({
         />
       </div>
       <ImageUploader
-        images={images}
-        setImages={(updatedImages) => {
-          setImages(updatedImages);
-          handleSave(updatedImages, active); // Pass updated images and active state
-        }}
-        handleSave={handleSave}
-      />
+  images={images}
+  setImages={(updatedImages) => {
+    console.log("Updated Images from ImageUploader:", updatedImages);
+    setImages(updatedImages); // Update state
+    handleSave(updatedImages, active); // Pass updated images and active state
+  }}
+  handleSave={handleSave}
+/>
+
     </div>
   );
 };

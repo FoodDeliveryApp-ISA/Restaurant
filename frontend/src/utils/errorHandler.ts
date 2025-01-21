@@ -4,7 +4,7 @@ import { ErrorResponse } from "../services/dto/error.dto"; // Adjust the path as
 // Centralized error handling
 export const handleError = async (
   error: unknown, 
-  retries: number = 3, 
+  retries: number = 2, 
   navigate?: Function
 ): Promise<void> => {
   if (axios.isAxiosError(error)) {

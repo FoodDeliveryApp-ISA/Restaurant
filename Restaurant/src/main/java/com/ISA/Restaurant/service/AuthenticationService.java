@@ -43,12 +43,14 @@ public class AuthenticationService {
         log.info("Registering new restaurant with email {} and name {}", input.getRestaurantEmail(), input.getRestaurantName());
 
         String email = input.getRestaurantEmail().trim();
-        // Check if email already exists
+//         Check if email already exists
         if (restaurantRepository.findByRestaurantEmail(email).isPresent()) {
-            throw new EmailAlreadyExistsException("Email " + email + " is already in use.");
-        }
+//            throw new EmailAlreadyExistsException("Email " + email + " is already in use.");
+            return null;
 
-        // Check if restaurant name already exists
+        }
+//
+//         Check if restaurant name already exists
         if (restaurantRepository.findByRestaurantName(input.getRestaurantName()).isPresent()) {
             throw new RuntimeException("Restaurant name " + input.getRestaurantName() + " is already in use.");
         }
