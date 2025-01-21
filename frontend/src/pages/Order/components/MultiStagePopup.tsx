@@ -126,26 +126,26 @@ const MultiStagePopup: React.FC<MultiStagePopupProps> = ({
               </Button>,
             ]
           : [
-              <Button
-                key="prev"
-                onClick={handlePrevious}
-                disabled={currentStep === 1}
-              >
-                Previous
-              </Button>,
-              <Button
-                key="next"
-                onClick={handleNext}
-                disabled={currentStep === statusFlow.length}
-              >
-                Next
-              </Button>,
-              <Button key="cancel" danger onClick={handleCancel}>
-                Cancel Order
-              </Button>,
-              <Button key="update" type="primary" onClick={handleUpdate}>
-                Update
-              </Button>,
+              // <Button
+              //   key="prev"
+              //   onClick={handlePrevious}
+              //   disabled={currentStep === 1}
+              // >
+              //   Previous
+              // </Button>,
+              // <Button
+              //   key="next"
+              //   onClick={handleNext}
+              //   disabled={currentStep === statusFlow.length}
+              // >
+              //   Next
+              // </Button>,
+              // <Button key="cancel" danger onClick={handleCancel}>
+              //   Cancel Order
+              // </Button>,
+              // <Button key="update" type="primary" onClick={handleUpdate}>
+              //   Update
+              // </Button>,
             ]
       }
       centered

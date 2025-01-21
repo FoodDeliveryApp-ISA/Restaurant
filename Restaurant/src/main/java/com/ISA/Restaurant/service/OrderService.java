@@ -77,6 +77,7 @@ public class OrderService {
 
     public void acceptOrder(String orderId) {
         transitionOrderStatus(orderId, OrderStatus.PLACED);
+        orderStatusProducer.sendOrderStatus(orderId,OrderStatus.PLACED);
     }
 
     public void requestRider(String orderId) {

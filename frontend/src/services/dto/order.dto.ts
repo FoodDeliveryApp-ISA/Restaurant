@@ -9,6 +9,7 @@ export interface CustomerOrderDto {
   
   export interface Order {
     orderId: string;
+    restaurantId: string; 
     restaurantLocation: [number, number];
     customerLocation: [number, number];
     customerName: string;

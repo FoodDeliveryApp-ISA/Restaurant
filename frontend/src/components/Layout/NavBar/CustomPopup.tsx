@@ -26,9 +26,13 @@ const CustomPopup: FC<CustomPopupProps> = ({
  
   // Extract the order ID from the message
   const extractOrderId = (msg: string): string | null => {
-    const match = msg.match(/#(ORD\d+)/);
-    return match ? match[1] : null;
+    const words = msg.split(" ");
+    const thirdWord = words[4]?.replace("#", ""); // Remove '#' and get 3rd word
+    console.log(words);
+    console.log(thirdWord);
+    return thirdWord && !isNaN(Number(thirdWord)) ? thirdWord : null; // Ensure it's numeric
   };
+  
 
   const orderId = extractOrderId(message);
 

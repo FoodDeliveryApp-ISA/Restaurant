@@ -82,6 +82,7 @@ const OrderActions: React.FC<OrderActionsProps> = ({
           </>
         )}
         {currentStep === 1 && (
+          <>
           <Tooltip title="Request a delivery partner">
             <Button
               type="primary"
@@ -95,8 +96,22 @@ const OrderActions: React.FC<OrderActionsProps> = ({
               Request Rider
             </Button>
           </Tooltip>
+          <Tooltip title="Reject the order">
+              <Button
+                danger
+                size="large"
+                onClick={handleRejectOrder}
+                icon={<FireOutlined />}
+                style={{
+                  minWidth: "150px",
+                 }}
+                >
+                  Reject Order
+                </Button>
+            </Tooltip>
+          </>
         )}
-        {currentStep === 2 && (
+        {/* {currentStep === 2 && (
           <Tooltip title="Assign a rider to the order">
             <Button
               type="primary"
@@ -155,7 +170,7 @@ const OrderActions: React.FC<OrderActionsProps> = ({
               Mark Paid
             </Button>
           </Tooltip>
-        )}
+        )} */}
       </div>
     </Card>
   );

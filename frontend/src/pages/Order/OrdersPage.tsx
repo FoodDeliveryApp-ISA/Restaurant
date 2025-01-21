@@ -28,7 +28,7 @@ const statusMapping: Record<number, string> = {
   5: "RIDER_PICKED",
   6: "DELIVERED",
   7: "PAID",
-  8: "CANCELLED", // Added CREATED status mapping
+  8: "CANCELLED",
 };
 
 const OrderStatusManager: React.FC = () => {
@@ -94,6 +94,7 @@ const OrderStatusManager: React.FC = () => {
   const fetchOrders = async () => {
     try {
       const restaurantId = TokenUtil.getRestaurantId();
+      console.log(restaurantId);
       const fetchedOrders = await orderService.getOrdersByRestaurantId(
         restaurantId,
         sortBy,
@@ -101,6 +102,7 @@ const OrderStatusManager: React.FC = () => {
         statuses,
         timeRange
       );
+      console.log(fetchOrders);
       setOrders(fetchedOrders);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -126,13 +128,13 @@ const OrderStatusManager: React.FC = () => {
     <div>
       <Row justify="space-between" align="middle" style={{ marginBottom: 20 }}>
         <Col>
-          <h1>Order Management</h1>
+          {/* <h1>Order Management</h1> */}
         </Col>
         <Col>
           <Space size="middle">
-            <Button type="primary" onClick={addOrder}>
+            {/* <Button type="primary" onClick={addOrder}>
               Add Order
-            </Button>
+            </Button> */}
             <Select
               mode="multiple"
               placeholder="Filter by Status"

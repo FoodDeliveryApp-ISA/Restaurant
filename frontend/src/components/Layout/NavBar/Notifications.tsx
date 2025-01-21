@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from "react";
 import { BellOutlined } from "@ant-design/icons";
-import { Badge, Popover, Tooltip, Spin, Drawer, Button } from "antd";
+import { Badge, Popover, Tooltip, Spin, Drawer, Button , message} from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import NotificationService from "../../../services/notification.service";
 import NotificationList from "./NotificationList";
@@ -31,11 +31,11 @@ const HeaderNoticeComponent: FC = () => {
       console.log("Calling orderService.acceptOrder with:", orderId);
       const response = await orderService.acceptOrder(orderId); // Replace with your actual service
       console.log("Response from acceptOrder:", response);
-      // message.success("Order has been accepted.");
+      message.success("Order has been accepted.");
       // setNotificationVisible(false); // Hide notification
     } catch (error) {
       console.error("Error in handleAcceptOrder:", error);
-      // message.error("Failed to accept the order. Please try again.");
+      message.error("Failed to accept the order. Please try again.");
     }
   };
 
@@ -45,11 +45,11 @@ const HeaderNoticeComponent: FC = () => {
       console.log("Calling orderService.cancelOrder with:", orderId);
       const response = await orderService.cancelOrder(orderId); // Replace with your actual service
       console.log("Response from cancelOrder:", response);
-      // message.error("The order has been cancelled.");
+      message.error("The order has been cancelled.");
       // setNotificationVisible(false); // Hide notification
     } catch (error) {
       console.error("Error in handleCancelOrder:", error);
-      // message.error("Failed to cancel the order. Please try again.");
+      message.error("Failed to cancel the order. Please try again.");
     }
   };
 
