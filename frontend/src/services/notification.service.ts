@@ -12,6 +12,9 @@ class NotificationService {
   private stompClient: Client | null = null;
   private rawSocket: WebSocket | null = null;
   private eventEmitter = new EventEmitter();
+  private retryAttempts = 0;
+  private maxRetryAttempts = 5;
+  private retryDelay = 5000;
 
   // Connect to STOMP WebSocket
   connectStompWebSocket(userId: string, onMessage: (message: string) => void): void {
@@ -25,24 +28,48 @@ class NotificationService {
 
     this.stompClient = new Client({
       webSocketFactory: () => socket,
-      reconnectDelay: 5000,
+      reconnectDelay: 0, // Disable built-in reconnect delay to handle it manually
     });
 
     this.stompClient.onConnect = () => {
       console.log("STOMP WebSocket connected successfully!");
-    
-      this.stompClient.subscribe(`/topic/notifications/${userId}`, (message: Message) => {
+      this.retryAttempts = 0; // Reset retry attempts on successful connection
+      this.stompClient?.subscribe(`/topic/notifications/${userId}`, (message: Message) => {
         console.log("Message received on topic:", message.body); // Log the received message
         onMessage(message.body);
       });
     };
-    
+
+    this.stompClient.onStompError = (error) => {
+      console.error("STOMP WebSocket error:", error);
+      this.retryConnection(userId, onMessage); // Retry connection on error
+    };
+
+    this.stompClient.onWebSocketClose = () => {
+      console.warn("STOMP WebSocket closed.");
+      this.retryConnection(userId, onMessage); // Retry connection on close
+    };
 
     this.stompClient.onStompError = (error) => {
       console.error("STOMP Error:", error);
     };
 
     this.stompClient.activate();
+  }
+
+  private retryConnection(userId: string, onMessage: (message: string) => void): void {
+    if (this.retryAttempts >= this.maxRetryAttempts) {
+      console.error("Max retry attempts reached. Unable to reconnect to STOMP WebSocket.");
+      return;
+    }
+
+    this.retryAttempts++;
+    const delay = this.retryDelay * this.retryAttempts;
+
+    console.log(`Retrying connection in ${delay / 1000} seconds (Attempt ${this.retryAttempts}/${this.maxRetryAttempts})...`);
+    setTimeout(() => {
+      this.connectStompWebSocket(userId, onMessage);
+    }, delay);
   }
 
   // Connect to raw WebSocket
