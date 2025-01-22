@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package realTimeSuggestion;
+
+// Option for Java outer class name
+option java_outer_classname = "RealTimeSuggestionsServiceOuterClass";
+
+// Service for real-time suggestions
+service RealTimeSuggestionsService {
+  rpc GetCitySuggestions (CitySuggestionRequest) returns (CitySuggestionResponse) {}
+  rpc GetRestaurantNameSuggestions (RestaurantNameSuggestionRequest) returns (RestaurantNameSuggestionResponse) {}
+  rpc GetMenuItemSuggestions (MenuItemSuggestionRequest) returns (MenuItemSuggestionResponse) {}
+}
+
+// Messages for Real-Time Suggestions
+message CitySuggestionRequest {
+  string partialCity = 1;
+  string partialName = 2;
+  string partialMenuItem = 3;
+}
+
+message CitySuggestionResponse {
+  repeated string cities = 1;
+}
+
+message RestaurantNameSuggestionRequest {
+  string partialCity = 1;
+  string partialName = 2;
+  string partialMenuItem = 3;
+}
+
+message RestaurantNameSuggestionResponse {
+  repeated string restaurantNames = 1;
+}
+
+message MenuItemSuggestionRequest {
+  string partialCity = 1;
+  string partialName = 2;
+  string partialMenuItem = 3;
+}
+
+message MenuItemSuggestionResponse {
+  repeated string menuItems = 1;
+}

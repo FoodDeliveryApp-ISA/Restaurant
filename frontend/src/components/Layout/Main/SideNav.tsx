@@ -1,140 +1,110 @@
-import { Menu } from "antd";
+import { Menu, Button } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   UserOutlined,
-  LogoutOutlined,
   UnorderedListOutlined,
   AppstoreOutlined,
-  FileTextOutlined,
+  DashboardOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from "@ant-design/icons";
+import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface SidenavProps {
-  color: string;
+  color: string; // Theme color for the selected item background
 }
 
 const Sidenav = ({ color }: SidenavProps) => {
   const { pathname } = useLocation();
   const currentPage = pathname.replace("/", "");
 
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleCollapsed = () => {
+    setCollapsed(!collapsed);
+  };
+
+  const isLightColor = (hexColor: string) => {
+    const rgb = parseInt(hexColor.slice(1), 16);
+    const r = (rgb >> 16) & 255;
+    const g = (rgb >> 8) & 255;
+    const b = rgb & 255;
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 200;
+  };
+
+  const selectedTextColor = isLightColor(color) ? "text-gray-800" : "text-blue-600";
+
+  const renderMenuItem = (
+    key: string,
+    icon: React.ReactNode,
+    label: string,
+    link: string
+  ) => (
+    <Menu.Item key={key} icon={icon}>
+      <NavLink to={link}>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className={`py-2 px-3 rounded-lg text-base font-medium transition-all ${
+            currentPage === key
+              ? `bg-[${color}] ${selectedTextColor}`
+              : "text-gray-700 hover:text-black hover:bg-gray-100"
+          }`}
+        >
+          {!collapsed && label}
+        </motion.div>
+      </NavLink>
+    </Menu.Item>
+  );
+
   return (
-    <div className="h-full flex flex-col items-start p-4 space-y-6 bg-gray-50 shadow-md rounded-lg">
-      {/* Dashboard Section */}
-      <div className="w-full mb-6 p-4 rounded-lg bg-blue-100 text-blue-700 text-2xl font-bold text-center">
-        Dashboard
-      </div>
+    <motion.div
+      initial={{ x: -50, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className={`h-full ${collapsed ? "w-20" : "w-72"} p-4 bg-white shadow-md transition-all`}
+    >
+      {/* Header */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="flex justify-between items-center mb-6"
+      >
+        <div className="text-center">
+          {!collapsed && (
+            <>
+              <h1 className="text-xl font-semibold text-gray-800">
+                Restaurant Panel
+              </h1>
+              <p className="text-sm text-gray-500">Manage your business</p>
+            </>
+          )}
+        </div>
+        <Button
+          type="text"
+          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          onClick={toggleCollapsed}
+        />
+      </motion.div>
 
-      {/* Menu Section */}
-      <div className="w-full border-t border-gray-200 pt-4">
-        <h2 className="text-lg font-semibold text-gray-600 flex items-center space-x-2 mb-3">
-          <AppstoreOutlined />
-          <span>Menu</span>
-        </h2>
+      {/* Menu Sections */}
+      <div className="w-full">
         <Menu
           mode="inline"
           defaultSelectedKeys={[currentPage]}
-          className="w-full space-y-2"
+          inlineCollapsed={collapsed}
           style={{ borderRight: 0 }}
         >
-          <Menu.Item key="menu" icon={<FileTextOutlined />}>
-            <NavLink to="/menu">
-              <span
-                className={`block py-2 px-4 rounded-lg text-base font-medium ${
-                  currentPage === "menu"
-                    ? `bg-[${color}] text-white`
-                    : "text-gray-800"
-                } hover:bg-gray-200 transition-all`}
-              >
-                Menu
-              </span>
-            </NavLink>
-          </Menu.Item>
-
-          <Menu.Item key="menu-item" icon={<UnorderedListOutlined />}>
-            <NavLink to="/menu-item">
-              <span
-                className={`block py-2 px-4 rounded-lg text-base font-medium ${
-                  currentPage === "menu-item"
-                    ? `bg-[${color}] text-white`
-                    : "text-gray-800"
-                } hover:bg-gray-200 transition-all`}
-              >
-                Menu Items
-              </span>
-            </NavLink>
-          </Menu.Item>
+          {renderMenuItem("dashboard", <DashboardOutlined />, "Dashboard", "/dashboard")}
+          {renderMenuItem("menu", <AppstoreOutlined />, "Menu", "/menu")}
+          {renderMenuItem("profile", <UserOutlined />, "Profile", "/profile")}
+          {renderMenuItem("orders", <UnorderedListOutlined />, "Orders", "/orders")}
         </Menu>
       </div>
-
-      {/* Profile Section */}
-      <div className="w-full border-t border-gray-200 pt-4 bg-blue-50 rounded-lg shadow-sm">
-        <h2 className="text-lg font-semibold text-blue-600 flex items-center space-x-2 mb-3">
-          <UserOutlined />
-          <span>Profile</span>
-        </h2>
-        <Menu
-          mode="inline"
-          defaultSelectedKeys={[currentPage]}
-          className="w-full space-y-2"
-          style={{ borderRight: 0 }}
-        >
-          <Menu.Item key="profile" icon={<UserOutlined />}>
-            <NavLink to="/profile">
-              <span
-                className={`block py-2 px-4 rounded-lg text-base font-medium ${
-                  currentPage === "profile"
-                    ? `bg-[${color}] text-white`
-                    : "text-gray-800"
-                } hover:bg-gray-200 transition-all`}
-              >
-                Profile
-              </span>
-            </NavLink>
-          </Menu.Item>
-
-          <Menu.Item key="logout" icon={<LogoutOutlined />}>
-            <NavLink to="/logout">
-              <span
-                className={`block py-2 px-4 rounded-lg text-base font-medium ${
-                  currentPage === "logout"
-                    ? `bg-[${color}] text-white`
-                    : "text-gray-800"
-                } hover:bg-gray-200 transition-all`}
-              >
-                Logout
-              </span>
-            </NavLink>
-          </Menu.Item>
-        </Menu>
-      </div>
-
-      {/* Orders Section */}
-      <div className="w-full border-t border-gray-200 pt-4 bg-blue-50 rounded-lg shadow-sm">
-        <h2 className="text-lg font-semibold text-blue-600 flex items-center space-x-2 mb-3">
-          <UnorderedListOutlined />
-          <span>Orders</span>
-        </h2>
-        <Menu
-          mode="inline"
-          defaultSelectedKeys={[currentPage]}
-          className="w-full space-y-2"
-          style={{ borderRight: 0 }}
-        >
-          <Menu.Item key="orders" icon={<UnorderedListOutlined />}>
-            <NavLink to="/orders">
-              <span
-                className={`block py-2 px-4 rounded-lg text-base font-medium ${
-                  currentPage === "orders"
-                    ? `bg-[${color}] text-white`
-                    : "text-gray-800"
-                } hover:bg-gray-200 transition-all`}
-              >
-                Orders
-              </span>
-            </NavLink>
-          </Menu.Item>
-        </Menu>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 

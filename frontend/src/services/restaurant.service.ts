@@ -1,136 +1,66 @@
 import axios, { AxiosResponse } from "axios";
+import authHeader from "./auth-header"; // Adjust the path as necessary
+import {
+  RestaurantResponseDto,
+  RequestUpdatedRestaurantDto,
+} from "./dto/restaurant.dto";
+import { BASE_API_URL } from "../config/apiConfig"; // Import API URL from config
+import { handleError} from "../utils/errorHandler"; // Assuming you have a custom error handler
 
-// API URL for the backend
-const API_URL = "http://localhost:8081/auth/";
 
-// Interfaces for the Restaurant and Response data
-interface Restaurant {
-  restaurantName: string;
-  restaurantEmail: string;
-  restaurantPassword: string;
-  restaurantAddress: string;
-  restaurantPhone: string;
-  restaurantCity: string;
-  restaurantLocation: string;
-  enabled: boolean;
-  accessToken?: string;
-}
+const API_URL = `${BASE_API_URL}/restaurants/`;
 
-interface RestaurantResponse {
-  message: string;
-  status: string;
-  data: Restaurant;
-}
+class RestaurantService {
+  private handleError: (error: unknown) => void;
 
-interface RestaurantsResponse {
-  message: string;
-  status: string;
-  data: Restaurant[];
-}
-
-class AuthService {
-  // Login method with type annotations
-  login(
-    restaurantEmail: string,
-    restaurantPassword: string
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios
-      .post<RestaurantResponse>(`${API_URL}signin`, {
-        restaurantEmail,
-        restaurantPassword,
-      })
-      .then((response: AxiosResponse<RestaurantResponse>) => {
-        if (response.data.data.accessToken) {
-          localStorage.setItem(
-            "restaurant",
-            JSON.stringify(response.data.data)
-          );
-          console.log(response.data)
-        }
-        return response.data;
-      })
-      .catch((error) => {
-        console.error("Login error:", error);
-        throw error; // Propagate the error
-      });
+  constructor() {
+    this.handleError = handleError;
   }
 
-  // Logout method
-  logout(): void {
-    localStorage.removeItem("restaurant");
+  // Get details of the authenticated restaurant
+  async getAuthenticatedRestaurant(): Promise<RestaurantResponseDto | null> {
+    try {
+      const response: AxiosResponse<RestaurantResponseDto> = await axios.get(
+        `${API_URL}auth`,
+        { headers: authHeader() } // Include the auth header
+      );
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+      console.error("Error fetching authenticated restaurant details:", error);
+      return null;
+    }
   }
 
-  // Register method with type annotations
-  register(
-    restaurantName: string,
-    restaurantEmail: string,
-    restaurantPassword: string,
-    restaurantPhone: string,
-    restaurantCity: string,
-    restaurantLocation: string
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios
-      .post<RestaurantResponse>(`${API_URL}signup`, {
-        restaurantName,
-        restaurantEmail,
-        restaurantPassword,
-        restaurantPhone,
-        restaurantCity,
-        restaurantLocation,
-      })
-      .then((response: AxiosResponse<RestaurantResponse>) => response.data)
-      .catch((error) => {
-        console.error("Registration error:", error);
-        throw error; // Propagate the error
-      });
+  // Update the authenticated restaurant
+  async updateAuthenticatedRestaurant(
+    restaurantDto: RequestUpdatedRestaurantDto
+  ): Promise<RestaurantResponseDto | null> {
+    try {
+      const response: AxiosResponse<RestaurantResponseDto> = await axios.put(
+        `${API_URL}auth`,
+        restaurantDto,
+        { headers: authHeader() } // Include the auth header
+      );
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+      console.error("Error updating authenticated restaurant:", error);
+      return null;
+    }
   }
 
-  // Create a new restaurant
-  createRestaurant(
-    data: Restaurant
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios.post<RestaurantResponse>(`${API_URL}restaurants`, data);
-  }
-
-  // Update restaurant details
-  updateRestaurant(
-    restaurantId: string,
-    data: Partial<Restaurant>
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios.put<RestaurantResponse>(
-      `${API_URL}restaurants/${restaurantId}`,
-      data
-    );
-  }
-
-  // Get a specific restaurant by ID
-  getRestaurantById(
-    restaurantId: string
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios.get<RestaurantResponse>(
-      `${API_URL}restaurants/${restaurantId}`
-    );
-  }
-
-  // Get all restaurants
-  getAllRestaurants(): Promise<AxiosResponse<RestaurantsResponse>> {
-    return axios.get<RestaurantsResponse>(`${API_URL}restaurants`);
-  }
-
-  // Delete a restaurant by ID
-  deleteRestaurant(
-    restaurantId: string
-  ): Promise<AxiosResponse<RestaurantResponse>> {
-    return axios.delete<RestaurantResponse>(
-      `${API_URL}restaurants/${restaurantId}`
-    );
-  }
-
-  // Get current restaurant method with type annotations
-  getCurrentRestaurant(): Restaurant | null {
-    const restaurant = localStorage.getItem("restaurant");
-    return restaurant ? (JSON.parse(restaurant) as Restaurant) : null;
+  // Delete the authenticated restaurant
+  async deleteAuthenticatedRestaurant(): Promise<boolean> {
+    try {
+      await axios.delete(`${API_URL}auth`, { headers: authHeader() }); // Include the auth header
+      return true;
+    } catch (error) {
+      this.handleError(error);
+      console.error("Error deleting authenticated restaurant:", error);
+      return false;
+    }
   }
 }
 
-export default new AuthService();
+export default new RestaurantService();

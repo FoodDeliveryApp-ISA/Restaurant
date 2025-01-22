@@ -1,21 +1,63 @@
 package com.ISA.Restaurant.Dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class RestaurantDto {
-    private int restaurantId;  // Change retained as int for consistency
+import java.io.Serial;
+import java.io.Serializable;
+
+@Builder
+@Getter
+@Setter
+public class RestaurantDto implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L; // Unique identifier for serialization
+
+    private int restaurantId;
+
+    @NotBlank
     private String restaurantName;
-    private String restaurantEmail;
-    private String restaurantPassword;
-    private String restaurantAddress;
-    private String restaurantPhone;
-    private String restaurantCity;
-    private String restaurantLocation;
-    private Boolean active;
-}
 
+    @NotBlank
+    @Email
+    private String restaurantEmail;
+
+    private String restaurantAddress;
+
+    @NotBlank
+    private String restaurantPhone;
+
+    @NotBlank
+    private String restaurantCity;
+
+    private String restaurantLocation;
+
+    private Boolean active;
+
+    private String coverImageUrl;
+
+    public RestaurantDto(
+            int restaurantId,
+            @NotBlank String restaurantName,
+            @NotBlank @Email String restaurantEmail,
+            String restaurantAddress,
+            @NotBlank String restaurantPhone,
+            @NotBlank String restaurantCity,
+            String restaurantLocation,
+            Boolean active,
+            String coverImageUrl
+    ) {
+        this.restaurantId = restaurantId;
+        this.restaurantName = restaurantName;
+        this.restaurantEmail = restaurantEmail;
+        this.restaurantAddress = restaurantAddress;
+        this.restaurantPhone = restaurantPhone;
+        this.restaurantCity = restaurantCity;
+        this.restaurantLocation = restaurantLocation;
+        this.active = active;
+        this.coverImageUrl = coverImageUrl;
+    }
+}

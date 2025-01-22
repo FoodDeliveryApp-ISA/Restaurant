@@ -1,26 +1,29 @@
-# Use Node.js official image for the build stage
+# Stage 1: Build the React app
 FROM node:18 AS build
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the package.json and package-lock.json
+# Copy only the package.json and package-lock.json to leverage Docker cache
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci --legacy-peer-deps
 
-# Copy the React app source code
+# Copy the entire source code
 COPY . .
 
 # Build the React app for production
 RUN npm run build
 
-# Use Nginx to serve the React app
+# Stage 2: Serve the React app with Nginx
 FROM nginx:alpine
 
 # Copy the build files from the build stage to the Nginx server
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy a custom Nginx configuration file if needed
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose the Nginx port
 EXPOSE 80

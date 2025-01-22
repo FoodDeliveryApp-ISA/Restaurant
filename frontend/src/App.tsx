@@ -1,35 +1,50 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout/Layout";
 import Main from "./components/Layout/Main";
-import LoginRegister from "./pages/LoginRegister/LoginRegister";
-import Menu from "./pages/Menu/Menu";
-import MenuDetailsPage from "./pages/MenuDetailsPage/MenuDetailsPage";
-import Profile from "./pages/Profile/Profile";
+import { publicRoutes, privateRoutes } from "./routes/routes";
+import PrivateRoute from "./routes/PrivateRoute";
+import OrdersNotification from "./components/Notification";
 
-const App = () => (
-  <div className="App">
-    <Router>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<LoginRegister />} />
-          <Route element={<Main />}>
-            <Route path="/menu" element={<Menu />} />
-            <Route path="/menu/:id" element={<MenuDetailsPage />} />
-            <Route path="/profile" element={<Profile />} />
-          </Route>
-        </Route>
+const App: React.FC = () => {
+    const renderPublicRoutes = () =>
+        publicRoutes.map(({ path, element }) => (
+            <Route key={path} path={path} element={element} />
+        ));
 
-        {/* Redirect from unknown routes to / */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
-  </div>
-);
+    const renderPrivateRoutes = () =>
+        privateRoutes.map(({ path, element }) => (
+            <Route
+                key={path}
+                path={path}
+                element={<PrivateRoute element={element} />}
+            />
+        ));
+
+    return (
+        <div className="App">
+            <BrowserRouter>
+                <Routes>
+                    {/* Public Routes */}
+                    {renderPublicRoutes()}
+
+                    {/* Routes with Layout */}
+                    <Route
+                        element={
+                            <Layout>
+                                <OrdersNotification /> {/* Notification integrated */}
+                            </Layout>
+                        }
+                    >
+                        <Route element={<Main />}>{renderPrivateRoutes()}</Route>
+                    </Route>
+
+                    {/* Catch-All Route for 404 */}
+                    {/* <Route path="*" element={<ErrorPage title="404" subTitle="Page not found" status={404} />} /> */}
+                </Routes>
+            </BrowserRouter>
+        </div>
+    );
+};
 
 export default App;

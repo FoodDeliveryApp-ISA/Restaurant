@@ -1,48 +1,97 @@
-version: "3.8"
-
 services:
-  # Spring Boot Backend
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.20.11.29:9092
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.60:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
+    ports:
+      - "8085:8080"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    environment:
+      REDIS_HOSTS: "local:redis:6379"
+    ports:
+      - "8086:8081"
+    depends_on:
+      - redis
+
   backend:
     build:
-      context: .
-      dockerfile: Restaurent/Dockerfile # Fixed path to Dockerfile
+      context: ./Restaurant
+      dockerfile: Dockerfile
     ports:
-      - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mydb
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=admin
+      - "8081:8081" # HTTP Port
+      - "9191:9191" # gRPC Port
+    env_file:
+      - .env
     depends_on:
       - db
+      - kafka
+      - redis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        # log-level: "error"
 
-  # React Frontend
-  frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile # Fixed path to Dockerfile
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-
-  # PostgreSQL Database
   db:
     image: postgres:13
     environment:
-      POSTGRES_DB: mydb
+      POSTGRES_DB: restaurant
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Volume for data persistence
+      - postgres_data:/var/lib/postgresql/data
 
-  # PostgreSQL Adminer for DB management
   adminer:
     image: adminer
     ports:
-      - "8081:8080"
+      - "8082:8080"
 
-# Volumes to persist PostgreSQL data
+  portainer:
+    image: portainer/portainer-ce:latest
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: always
+
 volumes:
   postgres_data:
+  portainer_data:

@@ -1,16 +1,21 @@
 import React, { useState } from "react";
-import { Form, Input, Button, message } from "antd";
+import { Form, Input, Button, message, Modal } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/auth.service";
+import passwordService from "../../services/password.service";
 import ToastNotification from "../../components/ToastNotification";
 import { z } from "zod";
 import { RestaurantLoginSchema, RestaurantLoginDTO } from "../../schemas/RestaurantLoginSchema";
 
 const RestaurantLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [email, setEmail] = useState("");
   const navigate = useNavigate();
 
+  // Handle login submission
   const handleLogin = async (values: RestaurantLoginDTO) => {
     setLoading(true);
 
@@ -41,6 +46,30 @@ const RestaurantLogin: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle "Forgot Password" click
+  const showForgotPasswordModal = () => {
+    setIsModalVisible(true);
+  };
+
+  // Handle password reset request
+  const handleForgotPassword = async () => {
+    setResetLoading(true);
+    try {
+      await passwordService.requestPasswordReset({ email });
+      ToastNotification.success({
+        message: "Password Reset Email Sent",
+        description: "Please check your email for reset instructions.",
+      });
+      setIsModalVisible(false);
+    } catch (error) {
+      message.error(
+        error?.response?.data?.message || "Failed to send reset email. Please try again."
+      );
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -81,6 +110,17 @@ const RestaurantLogin: React.FC = () => {
           />
         </Form.Item>
 
+        {/* Forgot Password Link */}
+        <Form.Item>
+          <Button
+            type="link"
+            onClick={showForgotPasswordModal}
+            style={{ padding: 0 }}
+          >
+            Forgot Password?
+          </Button>
+        </Form.Item>
+
         {/* Submit Button */}
         <Form.Item>
           <Button
@@ -100,6 +140,33 @@ const RestaurantLogin: React.FC = () => {
           </Button>
         </Form.Item>
       </Form>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        title="Reset Password"
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            loading={resetLoading}
+            onClick={handleForgotPassword}
+          >
+            Submit
+          </Button>,
+        ]}
+      >
+        <p>Please enter your email address to reset your password.</p>
+        <Input
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </Modal>
     </div>
   );
 };

@@ -1,90 +1,50 @@
-import React, { useState } from "react";
-import { Card, Button } from "antd";
+import React from "react";
 import { useParams } from "react-router-dom";
-import MenuItemsTable from "../../components/MenuItemsTable";
-import AddModal from "../../components/AddModal";
-import EditModal from "../../components/EditModal";
+import { Card, Typography, Alert } from "antd";
+import MenuItemsTable from "./components/MenuItemsTable";
+import MenuEdit from "./components/MenuEdit";
 
-interface MenuItem {
-  key: string;
-  name: string;
-  description: string;
-  active: boolean;
-}
+const { Title } = Typography;
 
 const MenuDetailsPage: React.FC = () => {
-  const { id } = useParams();
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    {
-      key: "1",
-      name: "Pancakes",
-      description: "Fluffy pancakes",
-      active: true,
-    },
-  ]);
+  const { menuId } = useParams<{ menuId: string }>();
+  const menuIdNumber = parseInt(menuId, 10);
 
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-
-  const handleAddItem = (item: MenuItem) => {
-    setMenuItems((prev) => [
-      ...prev,
-      { ...item, key: String(prev.length + 1) },
-    ]);
-    setIsAddModalVisible(false);
-  };
-
-  const handleEditItem = (item: MenuItem) => {
-    setMenuItems((prev) =>
-      prev.map((menuItem) => (menuItem.key === item.key ? item : menuItem))
+  if (isNaN(menuIdNumber)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <Alert
+          message="Error"
+          description="Invalid menu ID provided. Please check the URL and try again."
+          type="error"
+          showIcon
+          style={{ maxWidth: "400px", margin: "auto" }}
+        />
+      </div>
     );
-    setEditingItem(null);
-  };
-
-  const handleDeleteItem = (key: string) => {
-    setMenuItems((prev) => prev.filter((item) => item.key !== key));
-  };
-
-  const handleToggleActive = (key: string) => {
-    setMenuItems((prev) =>
-      prev.map((item) =>
-        item.key === key ? { ...item, active: !item.active } : item
-      )
-    );
-  };
+  }
 
   return (
-    <div className="menu-details-page">
+    <div className="p-6">
+
+      {/* Edit Menu Details Section */}
       <Card
-        title={`Menu Items - Menu ID: ${id}`}
-        extra={
-          <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
-            Add Menu Item
-          </Button>
-        }
+        title="Edit Menu"
+        bordered={true}
+        style={{ marginBottom: "1.5rem" }}
+        headStyle={{ fontSize: "1.25rem", fontWeight: "bold" }}
       >
-        <MenuItemsTable
-          items={menuItems}
-          onEdit={(item) => setEditingItem(item)}
-          onDelete={handleDeleteItem}
-          onToggleActive={handleToggleActive}
-        />
+        <MenuEdit menuId={menuIdNumber} />
       </Card>
 
-      <AddModal
-        visible={isAddModalVisible}
-        onCancel={() => setIsAddModalVisible(false)}
-        onSave={handleAddItem}
-      />
-
-      {editingItem && (
-        <EditModal
-          visible={!!editingItem}
-          item={editingItem}
-          onCancel={() => setEditingItem(null)}
-          onSave={handleEditItem}
-        />
-      )}
+      {/* Menu Items Section */}
+      <Card
+        title="Menu Items"
+        bordered={true}
+        headStyle={{ fontSize: "1.25rem", fontWeight: "bold" }}
+      >
+        <MenuItemsTable menuId={menuIdNumber} />
+      </Card>
     </div>
   );
 };

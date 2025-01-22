@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Drawer, Button } from "antd";
+import React, { useEffect, useState, useCallback } from "react";
+import { Drawer, Button, Tooltip } from "antd";
+import { MenuOutlined } from "@ant-design/icons";
 import LeftMenu from "./LeftMenu.tsx";
 import RightMenu from "./RightMenu.tsx";
-import { MenuOutlined } from "@ant-design/icons";
+import HeaderNoticeComponent from "./Notifications.tsx"; // Notifications component
 import { useLocation, useNavigate } from "react-router-dom";
 import authService from "../../../services/auth.service.ts"; // Import authService
 
@@ -13,7 +14,7 @@ const Navbar = () => {
   const { pathname: location } = useLocation();
 
   const showDrawer = () => {
-    setVisible(!visible);
+    setVisible((prev) => !prev);
   };
 
   // Check authentication status on component mount and when route changes
@@ -25,16 +26,22 @@ const Navbar = () => {
     setVisible(false); // Close the drawer on route change
   }, [location]);
 
-  const handleLogin = () => {
+  const handleLogin = useCallback(() => {
     authService.login(); // Simulate login via authService
     setIsAuthenticated(true); // Update authentication state
     navigate("/"); // Navigate to home page
-  };
+  }, [navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     authService.logout(); // Simulate logout via authService
     setIsAuthenticated(false); // Update authentication state
     navigate("/login"); // Navigate to login page
+  }, [navigate]);
+
+  const drawerStyle = {
+    backgroundColor: "black",
+    color: "white",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.3)",
   };
 
   return (
@@ -42,14 +49,16 @@ const Navbar = () => {
       <div className="flex justify-between items-center px-6 py-4">
         {/* Logo Section */}
         <div className="logo text-xl font-bold text-white tracking-wide">
-          Brand Here
+          aeroEat
         </div>
         {/* Desktop Menus */}
         <div className="hidden md:flex items-center gap-6">
+          {/* Notification Icon - Render only if authenticated */}
+          {isAuthenticated && <HeaderNoticeComponent />}
           <LeftMenu mode="horizontal" />
-          {isAuthenticated ? (
+          {isAuthenticated && (
             <RightMenu mode="horizontal" onLogout={handleLogout} />
-          ) : null}
+          )}
         </div>
         {/* Mobile Menu Button */}
         <Button
@@ -57,6 +66,7 @@ const Navbar = () => {
           type="text"
           onClick={showDrawer}
           icon={<MenuOutlined />}
+          aria-label="Toggle mobile menu"
         />
       </div>
 
@@ -67,21 +77,12 @@ const Navbar = () => {
         closable={true}
         onClose={showDrawer}
         open={visible}
-        className="md:hidden bg-black text-white"
-        headerStyle={{
-          backgroundColor: "black",
-          color: "white",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.3)",
-        }}
-        bodyStyle={{
-          backgroundColor: "black",
-          color: "white",
-        }}
+        className="md:hidden"
+        headerStyle={drawerStyle}
+        bodyStyle={{ backgroundColor: "black", color: "white" }}
       >
         <LeftMenu mode="inline" />
-        {isAuthenticated ? (
-          <RightMenu mode="inline" onLogout={handleLogout} />
-        ) : null}
+        {isAuthenticated && <RightMenu mode="inline" onLogout={handleLogout} />}
       </Drawer>
     </nav>
   );

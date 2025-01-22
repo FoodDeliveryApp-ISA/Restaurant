@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package customer_restaurant.grpc;
+
+option java_multiple_files = true;
+// add other options
+
+message Message {
+  string message = 1;
+}
+
+message GiveMeTrueRequest {}
+message GiveMeTrueResponse {
+  bool true = 1;
+}
+
+service MessageService {
+  rpc send(Message) returns (Message) {}
+  rpc giveMeTrue (GiveMeTrueRequest) returns (GiveMeTrueResponse) {}
+}

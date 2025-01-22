@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package restaurant;
+
+// Service for restaurant search
+service SearchService {
+  // Search restaurants by criteria
+  rpc SearchRestaurants (SearchRequest) returns (SearchResponse) {}
+}
+
+// Messages for Search Service
+message SearchRequest {
+  string restaurantName = 1;
+  string city = 2;
+  string menuItem = 3;
+}
+
+message SearchResponse {
+  repeated RestaurantSummary summaries = 1;
+}
+
+// Reuse RestaurantSummary from restaurant_service.proto
+import "Restaurant.proto";

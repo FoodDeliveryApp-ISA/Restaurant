@@ -1,152 +1,112 @@
 import React, { useState } from "react";
-import { Form, Input, Button, message, Steps } from "antd";
-import {
-  MailOutlined,
-  LockOutlined,
-  PhoneOutlined,
-  HomeOutlined,
-  EnvironmentOutlined,
-} from "@ant-design/icons";
+import { Form, Button, Steps, message } from "antd";
+import { useNavigate } from "react-router-dom";
+import steps from "./steps"; // Import the steps array
+import EmailVerificationPopup from "../../components/EmailVerificationPopup";
 import authService from "../../services/auth.service";
+import emailVerificationService from "../../services/emailVerification.service";
+import { RequestVerificationDto, VerifyEmailDto } from "../../services/dto/emailVerification.dto";
 
 const { Step } = Steps;
 
 const RestaurantRegister: React.FC = () => {
+  const [form] = Form.useForm(); // Use Ant Design's form instance
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [isEmailVerificationVisible, setIsEmailVerificationVisible] = useState(false);
+  const navigate = useNavigate();
 
-  const steps = [
-    {
-      title: "Basic Details",
-      content: (
-        <>
-          <Form.Item
-            label="Restaurant Name"
-            name="restaurantName"
-            rules={[
-              { required: true, message: "Please enter the restaurant name!" },
-            ]}
-          >
-            <Input
-              prefix={<HomeOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
-              placeholder="Enter restaurant name"
-            />
-          </Form.Item>
-          <Form.Item
-            label="Email"
-            name="restaurantEmail"
-            rules={[
-              { required: true, message: "Please enter your email!" },
-              { type: "email", message: "Please enter a valid email!" },
-            ]}
-          >
-            <Input
-              prefix={<MailOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
-              placeholder="Enter your email"
-            />
-          </Form.Item>
-          <Form.Item
-            label="Password"
-            name="restaurantPassword"
-            rules={[
-              { required: true, message: "Please enter your password!" },
-              { min: 6, message: "Password must be at least 6 characters!" },
-            ]}
-            hasFeedback
-          >
-            <Input.Password
-              prefix={<LockOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
-              placeholder="Enter your password"
-            />
-          </Form.Item>
-        </>
-      ),
-    },
-    {
-      title: "Additional Details",
-      content: (
-        <>
-          <Form.Item
-            label="Address"
-            name="restaurantAddress"
-            rules={[{ required: true, message: "Please enter the address!" }]}
-          >
-            <Input
-              prefix={
-                <EnvironmentOutlined style={{ color: "rgba(0,0,0,0.25)" }} />
-              }
-              placeholder="Enter restaurant address"
-            />
-          </Form.Item>
-          <Form.Item
-            label="Phone Number"
-            name="restaurantPhone"
-            rules={[
-              { required: true, message: "Please enter your phone number!" },
-              {
-                pattern: /^\+?\d{10,15}$/,
-                message: "Please enter a valid phone number!",
-              },
-            ]}
-          >
-            <Input
-              prefix={<PhoneOutlined style={{ color: "rgba(0,0,0,0.25)" }} />}
-              placeholder="Enter your phone number"
-            />
-          </Form.Item>
-          <Form.Item
-            label="City"
-            name="restaurantCity"
-            rules={[{ required: true, message: "Please enter the city!" }]}
-          >
-            <Input placeholder="Enter city" />
-          </Form.Item>
-          <Form.Item
-            label="Location (Latitude, Longitude)"
-            name="restaurantLocation"
-            rules={[{ required: true, message: "Please enter the location!" }]}
-          >
-            <Input placeholder="Enter location, e.g., 37.774929° N, 122.419418° W" />
-          </Form.Item>
-        </>
-      ),
-    },
-  ];
-
-  const handleNext = (values: any) => {
-    setFormData({ ...formData, ...values });
-    setCurrentStep(currentStep + 1);
-  };
-
-  const handleFinish = async (values: any) => {
-    const finalData = { ...formData, ...values, enabled: true };
-    setLoading(true);
-
+  const handleVerificationSuccess = async () => {
     try {
-      const response = await authService.register(finalData);
+      const response = await authService.register(formData);
+      message.success("Registration successful!");
+      navigate("/profile");
     } catch (error: any) {
-      console.error("Error during registration: ", error);
-      message.error(
-        error.response?.data?.message ||
-          "Something went wrong. Please try again later."
-      );
+      message.error(error.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleResend = async () => {
+    try {
+      const dto: RequestVerificationDto = { email: formData.restaurantEmail };
+      await emailVerificationService.resendVerificationCode(dto);
+      message.success("Verification email resent. Please check your inbox.");
+    } catch (error) {
+      message.error("Failed to resend the verification email.");
+    }
+  };
+
+  const handleCheckCode = async (): Promise<boolean> => {
+    const inputs = document.querySelectorAll('input[type="text"]');
+    const verificationCode = Array.from(inputs)
+      .map((input) => (input as HTMLInputElement).value)
+      .join("")
+      .slice(-6);
+
+    try {
+      const dto: VerifyEmailDto = { email: formData.restaurantEmail, verificationCode };
+      await emailVerificationService.verifyUser(dto);
+      await handleVerificationSuccess();
+      return true;
+    } catch (error) {
+      message.error("Invalid or expired verification code.");
+      return false;
+    }
+  };
+
+  const handleFinish = async (values: any) => {
+    console.log("Register function triggered");
+    const finalData = { ...formData, ...values, enabled: true };
+    console.log("Final form data:", finalData);
+    setFormData(finalData);
+    setLoading(true);
+
+    try {
+      const dto: RequestVerificationDto = { email: finalData.restaurantEmail };
+      await emailVerificationService.requestVerificationCode(dto);
+      message.success("Verification email sent. Please check your inbox.");
+      setIsEmailVerificationVisible(true);
+    } catch (error) {
+      message.error("Failed to send verification email.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinishFailed = (errorInfo: any) => {
+    console.error("Validation Failed:", errorInfo);
+    message.error("Please correct the errors in the form.");
+  };
+
+  const handleNext = async () => {
+    try {
+      const values = await form.validateFields(); // Validate current step fields
+      console.log("Step Data:", values);
+      setFormData({ ...formData, ...values });
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      console.error("Validation Error:", error);
+    }
+  };
+
+  const currentSteps = steps(form, setFormData);
+
   return (
     <div style={{ maxWidth: 400, margin: "50px auto", padding: 20 }}>
       <Steps current={currentStep}>
-        {steps.map((step, index) => (
+        {currentSteps.map((step, index) => (
           <Step key={index} title={step.title} />
         ))}
       </Steps>
       <Form
+        form={form}
         name="restaurant-register"
         layout="vertical"
-        onFinish={currentStep === steps.length - 1 ? handleFinish : handleNext}
+        onFinish={currentStep === currentSteps.length - 1 ? handleFinish : handleNext}
+        onFinishFailed={handleFinishFailed}
         style={{
           boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
           padding: 20,
@@ -154,7 +114,7 @@ const RestaurantRegister: React.FC = () => {
           marginTop: 20,
         }}
       >
-        {steps[currentStep].content}
+        {currentSteps[currentStep].content}
         <Form.Item>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             {currentStep > 0 && (
@@ -169,16 +129,27 @@ const RestaurantRegister: React.FC = () => {
               style={{
                 backgroundColor: "#FF5733",
                 borderColor: "#FF5733",
-                height: "40px",
-                fontSize: "16px",
-                fontWeight: "bold",
               }}
             >
-              {currentStep === steps.length - 1 ? "Register" : "Next"}
+              {currentStep === currentSteps.length - 1 ? "Register" : "Next"}
             </Button>
           </div>
         </Form.Item>
       </Form>
+
+      {isEmailVerificationVisible && (
+        <EmailVerificationPopup
+          visible={isEmailVerificationVisible}
+          onClose={() => setIsEmailVerificationVisible(false)}
+          onResend={handleResend}
+          onSend={handleVerificationSuccess}
+          onCheck={handleCheckCode}
+          title="Verify Your Email"
+          description="Please enter the verification code to continue."
+          successMessage="Thank you for verifying your email!"
+          timerDuration={60}
+        />
+      )}
     </div>
   );
 };

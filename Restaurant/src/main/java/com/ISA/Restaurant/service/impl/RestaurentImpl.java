@@ -1,121 +1,181 @@
 package com.ISA.Restaurant.service.impl;
 
+import com.ISA.Restaurant.Dto.Request.RegisterRequest;
+//import com.ISA.Restaurant.Dto.
 import com.ISA.Restaurant.Dto.RestaurantDto;
 import com.ISA.Restaurant.Entity.Restaurant;
+import com.ISA.Restaurant.exception.RestaurantNotFoundException;
 import com.ISA.Restaurant.repo.RestaurantRepository;
 import com.ISA.Restaurant.service.RestaurentService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class RestaurentImpl implements RestaurentService {
 
+    private static final String ALL_RESTAURANTS_KEY = "'all'";
+
+    // Helper to evict specific cache keys
+    private void evictCache(int restaurantId, String email) {
+        log.info("Evicting cache for restaurantId: {} and email: {}", restaurantId, email);
+        // Use manual eviction if using programmatic cache management
+    }
+
+    // Helper to evict all cache entries for the 'all' key
+    private void evictAllRestaurantsCache() {
+        log.info("Evicting cache for all restaurants.");
+    }
+
+
+    private static final String RESTAURANT_CACHE = "restaurants";
     private final RestaurantRepository repository;
 
-    @Override
-    public RestaurantDto saveRestaurent(RestaurantDto restaurantDto) {
-        System.out.println("Restaurant to save: " + restaurantDto);
-        Restaurant restaurant = new Restaurant(
-                restaurantDto.getRestaurantName(),
-                restaurantDto.getRestaurantEmail(),
-                restaurantDto.getRestaurantPassword(),
-                restaurantDto.getRestaurantAddress(),
-                restaurantDto.getRestaurantPhone(),
-                restaurantDto.getRestaurantCity(),
-                restaurantDto.getRestaurantLocation(),
-                true
+    private Restaurant mapDtoToEntity(RestaurantDto dto) {
+        return new Restaurant
+                (
+                dto.getRestaurantName(),
+                dto.getRestaurantEmail(),
+                dto.getRestaurantAddress(),
+                dto.getRestaurantPhone(),
+                dto.getRestaurantCity(),
+                dto.getRestaurantLocation(),
+                dto.getActive(),
+                dto.getCoverImageUrl()
         );
-        Restaurant savedRestaurant = repository.save(restaurant);
-        System.out.println("Restaurant to save: " + restaurant);
+    }
 
+    private RestaurantDto mapEntityToDto(Restaurant entity) {
         return new RestaurantDto(
-                savedRestaurant.getRestaurantId(),
-                savedRestaurant.getRestaurantName(),
-                savedRestaurant.getRestaurantEmail(),
-                savedRestaurant.getRestaurantPassword(),
-                savedRestaurant.getRestaurantAddress(),
-                savedRestaurant.getRestaurantPhone(),
-                savedRestaurant.getRestaurantCity(),
-                savedRestaurant.getRestaurantLocation(),
-                savedRestaurant.getActive()
+                entity.getRestaurantId(),
+                entity.getRestaurantName(),
+                entity.getRestaurantEmail(),
+                entity.getRestaurantAddress(),
+                entity.getRestaurantPhone(),
+                entity.getRestaurantCity(),
+                entity.getRestaurantLocation(),
+                entity.getActive(),
+                entity.getCoverImageUrl()
         );
     }
 
-    @Override
-    public RestaurantDto getRestaurantById(int restaurantId) {
-        return repository.findById(restaurantId)
-                .map(restaurant -> new RestaurantDto(
-                        restaurant.getRestaurantId(),
-                        restaurant.getRestaurantName(),
-                        restaurant.getRestaurantEmail(),
-                        restaurant.getRestaurantPassword(),
-                        restaurant.getRestaurantAddress(),
-                        restaurant.getRestaurantPhone(),
-                        restaurant.getRestaurantCity(),
-                        restaurant.getRestaurantLocation(),
-                        restaurant.getActive()
-                ))
-                .orElse(null); // return null if not found
-    }
 
-    @Override
-    public RestaurantDto updateRestaurant(int restaurantId, RestaurantDto restaurantDto) {
-        if (repository.existsById(restaurantId)) {
-            Restaurant restaurant = new Restaurant(
-                    restaurantDto.getRestaurantName(),
-                    restaurantDto.getRestaurantEmail(),
-                    restaurantDto.getRestaurantPassword(),
-                    restaurantDto.getRestaurantAddress(),
-                    restaurantDto.getRestaurantPhone(),
-                    restaurantDto.getRestaurantCity(),
-                    restaurantDto.getRestaurantLocation(),
-                    restaurantDto.getActive()
-            );
-            Restaurant updatedRestaurant = repository.save(restaurant);
-            return new RestaurantDto(
-                    updatedRestaurant.getRestaurantId(),
-                    updatedRestaurant.getRestaurantName(),
-                    updatedRestaurant.getRestaurantEmail(),
-                    updatedRestaurant.getRestaurantPassword(),
-                    updatedRestaurant.getRestaurantAddress(),
-                    updatedRestaurant.getRestaurantPhone(),
-                    updatedRestaurant.getRestaurantCity(),
-                    updatedRestaurant.getRestaurantLocation(),
-                    updatedRestaurant.getActive()
-            );
+        @Override
+        @Cacheable(value = RESTAURANT_CACHE, key = "#restaurantId")
+        public RestaurantDto getRestaurantById(int restaurantId) {
+            try {
+                return repository.findById(restaurantId)
+                        .map(this::mapEntityToDto)
+                        .orElseThrow(() -> new RestaurantNotFoundException(
+                                "Restaurant with ID " + restaurantId + " not found."));
+            } catch (Exception e) {
+                log.error("Error retrieving restaurant by ID: {}", restaurantId, e);
+                throw e; // Re-throwing allows centralized handling in @ControllerAdvice.
+            }
         }
-        return null; // return null if not found
-    }
 
-    @Override
-    public boolean deleteRestaurant(int restaurantId) {
-        if (repository.existsById(restaurantId)) {
-            repository.deleteById(restaurantId);
-            return true;
+        @Override
+        @Cacheable(value = RESTAURANT_CACHE, key = "#email")
+        public RestaurantDto findByRestaurentEmail(String email) {
+            try {
+                return repository.findByRestaurantEmail(email)
+                        .map(this::mapEntityToDto)
+                        .orElseThrow(() -> new RestaurantNotFoundException(
+                                "Restaurant with email " + email + " not found."));
+            } catch (Exception e) {
+                log.error("Error retrieving restaurant by email: {}", email, e);
+                throw e;
+            }
         }
-        return false; // return false if restaurant does not exist
+
+        @Override
+        @Caching(evict = {
+                @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantId"),
+                @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantDto.restaurantEmail", beforeInvocation = true),
+                @CacheEvict(value = RESTAURANT_CACHE,  allEntries = true)
+        })
+        public RestaurantDto updateRestaurant(int restaurantId, RestaurantDto restaurantDto) {
+            validateRestaurantDto(restaurantDto);
+
+            try {
+                Restaurant existingRestaurant = repository.findById(restaurantId)
+                        .orElseThrow(() -> new RestaurantNotFoundException(
+                                "Restaurant with ID " + restaurantId + " not found."));
+
+                // Update fields
+                existingRestaurant.setRestaurantName(restaurantDto.getRestaurantName());
+                existingRestaurant.setRestaurantEmail(restaurantDto.getRestaurantEmail());
+                existingRestaurant.setRestaurantAddress(restaurantDto.getRestaurantAddress());
+                existingRestaurant.setRestaurantPhone(restaurantDto.getRestaurantPhone());
+                existingRestaurant.setRestaurantCity(restaurantDto.getRestaurantCity());
+                existingRestaurant.setRestaurantLocation(restaurantDto.getRestaurantLocation());
+                existingRestaurant.setActive(restaurantDto.getActive());
+                existingRestaurant.setCoverImageUrl(restaurantDto.getCoverImageUrl());
+
+                // Save updated restaurant
+                Restaurant updatedRestaurant = repository.save(existingRestaurant);
+                return mapEntityToDto(updatedRestaurant);
+            } catch (Exception e) {
+                log.error("Error updating restaurant ID: {}, Data: {}", restaurantId, restaurantDto, e);
+                throw e;
+            }
+        }
+
+        @Override
+        @Caching(evict = {
+                @CacheEvict(value = RESTAURANT_CACHE, key = "#restaurantId"),
+                @CacheEvict(value = RESTAURANT_CACHE, key = "#email", beforeInvocation = true),
+                @CacheEvict(value = RESTAURANT_CACHE, key = ALL_RESTAURANTS_KEY)
+        })
+        public boolean deleteRestaurant(int restaurantId) {
+            try {
+                if (repository.existsById(restaurantId)) {
+                    repository.deleteById(restaurantId);
+                    return true;
+                }
+                throw new RestaurantNotFoundException("Restaurant with ID " + restaurantId + " not found.");
+            } catch (Exception e) {
+                log.error("Error deleting restaurant ID: {}", restaurantId, e);
+                throw e;
+            }
+        }
+
+        @Override
+        @Cacheable(value = RESTAURANT_CACHE, key = ALL_RESTAURANTS_KEY)
+        public Iterable<RestaurantDto> getAllRestaurants() {
+            try {
+                Iterable<Restaurant> restaurants = repository.findAll();
+                return StreamSupport.stream(restaurants.spliterator(), false)
+                        .map(this::mapEntityToDto)
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                log.error("Error retrieving all restaurants", e);
+                throw e;
+            }
+        }
+
+        private void validateRestaurantDto(RestaurantDto restaurantDto) {
+            if (restaurantDto.getRestaurantEmail() == null
+                    || !restaurantDto.getRestaurantEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                log.error("Invalid email format: {}", restaurantDto.getRestaurantEmail());
+                throw new IllegalArgumentException("Invalid email format.");
+            }
+        }
+
+    @CacheEvict(value = RESTAURANT_CACHE, allEntries = true)
+    public void evictCacheOnLogout() {
+        log.info("All restaurant-related caches evicted on logout.");
     }
 
-    @Override
-    public Iterable<RestaurantDto> getAllRestaurants() {
-        Iterable<Restaurant> restaurants = repository.findAll();
-        // Use StreamSupport to convert Iterable to Stream
-        return StreamSupport.stream(restaurants.spliterator(), false)
-                .map(restaurant -> new RestaurantDto(
-                        restaurant.getRestaurantId(),
-                        restaurant.getRestaurantName(),
-                        restaurant.getRestaurantEmail(),
-                        restaurant.getRestaurantPassword(),
-                        restaurant.getRestaurantAddress(),
-                        restaurant.getRestaurantPhone(),
-                        restaurant.getRestaurantCity(),
-                        restaurant.getRestaurantLocation(),
-                        restaurant.getActive()
-                ))
-                .collect(Collectors.toList());
-    }
 }
