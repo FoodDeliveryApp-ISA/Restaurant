@@ -20,8 +20,7 @@ const MainPage: React.FC = () => {
   const { menuId, menuItemId } = useParams<Params>();
 
   useEffect(() => {
-    console.log("Menu ID and Menu Item ID:", menuId, menuItemId);
-
+    console.log("Menu id and menu item id :",menuId,menuItemId);
     if (!menuId || !menuItemId) {
       message.error("Invalid menu or menu item ID.");
       return;
@@ -33,22 +32,13 @@ const MainPage: React.FC = () => {
           Number(menuId),
           Number(menuItemId)
         );
-        const {
-          menuItemName = "",
-          menuItemDescription = "",
-          menuItemPrice = 0,
-          active = false,
-          imageUrls = [],
-        } = response || {};
-
-        console.log("Fetched Menu Item Data:", response);
-
-        // Update state
-        setMenuItemName(menuItemName);
-        setMenuItemDescription(menuItemDescription);
-        setMenuItemPrice(menuItemPrice);
-        setActive(active);
-        setImageUrls(imageUrls);
+        const { menuItemName, menuItemDescription, menuItemPrice , active , imageUrls } = response|| {};
+        console.log("responses : ",response);
+        setMenuItemName(menuItemName || "");
+        setMenuItemDescription(menuItemDescription || "");
+        setMenuItemPrice(menuItemPrice || 0);
+        setActive(active || false);
+        setImageUrls(imageUrls || []);
       } catch (error) {
         console.error("Error fetching menu item:", error);
         message.error("Failed to load menu item. Please try again.");
@@ -62,23 +52,21 @@ const MainPage: React.FC = () => {
     updatedImages = imageUrls,
     updatedActive = active
   ) => {
-    console.log("Initiating Save...");
-
     if (!menuItemName || menuItemPrice === undefined) {
       message.error("Name and Price are required!");
       return;
     }
-
+  
     const menuItemData = {
       menuItemName,
       menuItemDescription,
       menuItemPrice,
-      active: updatedActive,
-      imageUrls: updatedImages,
+      active: updatedActive, // Use updated active state
+      imageUrls: updatedImages, // Use updated images
     };
-
+  
     console.log("Saving Menu Item Data:", menuItemData);
-
+  
     try {
       if (menuItemId) {
         await MenuItemService.updateMenuItem(
@@ -95,6 +83,42 @@ const MainPage: React.FC = () => {
       message.error("Failed to save menu item. Try again.");
     }
   };
+
+  const handleSave2 = async (
+
+  ) => {
+    if (!menuItemName || menuItemPrice === undefined) {
+      message.error("Name and Price are required!");
+      return;
+    }
+  
+    const menuItemData = {
+      menuItemName,
+      menuItemDescription,
+      menuItemPrice,
+    };
+  
+    console.log("Saving Menu Item Data:", menuItemData);
+  
+    try {
+      if (menuItemId) {
+        await MenuItemService.updateMenuItem(
+          Number(menuId),
+          Number(menuItemId),
+          menuItemData
+        );
+      } else {
+        await MenuItemService.createMenuItem(Number(menuId), menuItemData);
+      }
+      message.success("Menu item saved successfully!");
+    } catch (error) {
+      console.error("Error saving menu item:", error);
+      message.error("Failed to save menu item. Try again.");
+    }
+  };
+  
+  
+  
 
   const handlePreview = () => {
     if (!menuItemName || menuItemPrice === undefined) {
@@ -113,7 +137,6 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Edit Page */}
       <EditPage
         menuItemName={menuItemName}
         setMenuItemName={setMenuItemName}
@@ -121,7 +144,7 @@ const MainPage: React.FC = () => {
         setMenuItemDescription={setMenuItemDescription}
         menuItemPrice={menuItemPrice}
         setMenuItemPrice={setMenuItemPrice}
-        handleSave={handleSave}
+        handleSave={handleSave2}
         handlePreview={handlePreview}
       />
       <motion.div
@@ -129,16 +152,16 @@ const MainPage: React.FC = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        {/* Image and Active Page */}
         <ImageAndActivePage
           active={active}
           setActive={setActive}
           images={imageUrls}
           setImages={setImageUrls}
-          menuId={menuId!}
+          menuId={menuId!} // Add non-null assertion if you are sure it's not null/undefined
           menuItemId={menuItemId!}
-          handleSave={handleSave}
+          handleSave={handleSave} // Ensure this is passed correctly
         />
+
       </motion.div>
     </div>
   );

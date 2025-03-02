@@ -34,9 +34,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     private MenuRepository menuRepository;
 
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId") // Evict menu-wide cache
-    })
+    @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId")
     public MenuItemDto createMenuItem(RequestMenuItemSaveDto menuItemDto, Long menuId) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new MenuItemNotFoundException("Menu not found with id " + menuId));
@@ -57,7 +55,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    @Cacheable(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId+#menuItemId")
+    @Cacheable(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId + ':' + #menuItemId")
     public MenuItemDto getMenuItemById(Long menuId, Long menuItemId) {
         log.info(menuItemId.toString(),menuId);
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuId,menuItemId);
@@ -69,10 +67,8 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId+#menuItemId"), // Evict individual menu item cache
-            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId") // Evict menu-wide items cache
-    })
+    @CachePut(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId + ':' + #menuItemId") // Update specific menu item cache
+    @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId")
     public MenuItemDto updateMenuItem(Long menuId, Long menuItemId, RequestUpdatedMenuItemDto updatedMenuItemDto) {
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuItemId, menuId);
         if (menuItem == null) {
@@ -99,8 +95,8 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId+#menuItemId"), // Clear cache for specific menu item
-            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId") // Clear cache for the menu
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId + ':' + #menuItemId"), // Evict specific menu item
+            @CacheEvict(value = MENU_ITEM_CACHE, key = "'menu_' + #menuId") // Evict menu-wide cache
     })
     public void deleteMenuItem(Long menuId, Long menuItemId) {
         MenuItem menuItem = menuItemRepository.findByMenuItemIdAndMenu_MenuId(menuItemId, menuId);
